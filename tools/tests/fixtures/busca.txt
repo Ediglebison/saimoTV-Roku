@@ -1,0 +1,10 @@
+# busca de teste
+#Alive (2020)	f	#
+A Academia	s	A
+A Academia	s	A
+A Agência	d	A	2024
+Akira	a	A	1998
+A Teia	f	A	2024
+Série Adulta XXX	s	S
+Série Boa	s	S	2025
+Anjo Selvagem	f	A

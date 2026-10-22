@@ -1,0 +1,13 @@
+{
+  "rootDir": "SaimoTV",
+  "files": [
+    "source/**/*",
+    "components/**/*",
+    "images/**/*",
+    "manifest"
+  ],
+  "stagingDir": ".roku-build",
+  "createPackage": false,
+  "diagnosticLevel": "hint",
+  "sourceMap": false
+}

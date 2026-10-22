@@ -1,0 +1,8 @@
+# filmes de teste
+A Teia	dub=https://cdn.example/a-teia.mp4	leg=https://cdn.example/a-teia-leg.mp4
+A 5a Onda (2016)	dub=10:2458625,https://cdn.example/error.txt
+#Alive (2020)	dub=https://cdn.example/alive.mp4
+A 5a Onda (2016)	dub=https://cdn.example/duplicado.mp4
+Adulto XXX	dub=https://cdn.example/xxx.mp4
+Sem Fonte	dub=99:123
+A Teia (2024)	leg=https://cdn.example/a-teia-2024-leg.mp4

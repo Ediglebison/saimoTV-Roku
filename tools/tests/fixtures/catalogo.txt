@@ -1,0 +1,18 @@
+# SAIMO TV
+canal: Canal Alpha
+logo: https://img.example/alpha.png
+categoria: Filmes
+fonte: https://cdn.example/alpha.m3u8
+nome: Principal
+referer: https://site.example/
+agente: TestAgent/1.0
+canal: Canal Beta
+categoria: Series
+fonte: https://cdn.example/beta1.m3u8
+fonte: https://cdn.example/beta2.m3u8
+qualidade: 1080p
+canal: Canal ClearKey
+fonte: https://cdn.example/drm.mpd
+chave: kid:key
+canal: Canal Vazio
+logo: https://img.example/vazio.png

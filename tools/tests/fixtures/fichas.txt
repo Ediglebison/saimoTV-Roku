@@ -1,0 +1,6 @@
+# Ficha de teste
+capa: https://img.example/w342
+f	A Teia	123	/a-teia.jpg	Ação,Drama
+s	A Academia	456	/academia.jpg	Comédia
+f	A 5a Onda (2016)	789	https://direct.example/poster.jpg	Ficção
+f	#Alive (2020)	999	/alive.jpg	Terror

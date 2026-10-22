@@ -1,0 +1,10 @@
+# fileiras de teste
+capa: https://img.example/w342
+fila	Em alta
+f	A Teia	A	2024	/a-teia.jpg
+s	A Academia	A	2024	/academia.jpg
+d	A Agência	A	2024	/agencia.jpg
+a	Akira	A	1998	/akira.jpg
+f	Adulto XXX	A	2024	/xxx.jpg
+fila	Séries
+s	Outra Serie	O	2023	/outra.jpg

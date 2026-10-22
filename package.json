@@ -1,0 +1,17 @@
+{
+  "name": "saimo-tv-roku",
+  "version": "2.5.0",
+  "private": true,
+  "description": "Cliente pessoal nao oficial Saimo TV para Roku, com destaques VOD, catalogo por fragmentos, busca e sincronizacao automatica",
+  "scripts": {
+    "art": "python3 tools/make_artwork.py",
+    "check": "python3 tools/check_project.py",
+    "test": "python3 tools/test_parsers.py",
+    "build": "bsc --project bsconfig.json",
+    "package": "python3 tools/package.py"
+  },
+  "devDependencies": {
+    "brighterscript": "^0.73.7",
+    "brs": "^0.45.0"
+  }
+}

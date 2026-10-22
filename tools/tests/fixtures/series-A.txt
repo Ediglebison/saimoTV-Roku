@@ -1,0 +1,7 @@
+# series de teste
+A Academia		0	8
+A Agência	2024	1	159
+A Agencia - Ligue Para o Meu Agente		0	45
+Serie Adulta XXX	2020	0	5
+Sem Campos	2020
+A Academia	2024	2	99

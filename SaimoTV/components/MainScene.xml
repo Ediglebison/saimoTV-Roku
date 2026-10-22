@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="MainScene" extends="Scene">
+    <script type="text/brightscript" uri="pkg:/source/bslib.brs" />
+    <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
+
+    <children>
+        <Poster id="appBg" translation="[0, 0]" width="1920" height="1080"
+                uri="pkg:/images/bg_app.png" loadSync="true" />
+
+        <Video id="video" visible="false" width="1920" height="1080" />
+
+        <Group id="homeGroup">
+            <Poster id="sidebarBg" translation="[0, 0]" width="400" height="1080"
+                    uri="pkg:/images/bg_sidebar.png" loadSync="true" />
+
+            <Group id="previewBackdropGroup" translation="[400, 0]" opacity="0.5"
+                   clippingRect="[0, 0, 1520, 1080]" visible="false">
+                <Poster id="previewBackdrop" translation="[0, 0]" width="1520" height="1080"
+                        loadSync="false" loadDisplayMode="scaleToZoom" />
+            </Group>
+            <Rectangle translation="[400, 0]" width="1520" height="1080" color="0x08070D99" />
+
+            <Poster id="logo" translation="[52, 28]" width="58" height="58"
+                    uri="pkg:/images/logo.png" loadSync="true" />
+            <Label id="brand" translation="[124, 26]" width="250" height="50"
+                   font="font:LargeBoldSystemFont" color="0xF7F3FFFF" text="Saimo TV" />
+            <Label id="brandSub" translation="[126, 78]" width="262" height="28"
+                   font="font:SmallBoldSystemFont" color="0x4FE3D0FF"
+                   text="FILMES  •  SÉRIES  •  AO VIVO" />
+            <Rectangle translation="[54, 118]" width="292" height="1" color="0xFFFFFF1A" />
+
+            <Label translation="[54, 140]" width="290" height="24"
+                   font="font:SmallBoldSystemFont" color="0x8F87A3FF" text="NAVEGAÇÃO" />
+
+            <LabelList id="navList" translation="[44, 174]" width="338" height="630"
+                       itemSize="[338, 48]" itemSpacing="[0, 4]" numRows="12"
+                       font="font:MediumSystemFont" focusedFont="font:MediumBoldSystemFont"
+                       color="0xB8B0CCFF" focusedColor="0xF7F3FFFF"
+                       textHorizAlign="left" vertFocusAnimationStyle="floatingFocus"
+                       focusBitmapUri="pkg:/images/nav_focus.png"
+                       focusFootprintBitmapUri="pkg:/images/nav_focus_idle.png"
+                       drawFocusFeedback="true" drawFocusFeedbackOnTop="false" />
+
+            <Rectangle translation="[28, 836]" width="344" height="132" color="0x8B5CF60F" />
+            <Rectangle translation="[28, 836]" width="3" height="132" color="0x4FE3D0FF" />
+            <Label id="status" translation="[50, 850]" width="300" height="72"
+                   font="font:SmallSystemFont" color="0xA79FBAFF" wrap="true" text="" />
+            <Label translation="[50, 930]" width="300" height="24"
+                   font="font:SmallBoldSystemFont" color="0x6F6882FF"
+                   text="SAIMO TV  •  ROKU" />
+
+            <Label id="listEyebrow" translation="[452, 48]" width="660" height="28"
+                   font="font:SmallBoldSystemFont" color="0x4FE3D0FF" text="AO VIVO" />
+            <Label id="listTitle" translation="[450, 74]" width="1100" height="62"
+                   font="font:LargeBoldSystemFont" color="0xF7F3FFFF" text="Canais ao vivo" />
+            <Rectangle id="headerAccent" translation="[454, 142]" width="64" height="3"
+                       color="0x8B5CF6FF" />
+            <Label id="listSub" translation="[454, 152]" width="1050" height="34"
+                   font="font:SmallSystemFont" color="0xA79FBAFF" text="" />
+
+            <Label id="syncHint" translation="[1190, 50]" width="340" height="28"
+                   font="font:SmallSystemFont" color="0x8F87A3FF" horizAlign="right" text="" />
+            <Label id="clock" translation="[1580, 48]" width="260" height="34"
+                   font="font:MediumBoldSystemFont" color="0xE8E2F5FF" horizAlign="right" text="" />
+            <Rectangle translation="[430, 194]" width="1460" height="1" color="0xFFFFFF14" />
+
+            <LabelList id="itemList" translation="[432, 214]" width="730" height="760"
+                       itemSize="[730, 58]" itemSpacing="[0, 4]" numRows="10"
+                       font="font:MediumSystemFont" focusedFont="font:MediumBoldSystemFont"
+                       color="0xD2CBDDFF" focusedColor="0xFFFFFFFF"
+                       textHorizAlign="left" vertFocusAnimationStyle="floatingFocus"
+                       focusBitmapUri="pkg:/images/item_focus.png"
+                       focusFootprintBitmapUri="pkg:/images/item_focus_idle.png"
+                       drawFocusFeedback="true" drawFocusFeedbackOnTop="false" />
+
+            <PosterGrid id="vodGrid" translation="[438, 214]" width="1160" height="780"
+                        basePosterSize="[210, 315]" numColumns="5" numRows="2"
+                        columnSpacings="[24, 24, 24, 24]" rowSpacings="[16, 16]"
+                        caption1Font="font:SmallBoldSystemFont" caption2Font="font:SmallSystemFont"
+                        caption1NumLines="2" caption2NumLines="1"
+                        caption1Color="0xF7F3FFFF" caption2Color="0x9C90B8FF"
+                        captionHorizAlignment="left" enableCaptionScrolling="false"
+                        posterDisplayMode="scaleToFit"
+                        horizFocusAnimationStyle="floatingFocus" vertFocusAnimationStyle="floatingFocus"
+                        focusBitmapUri="pkg:/images/focus_grid.png"
+                        focusFootprintBitmapUri="pkg:/images/focus_grid_idle.png"
+                        drawFocusFeedback="true" drawFocusFeedbackOnTop="true" visible="false" />
+
+            <Rectangle id="previewPanel" translation="[1192, 208]" width="660" height="760"
+                       color="0x151021D9" />
+            <Rectangle translation="[1192, 208]" width="660" height="2" color="0x8B5CF6FF" />
+            <Rectangle translation="[1192, 208]" width="2" height="760" color="0x4FE3D01F" />
+
+            <Rectangle translation="[1228, 246]" width="240" height="360" color="0x00000066" />
+            <Poster id="previewPoster" translation="[1216, 234]" width="240" height="360"
+                    loadSync="false" loadDisplayMode="scaleToFit" />
+
+            <Rectangle id="previewBadgeBg" translation="[1488, 236]" width="180" height="30"
+                       color="0x4FE3D024" />
+            <Label id="previewBadge" translation="[1488, 240]" width="180" height="24"
+                   font="font:SmallBoldSystemFont" color="0x4FE3D0FF" horizAlign="center"
+                   text="DESTAQUE" />
+
+            <Label id="previewTitle" translation="[1488, 280]" width="330" height="148"
+                   font="font:LargeBoldSystemFont" color="0xF7F3FFFF" wrap="true" text="" />
+            <Label id="previewMeta" translation="[1490, 436]" width="330" height="92"
+                   font="font:MediumSystemFont" color="0x4FE3D0FF" wrap="true" text="" />
+            <Rectangle id="previewRule" translation="[1490, 540]" width="300" height="1"
+                       color="0xFFFFFF22" />
+            <Label id="previewDesc" translation="[1216, 618]" width="600" height="196"
+                   font="font:SmallSystemFont" color="0xB8B0C8FF" wrap="true" text="" />
+
+            <Rectangle id="previewCta" translation="[1216, 838]" width="200" height="44"
+                       color="0x8B5CF6FF" />
+            <Label id="previewCtaText" translation="[1216, 846]" width="200" height="28"
+                   font="font:SmallBoldSystemFont" color="0xFFFFFFFF" horizAlign="center"
+                   text="OK  ABRIR" />
+            <Label translation="[1440, 848]" width="360" height="28"
+                   font="font:SmallSystemFont" color="0x8F87A3FF"
+                   text="OK abre  •  Back volta  •  Replay busca" />
+
+            <Label id="emptyLabel" translation="[452, 350]" width="1420" height="260"
+                   font="font:MediumSystemFont" color="0xA79FBAFF" wrap="true"
+                   horizAlign="center" text="" />
+
+            <Label id="hint" translation="[432, 1028]" width="1450" height="30"
+                   font="font:SmallSystemFont" color="0x6F6882FF"
+                   text="↑ ↓ ← → navegar   •   OK selecionar   •   Replay buscar   •   * favorito   •   Back voltar" />
+        </Group>
+
+        <Group id="settingsGroup" visible="false">
+            <Rectangle translation="[60, 24]" width="1800" height="1032" color="0x0D0A15F2" />
+            <Rectangle translation="[60, 24]" width="1800" height="2" color="0x8B5CF6FF" />
+            <Label id="settingsTitle" translation="[100, 52]" width="1000" height="60"
+                   font="font:LargeBoldSystemFont" color="0xF7F3FFFF" text="Ajustes" />
+            <Label id="settingsSub" translation="[102, 114]" width="1200" height="34"
+                   font="font:MediumSystemFont" color="0x4FE3D0FF"
+                   text="Lista, EPG, agente HTTP e diagnóstico" />
+            <Rectangle translation="[102, 158]" width="64" height="3" color="0x8B5CF6FF" />
+            <LabelList id="settingsList" translation="[100, 178]" width="1220" height="760"
+                       itemSize="[1220, 54]" itemSpacing="[0, 4]" numRows="12"
+                       font="font:MediumSystemFont" focusedFont="font:MediumBoldSystemFont"
+                       color="0xD2CBDDFF" focusedColor="0xFFFFFFFF"
+                       textHorizAlign="left" vertFocusAnimationStyle="floatingFocus"
+                       focusBitmapUri="pkg:/images/list_focus.png"
+                       focusFootprintBitmapUri="pkg:/images/list_focus_idle.png"
+                       drawFocusFeedback="true" drawFocusFeedbackOnTop="false" />
+            <Rectangle translation="[1350, 178]" width="1" height="760" color="0xFFFFFF14" />
+            <Label id="settingsHelp" translation="[1378, 186]" width="450" height="700"
+                   font="font:SmallSystemFont" color="0xA79FBAFF" wrap="true" text="" />
+            <Label id="settingsHint" translation="[100, 1008]" width="1600" height="30"
+                   font="font:SmallSystemFont" color="0x6F6882FF"
+                   text="OK edita ou executa   •   Back volta" />
+        </Group>
+
+        <Group id="guideGroup" visible="false">
+            <Rectangle translation="[60, 24]" width="1800" height="1032" color="0x0D0A15F2" />
+            <Rectangle translation="[60, 24]" width="1800" height="2" color="0x8B5CF6FF" />
+            <Label id="guideTitle" translation="[100, 52]" width="1200" height="60"
+                   font="font:LargeBoldSystemFont" color="0xF7F3FFFF" text="Guia de canais" />
+            <Label id="guideSub" translation="[102, 114]" width="1500" height="34"
+                   font="font:MediumSystemFont" color="0x4FE3D0FF" text="" />
+            <Rectangle translation="[102, 158]" width="64" height="3" color="0x8B5CF6FF" />
+            <LabelList id="guideList" translation="[100, 178]" width="1720" height="760"
+                       itemSize="[1720, 54]" itemSpacing="[0, 4]" numRows="12"
+                       font="font:MediumSystemFont" focusedFont="font:MediumBoldSystemFont"
+                       color="0xD2CBDDFF" focusedColor="0xFFFFFFFF"
+                       textHorizAlign="left" vertFocusAnimationStyle="floatingFocus"
+                       focusBitmapUri="pkg:/images/guide_focus.png"
+                       focusFootprintBitmapUri="pkg:/images/guide_focus_idle.png"
+                       drawFocusFeedback="true" drawFocusFeedbackOnTop="false" />
+            <Label id="guideHint" translation="[100, 1008]" width="1600" height="30"
+                   font="font:SmallSystemFont" color="0x6F6882FF"
+                   text="OK abre o canal   •   Back volta" />
+        </Group>
+
+        <Group id="aboutGroup" visible="false">
+            <Rectangle translation="[60, 24]" width="1800" height="1032" color="0x0D0A15F2" />
+            <Rectangle translation="[60, 24]" width="1800" height="2" color="0x8B5CF6FF" />
+            <Label id="aboutTitle" translation="[100, 52]" width="1000" height="60"
+                   font="font:LargeBoldSystemFont" color="0xF7F3FFFF" text="Sobre" />
+            <Label id="aboutText" translation="[100, 150]" width="1720" height="800"
+                   font="font:MediumSystemFont" color="0xC9C1DAFF" wrap="true" text="" />
+            <Label id="aboutHint" translation="[100, 1008]" width="1600" height="30"
+                   font="font:SmallSystemFont" color="0x6F6882FF" text="Back volta" />
+        </Group>
+
+        <Group id="playerOverlay" visible="false">
+            <Rectangle translation="[0, 0]" width="1920" height="190" color="0x08070DCC" />
+            <Rectangle translation="[0, 900]" width="1920" height="180" color="0x08070DCC" />
+            <Rectangle translation="[0, 0]" width="1920" height="2" color="0x8B5CF6FF" />
+            <Label id="playerTitle" translation="[70, 42]" width="1440" height="58"
+                   font="font:LargeBoldSystemFont" color="0xF7F3FFFF" text="" />
+            <Label id="playerSubtitle" translation="[72, 102]" width="1440" height="34"
+                   font="font:MediumSystemFont" color="0x4FE3D0FF" text="" />
+            <Label id="playerState" translation="[72, 146]" width="1440" height="34"
+                   font="font:SmallSystemFont" color="0xA79FBAFF" text="" />
+            <Label id="playerLive" translation="[1600, 42]" width="250" height="34"
+                   font="font:MediumBoldSystemFont" color="0x4FE3D0FF" horizAlign="right"
+                   text="● AO VIVO" visible="false" />
+            <Rectangle id="progressTrack" translation="[70, 986]" width="1780" height="6"
+                       color="0x2A2338FF" />
+            <Rectangle id="progressFill" translation="[70, 986]" width="0" height="6"
+                       color="0x4FE3D0FF" />
+            <Label id="playerHint" translation="[70, 1010]" width="1450" height="30"
+                   font="font:SmallSystemFont" color="0x8F87A3FF"
+                   text="OK pausa   •   ← -10s   •   → +30s   •   Back sai" />
+            <Label id="playerTime" translation="[1600, 1010]" width="250" height="30"
+                   font="font:SmallSystemFont" color="0x8F87A3FF" horizAlign="right" text="" />
+        </Group>
+
+        <Rectangle id="toastAccent" visible="false" translation="[430, 934]" width="4" height="56"
+                   color="0x4FE3D0FF" />
+        <Rectangle id="toastBg" visible="false" translation="[434, 934]" width="936" height="56"
+                   color="0x1A1526F2" />
+        <Label id="toast" visible="false" translation="[454, 946]" width="900" height="32"
+               font="font:MediumSystemFont" color="0xF7F3FFFF" text="" />
+
+        <Timer id="toastTimer" duration="3" repeat="false" />
+        <Timer id="failoverTimer" duration="20" repeat="false" />
+        <Timer id="progressTimer" duration="2" repeat="true" />
+        <Timer id="vodRefreshTimer" duration="900" repeat="true" />
+    </children>
+</component>

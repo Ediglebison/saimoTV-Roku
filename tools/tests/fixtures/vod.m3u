@@ -1,0 +1,9 @@
+#EXTM3U
+#EXTINF:-1 tvg-logo="https://img.example/a.jpg" group-title="Filmes",Filme Um (2024)
+https://cdn.example/filme1.mp4
+#EXTINF:-1 tvg-logo="https://img.example/s.jpg" group-title="Séries",Série Teste S01E01 - Piloto
+https://cdn.example/s1e1.mp4
+#EXTINF:-1 group-title="Séries",Série Teste S01E02 - Final
+https://cdn.example/s1e2.mp4
+#EXTINF:-1 group-title="Adultos",Conteudo XXX
+https://cdn.example/xxx.mp4

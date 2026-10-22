@@ -1,0 +1,11 @@
+node_modules/
+.roku-build/
+dist/
+.DS_Store
+*.log
+.agents/
+.memory/
+opencode.json
+.ignore
+/chatgpt-session.md
+/session-*.md
