@@ -8,9 +8,10 @@ Launching the channel creates the SceneGraph scene, restores settings and favori
 
 **Flow:**
 
-1. `SaimoTV/manifest` — supplies the channel title, version 2.5.0, icon, splash, and FHD resolution.
+1. `SaimoTV/manifest` — supplies the channel title, version 2.5.2, icon, splash, and FHD resolution.
 2. `SaimoTV/source/main.brs` — creates `roSGScreen`, opens `MainScene`, and waits for the screen to close.
 3. `SaimoTV/components/MainScene.xml` — defines the layout, video node, and 15-minute refresh timer.
+   - The scene defines Inter Regular, SemiBold, and Bold font roles from bundled SIL Open Font License assets.
 4. `SaimoTV/components/MainScene.brs` — `init` reads registry settings, applies canonical URL defaults, loads favorites and cached content, starts timers and scheduled sync, and loads EPG when configured.
 5. `SaimoTV/source/bslib.brs` — provides URL detection, cache signatures, and parser helpers used during restoration.
 6. `SaimoTV/components/FetchTask.brs` — performs the first background playlist or catalog refresh when a cached source is stale.
@@ -34,7 +35,7 @@ The user browses live channels by category, sees a preview, and selects a channe
 
 ## Live TV Playback
 
-Live channels open in the full-screen player, with multiple sources tried in order and no pause or seek controls.
+Live channels open in the full-screen player, with multiple sources tried in order and no pause or seek controls. The player uses gradient veils, a loading spinner, a paused state, and a three-second control overlay timeout.
 
 **Flow:**
 
@@ -48,7 +49,7 @@ Live channels open in the full-screen player, with multiple sources tried in ord
 
 ## Discover Highlights
 
-The Discover view shows a mixed movie and series shelf from the Saimo catalog and opens the matching catalog letter.
+The Discover view preserves the editorial shelves from the Saimo index and opens the matching catalog letter.
 
 **Flow:**
 
@@ -57,13 +58,16 @@ The Discover view shows a mixed movie and series shelf from the Saimo catalog an
 3. `SaimoTV/components/FetchTask.brs` — `loadSaimoIndex` downloads `destaques.txt` and parses its shelves.
 4. `SaimoTV/source/bslib.brs` — `parseHighlights` and `pickSaimoHighlights` normalize, filter, and mix the shelf entries.
 5. `SaimoTV/components/MainScene.brs` — `handleSaimoIndexResult` stores the highlights and artwork.
-6. `SaimoTV/components/MainScene.brs` — `buildVodGrid` renders the 3-column highlight grid; `onVodItemSelected` opens the matching letter.
+6. `SaimoTV/components/FetchTask.brs` — returns both the flattened compatibility list and the original shelf groups.
+7. `SaimoTV/components/MainScene.brs` — `showSaimoShelves`, `onShelfItemFocused`, and `onShelfItemSelected` render and navigate the shelf rows; the focused title updates the top hero, poster, backdrop, and metadata.
+8. `SaimoTV/components/ShelfCard.xml` — renders each poster and its focus state.
+9. `SaimoTV/components/MainScene.brs` — horizontal shelf movement stays within the row; left enters the sidebar only from the first card.
 
 ---
 
 ## VOD Catalog Browsing
 
-The user browses the Saimo catalog by letter, sees five-column poster grids, and drills into series episodes. Authorized M3U catalogs use a separate branch.
+The user browses the Saimo catalog by letter, sees six-column poster grids, and drills into 16:9 episode cards. Authorized M3U catalogs use a separate branch.
 
 **Flow:**
 
@@ -75,11 +79,11 @@ The user browses the Saimo catalog by letter, sees five-column poster grids, and
 6. `SaimoTV/components/MainScene.brs` — `loadSaimoLetter` shows a cached letter immediately and starts a `saimo_letter` task.
 7. `SaimoTV/components/FetchTask.brs` — `loadSaimoLetter` downloads `filmes-LETTER.txt` and `series-LETTER.txt` and applies artwork inside the task.
 8. `SaimoTV/source/bslib.brs` — `parseSaimoMovieItems`, `parseSaimoSeriesItems`, `applySaimoArtwork`, and `sortSaimoItems` produce the sorted grid items.
-9. `SaimoTV/components/MainScene.brs` — `handleSaimoLetterResult`, `showSaimoGrid`, and `buildVodGrid` render the five-column poster grid.
+9. `SaimoTV/components/MainScene.brs` — `handleSaimoLetterResult`, `showSaimoGrid`, and `buildVodGrid` render the six-column poster grid.
 10. `SaimoTV/components/MainScene.brs` — `loadSaimoEpisodes` starts the episode task and `handleSaimoEpisodesResult` receives the result.
 11. `SaimoTV/components/FetchTask.brs` — `loadSaimoEpisodes` downloads the selected series fragment.
 12. `SaimoTV/source/bslib.brs` — `parseSaimoEpisodeItems` groups and sorts the episode sources.
-13. `SaimoTV/components/MainScene.brs` — `showSaimoEpisodes` renders the episode grid.
+13. `SaimoTV/components/MainScene.brs` — `showSaimoEpisodes` and `showSeriesEpisodes` render 16:9 episode cards; `buildVodGrid` fits inherited portrait covers without cropping them and gives each card episode title, season, and source count.
 
 **Branch — M3U VOD:**
 
@@ -167,7 +171,7 @@ The app checks for updates every 15 minutes, downloads only when the cache is ol
 
 ## TV Guide
 
-The TV guide lists loaded channels with the current programme from an optional XMLTV feed.
+The TV guide lists loaded channels with the current and next programme from an optional XMLTV feed, including current-programme progress. Live channel rows also show programme progress and now/next details when available.
 
 **Flow:**
 
@@ -177,6 +181,17 @@ The TV guide lists loaded channels with the current programme from an optional X
 4. `SaimoTV/components/EpgTask.brs` — downloads XMLTV and `storeProgram` keeps the current and next programme per channel.
 5. `SaimoTV/source/bslib.brs` — `xmltvEpoch`, `epgTagAttr`, and `xmltvTagValue` parse XMLTV timestamps and values.
 6. `SaimoTV/components/MainScene.brs` — `onEpgState` stores the EPG and rebuilds the guide; `onGuideSelected` starts the selected channel.
+
+---
+
+## Toast Feedback
+
+Toasts use distinct success, error, and information colors with a matching icon.
+
+**Flow:**
+
+1. `SaimoTV/components/MainScene.brs` — `showToast` defaults to information; `showToastType` selects the semantic style.
+2. `SaimoTV/components/MainScene.xml` — `toastIcon`, `toastAccent`, and `toastBg` render the feedback state.
 
 ---
 

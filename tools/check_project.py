@@ -67,13 +67,13 @@ def main() -> int:
     except json.JSONDecodeError as exc:
         ERRORS.append(f"JSON inválido: {exc}")
         package, config = {}, {}
-    check(package.get("version") == "2.5.0", "package.json deve apontar para 2.5.0")
+    check(package.get("version") == "2.5.2", "package.json deve apontar para 2.5.2")
     try:
         lock = json.loads(read(ROOT / "package-lock.json"))
     except json.JSONDecodeError:
         lock = {}
-    check(lock.get("version") == "2.5.0" and lock.get("packages", {}).get("", {}).get("version") == "2.5.0",
-          "package-lock.json deve apontar para 2.5.0")
+    check(lock.get("version") == "2.5.2" and lock.get("packages", {}).get("", {}).get("version") == "2.5.2",
+          "package-lock.json deve apontar para 2.5.2")
     check(package.get("scripts", {}).get("test") == "python3 tools/test_parsers.py",
           "package.json deve expor npm test para a suíte de parsers")
     check("brighterscript" in package.get("devDependencies", {}), "Dependência brighterscript ausente")
@@ -82,8 +82,8 @@ def main() -> int:
 
     manifest = read(APP / "manifest")
     version_fields = dict(line.split("=", 1) for line in manifest.splitlines() if "=" in line)
-    check((version_fields.get("major_version"), version_fields.get("minor_version"), version_fields.get("build_version")) == ("2", "5", "0"),
-          "Versão do manifest não corresponde a 2.5.0")
+    check((version_fields.get("major_version"), version_fields.get("minor_version"), version_fields.get("build_version")) == ("2", "5", "2"),
+          "Versão do manifest não corresponde a 2.5.2")
     check("ui_resolutions=fhd" in manifest, "Resolução FHD do manifest deve permanecer definida")
 
     main_brs = read(APP / "components/MainScene.brs")
@@ -123,9 +123,12 @@ def main() -> int:
           "Grade de pôsteres não define dimensões 2:3 e espaçamento da interface")
     check('caption2NumLines="1"' in main_xml_text and 'focusBitmapUri="pkg:/images/focus_grid.png"' in main_xml_text,
           "Grade de pôsteres não usa legenda compacta e foco personalizado")
+    check('id="vodGrid"' in main_xml_text and 'useAtlas="false"' in main_xml_text
+          and "m.vodGrid.posterDisplayMode = gridDisplayMode" in main_brs,
+          "Escala das capas deve ser aplicada pelo PosterGrid")
     check('id="appBg"' in main_xml_text and 'uri="pkg:/images/bg_app.png"' in main_xml_text
           and 'id="sidebarBg"' in main_xml_text and 'uri="pkg:/images/bg_sidebar.png"' in main_xml_text,
-          "Fundos da identidade visual 2.5.0 ausentes")
+          "Fundos da identidade visual 2.5.2 ausentes")
     check('id="logo"' in main_xml_text and 'uri="pkg:/images/logo.png"' in main_xml_text,
           "Logotipo oficial Saimo ausente na barra lateral")
     check('id="clock"' in main_xml_text and 'id="syncHint"' in main_xml_text
@@ -136,12 +139,48 @@ def main() -> int:
           "Prévia cinematográfica com badge/backdrop ausente")
     check('id="playerLive"' in main_xml_text and 'id="toastAccent"' in main_xml_text
           and "m.playerLive.visible = m.currentIsLive" in main_brs,
-          "Sobreposição do player/toast 2.5.0 incompleta")
+          "Sobreposição do player/toast 2.5.2 incompleta")
     check('focusBitmapUri="pkg:/images/nav_focus.png"' in main_xml_text
           and 'HDListItemIconUrl' in main_brs, "Navegação com pílula de foco/ícones ausente")
-    check('numColumns="5"' in main_xml_text and "m.vodGrid.numColumns = 5" in main_brs,
-          "Catálogo completo deve usar cinco colunas")
-    check("m.vodGrid.numColumns = 3" in main_brs, "Tela Descobrir deve usar três colunas com prévia")
+    check('numColumns="5"' in main_xml_text and "m.vodGrid.numColumns = 6" in main_brs,
+          "Catálogo completo deve usar seis colunas")
+    check('id="shelfList"' in main_xml_text and 'itemComponentName="ShelfCard"' in main_xml_text
+          and "sub showSaimoShelves" in main_brs,
+          "Tela Descobrir deve manter suas fileiras editoriais")
+    check('if k = "left" and m.shelfList.hasFocus() then' in main_brs
+          and 'focus[1] = 0 then' in main_brs,
+          "Navegação horizontal das fileiras deve manter o foco entre capas")
+    check("m.previewPoster.translation = [430, 30]" in main_brs
+          and "m.previewBackdropGroup.clippingRect = [0, 0, 1520, 210]" in main_brs
+          and 'm.listTitle.text = title' in main_brs,
+          "Descobrir deve atualizar hero e metadados conforme o foco")
+    check("focusScale = 1.0" in read(APP / "components/ShelfCard.brs"),
+          "Cartões das fileiras devem destacar o foco sem ampliar a capa")
+    check("m.vodGrid.basePosterSize = [310, 174]" in main_brs,
+          "Episódios devem usar cartões em proporção 16:9")
+    check('m.vodGrid.posterDisplayMode = gridDisplayMode' in main_brs
+          and 'gridDisplayMode = "scaleToFit"' in main_brs
+          and 'node.shortDescriptionLine2 = saimoGridSubtitle(entry)' in main_brs,
+          "Capas de episódios devem preservar artwork vertical e exibir contexto")
+    check('m.vodGrid.basePosterSize = [310, 174]' in main_brs
+          and 'm.vodGrid.numColumns = 4' in main_brs,
+          "Episódios VOD e Saimo devem compartilhar o layout 16:9")
+    check('id="playerSpinner"' in main_xml_text and 'id="playerAutoHideTimer"' in main_xml_text
+          and 'uri="pkg:/images/player_veil_top.png"' in main_xml_text,
+          "Player deve usar spinner, auto-hide e gradientes")
+    check('id="toastIcon"' in main_xml_text and "sub showToastType" in main_brs,
+          "Toasts devem diferenciar estados semânticos")
+    check('id="emptyIcon"' in main_xml_text and 'id="emptyAction"' in main_xml_text,
+          "Estado vazio deve incluir ícone e uma ação")
+    check('uri="pkg:/fonts/Inter-Regular.ttf"' in main_xml_text
+          and 'uri="pkg:/fonts/Inter-SemiBold.ttf"' in main_xml_text
+          and 'uri="pkg:/fonts/Inter-Bold.ttf"' in main_xml_text,
+          "Papéis tipográficos Inter devem estar definidos na cena")
+    check((APP / "fonts/OFL.txt").is_file()
+          and (APP / "fonts/Inter-Regular.ttf").is_file()
+          and (APP / "fonts/Inter-SemiBold.ttf").is_file()
+          and (APP / "fonts/Inter-Bold.ttf").is_file(),
+          "Fontes Inter e licença OFL devem estar empacotadas")
     check('id="previewPanel"' in main_xml_text and 'm.previewPanel.visible = true' in main_brs,
           "Painel visual da prévia não é configurado por tela")
     check('caption1NumLines="2"' in main_xml_text, "Os cartões devem permitir títulos maiores e menos truncamento")
@@ -220,7 +259,7 @@ def main() -> int:
     check("TESTS_FAILED" in test_runner and "TESTS_PASS" in test_runner,
           "O runner de testes deve falhar quando TESTS_FAILED for emitido")
 
-    check("2.5.0" in readme, "README precisa documentar a versão 2.5.0")
+    check("2.5.2" in readme, "README precisa documentar a versão 2.5.2")
     check("identidade visual" in readme.lower() or "interface" in readme.lower(),
           "README precisa documentar a renovação visual")
     check("saimo-filmes.pages.dev" in readme and "saimo-canais.pages.dev" in readme,
@@ -229,8 +268,8 @@ def main() -> int:
           "README precisa documentar a verificação e a validade do cache")
     check("indice.txt" in readme and "fichas.txt" in readme,
           "README precisa documentar o catálogo por fragmentos e as capas")
-    check("3 colunas" in readme and "5 colunas" in readme,
-          "README precisa documentar as grades de Descobrir e do catálogo")
+    check("fileiras editoriais" in readme and "6 colunas" in readme,
+          "README precisa documentar as fileiras e densidade do catálogo")
     check("npm install" in readme and "npm run package" in readme and "npm test" in readme,
           "Comandos de build/teste ausentes no README")
     check("/tmp/opencode" not in read(ROOT / "package.json"), "package.json ainda depende de caminho local da sessão")

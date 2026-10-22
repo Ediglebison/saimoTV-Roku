@@ -26,6 +26,7 @@ FONT = {
     "C": ["01111", "10000", "10000", "10000", "10000", "10000", "01111"],
     "D": ["11110", "10001", "10001", "10001", "10001", "10001", "11110"],
     "E": ["11111", "10000", "10000", "11110", "10000", "10000", "11111"],
+    "É": ["00100", "00000", "11111", "10000", "11110", "10000", "11111"],
     "F": ["11111", "10000", "10000", "11110", "10000", "10000", "10000"],
     "G": ["01111", "10000", "10000", "10111", "10001", "10001", "01111"],
     "H": ["10001", "10001", "10001", "11111", "10001", "10001", "10001"],
@@ -80,6 +81,81 @@ def save_png(path, width, height, pixels):
     payload += chunk(b"IDAT", data)
     payload += chunk(b"IEND", b"")
     path.write_bytes(payload)
+
+
+def paeth(left, above, upper_left):
+    prediction = left + above - upper_left
+    distances = (abs(prediction - left), abs(prediction - above), abs(prediction - upper_left))
+    if distances[0] <= distances[1] and distances[0] <= distances[2]:
+        return left
+    if distances[1] <= distances[2]:
+        return above
+    return upper_left
+
+
+def load_rgba_png(path):
+    data = path.read_bytes()
+    if data[:8] != b"\x89PNG\r\n\x1a\n":
+        raise ValueError(f"Invalid PNG signature: {path}")
+    width = height = None
+    image_data = bytearray()
+    offset = 8
+    while offset < len(data):
+        chunk_size = struct.unpack(">I", data[offset:offset + 4])[0]
+        chunk_type = data[offset + 4:offset + 8]
+        chunk_data = data[offset + 8:offset + 8 + chunk_size]
+        offset += chunk_size + 12
+        if chunk_type == b"IHDR":
+            width, height, bit_depth, color_type, compression, filtering, interlace = struct.unpack(">IIBBBBB", chunk_data)
+            if (bit_depth, color_type, compression, filtering, interlace) != (8, 6, 0, 0, 0):
+                raise ValueError(f"Unsupported PNG format: {path}")
+        elif chunk_type == b"IDAT":
+            image_data.extend(chunk_data)
+        elif chunk_type == b"IEND":
+            break
+    if width is None or height is None:
+        raise ValueError(f"PNG has no image header: {path}")
+
+    raw = zlib.decompress(image_data)
+    stride = width * 4
+    pixels = bytearray(height * stride)
+    raw_offset = 0
+    for y in range(height):
+        filter_type = raw[raw_offset]
+        raw_offset += 1
+        row_offset = y * stride
+        for x in range(stride):
+            encoded = raw[raw_offset]
+            raw_offset += 1
+            left = pixels[row_offset + x - 4] if x >= 4 else 0
+            above = pixels[row_offset + x - stride] if y > 0 else 0
+            upper_left = pixels[row_offset + x - stride - 4] if y > 0 and x >= 4 else 0
+            if filter_type == 1:
+                encoded += left
+            elif filter_type == 2:
+                encoded += above
+            elif filter_type == 3:
+                encoded += (left + above) // 2
+            elif filter_type == 4:
+                encoded += paeth(left, above, upper_left)
+            elif filter_type != 0:
+                raise ValueError(f"Unsupported PNG filter {filter_type}: {path}")
+            pixels[row_offset + x] = encoded & 255
+    return width, height, pixels
+
+
+def paste_brand_logo(pixels, width, height, size, center_y):
+    source_width, source_height, source_pixels = load_rgba_png(IMAGES / "logo.png")
+    left = (width - size) // 2
+    top = center_y - size // 2
+    for y in range(size):
+        source_y = min(source_height - 1, y * source_height // size)
+        for x in range(size):
+            source_x = min(source_width - 1, x * source_width // size)
+            index = (source_y * source_width + source_x) * 4
+            red, green, blue, alpha = source_pixels[index:index + 4]
+            if alpha > 0:
+                blend(pixels, width, left + x, top + y, (red, green, blue, alpha), alpha / 255.0)
 
 
 def canvas(width, height, color=(0, 0, 0, 0)):
@@ -256,7 +332,7 @@ def badge(pixels, width, height, cx, cy, size):
 
 
 def make_bg_app():
-    width, height = 1280, 720
+    width, height = 1920, 1080
     pixels = gradient(width, height, BG, BG2, [
         (0.16, 0.02, 0.62, VIOLET, 0.16),
         (0.58, -0.10, 0.70, PINK, 0.07),
@@ -287,16 +363,42 @@ def make_bg_sidebar():
     save_png(IMAGES / "bg_sidebar.png", width, height, pixels)
 
 
+def make_player_veils():
+    width, height = 1920, 260
+    top_pixels = canvas(width, height)
+    bottom_pixels = canvas(width, height)
+    for y in range(height):
+        top_strength = (1 - y / (height - 1)) ** 1.5 * 0.82
+        bottom_strength = (y / (height - 1)) ** 1.5 * 0.88
+        for x in range(width):
+            blend(top_pixels, width, x, y, BG + (255,), top_strength)
+            blend(bottom_pixels, width, x, y, BG + (255,), bottom_strength)
+    save_png(IMAGES / "player_veil_top.png", width, height, top_pixels)
+    save_png(IMAGES / "player_veil_bottom.png", width, height, bottom_pixels)
+
+
+def make_spinner():
+    size = 96
+    center = (size - 1) / 2
+    pixels = canvas(size, size)
+    for y in range(size):
+        for x in range(size):
+            dx = x - center
+            dy = y - center
+            radius = math.sqrt(dx * dx + dy * dy)
+            if 34 <= radius <= 43:
+                angle = (math.atan2(dy, dx) + math.pi) / (2 * math.pi)
+                color = mix(VIOLET, TEAL, angle)
+                blend(pixels, size, x, y, color + (255,), 0.2 + angle * 0.8)
+    save_png(IMAGES / "player_spinner.png", size, size, pixels)
+
+
 def make_icon(path, width, height):
     pixels = gradient(width, height, (10, 8, 17), (6, 5, 10), [
         (0.20, 0.10, 0.60, VIOLET, 0.22),
         (0.82, 0.90, 0.55, TEAL, 0.12),
     ])
-    badge(pixels, width, height, width // 2, int(height * 0.40), int(height * 0.52))
-    scale = max(2, width // 130)
-    label = "SAIMO TV"
-    text(pixels, width, height, label, (width - text_width(label, scale)) // 2,
-         int(height * 0.76), scale, TEXT + (255,))
+    paste_brand_logo(pixels, width, height, int(height * 0.68), int(height * 0.42))
     save_png(path, width, height, pixels)
 
 
@@ -306,15 +408,7 @@ def make_splash(path, width, height):
         (0.62, 0.18, 0.65, PINK, 0.06),
         (0.86, 0.98, 0.55, TEAL, 0.07),
     ])
-    badge(pixels, width, height, width // 2, int(height * 0.40), int(height * 0.34))
-    scale = max(4, width // 240)
-    label = "SAIMO TV"
-    text(pixels, width, height, label, (width - text_width(label, scale)) // 2,
-         int(height * 0.63), scale, TEXT + (255,))
-    sub = "FILMES E SERIES"
-    sub_scale = max(2, scale // 2)
-    text(pixels, width, height, sub, (width - text_width(sub, sub_scale)) // 2,
-         int(height * 0.74), sub_scale, LILAC + (255,))
+    paste_brand_logo(pixels, width, height, int(height * 0.40), int(height * 0.42))
     save_png(path, width, height, pixels)
 
 
@@ -412,6 +506,8 @@ def main():
     IMAGES.mkdir(parents=True, exist_ok=True)
     make_bg_app()
     make_bg_sidebar()
+    make_player_veils()
+    make_spinner()
     make_icon(IMAGES / "icon_focus_fhd.png", 540, 405)
     make_icon(IMAGES / "icon_focus_hd.png", 290, 218)
     make_icon(IMAGES / "icon_focus_sd.png", 214, 144)

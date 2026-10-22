@@ -85,6 +85,7 @@ sub loadSaimoIndex()
     ' e baixado em tarefa separada para nao bloquear a primeira tela.
     covers = {}
     featured = []
+    shelves = []
     featuredSeen = {}
     highlights = httpGet(base + "destaques.txt", m.top.userAgent, "")
     if highlights.ok and not looksLikeHtml(highlights.body) then
@@ -112,6 +113,7 @@ sub loadSaimoIndex()
         bases: bases
         covers: covers
         highlights: featured
+        shelves: shelves
         baseUrl: base
         signature: signature
     }

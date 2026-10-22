@@ -1,17 +1,18 @@
-# Saimo TV para Roku — versão 2.5.0
+# Saimo TV para Roku — versão 2.5.2
 
-Cliente pessoal não oficial em BrightScript/SceneGraph para Roku. A versão **2.5.0** renova a identidade visual e a experiência de navegação com inspiração no site e nos aplicativos Saimo, mantendo o catálogo VOD por letras, as capas, o cache e a sincronização automática da versão anterior.
+Cliente pessoal não oficial em BrightScript/SceneGraph para Roku. A versão **2.5.2** renova a identidade visual e a experiência de navegação com inspiração no site e nos aplicativos Saimo, mantendo o catálogo VOD por letras, as capas, o cache e a sincronização automática da versão anterior.
 
 Use somente listas e fontes de mídia que você tenha autorização para acessar. O cliente não inclui conteúdo audiovisual nem fornece um catálogo próprio de filmes/séries. Itens com marcadores adultos conhecidos em título ou categoria são excluídos.
 
-## Novidades da versão 2.5.0
+## Novidades da versão 2.5.2
 
-- Nova identidade visual alinhada ao site Saimo: fundo quase preto, destaques em violeta, ciano e rosa, painéis translúcidos e tipografia com hierarquia mais clara.
+- Nova identidade visual alinhada ao site Saimo: fundo quase preto, destaques em violeta, ciano e vermelho ao vivo, painéis translúcidos e tipografia Inter com hierarquia mais clara.
 - Logotipo oficial na barra lateral, ícones de navegação, pílulas de foco personalizadas e relógio no cabeçalho.
 - Cartões de pôster em proporção **2:3** com legenda compacta (filme/série + ano ou contagem de episódios) e mais espaço entre as colunas.
 - Painel de prévia redesenhado com badge de tipo, fundo cinematográfico ampliado e escurecido, metadados, descrição e chamada de ação.
-- Cabeçalho com sobrancelha de seção, indicador de sincronização e relógio; tela Descobrir continua com **3 colunas**, catálogo com **5 colunas**.
-- Sobreposição do player redesenhada, com selo **AO VIVO**, barra de progresso em ciano e dicas de controle mais legíveis.
+- Cabeçalho com indicador de sincronização e relógio; Descobrir combina **hero que acompanha o foco** e fileiras editoriais, catálogo usa **6 colunas** e episódios usam cards **16:9**.
+- Navegação horizontal nas fileiras preserva o foco entre capas; a barra lateral recebe o foco ao pressionar esquerda no primeiro cartão.
+- Canais ao vivo usam selo vermelho e mostram programa atual/próximo e progresso do EPG quando esses dados existem.
 - Ajustes, Guia de TV, Sobre, estados vazios e toasts receberam a mesma linguagem visual.
 - Ícone, splash e arte de espaço reservado regenerados na nova paleta, sem dependências externas de imagem.
 

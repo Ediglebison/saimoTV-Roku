@@ -1179,28 +1179,38 @@ function saimoItemSubtitle(entry as object) as string
     return text
 end function
 
-' Legenda compacta para os cartoes 2:3 da grade: titulo + um unico dado de
-' contexto, como no site. A previa continua usando saimoItemSubtitle().
+' Legenda compacta da grade: o tipo do cartao define sua proporcao e contexto.
+' A previa continua usando saimoItemSubtitle().
 function saimoGridSubtitle(entry as object) as string
     kind = LCase(strField(entry, "type"))
     year = strField(entry, "year").Trim()
     if kind = "episode" then
         season = Val(strField(entry, "season"))
         number = Val(strField(entry, "episode"))
-        if season > 0 and number > 0 then return "T" + Str(season).Trim() + "  E" + Str(number).Trim()
-        if number > 0 then return "Episódio " + Str(number).Trim()
-        return "Episódio"
+        text = strField(entry, "group").Trim()
+        if text = "" and season > 0 then text = "Temporada " + Str(season).Trim()
+        if text = "" and number > 0 then text = "Episódio " + Str(number).Trim()
+        if text = "" then text = "Episódio"
+        if type(entry.sources) = "roArray" and entry.sources.Count() > 0 then
+            text = text + "  •  " + Str(entry.sources.Count()).Trim() + " fontes"
+        end if
+        return text
     end if
     if kind = "series" then
+        text = "Série"
         count = Val(strField(entry, "episodeCount"))
-        if count > 0 then return "Série  •  " + Str(count).Trim() + " episódios"
-        if year <> "" then return "Série  •  " + year
-        return "Série"
+        if count = 0 and type(entry.episodes) = "roArray" then count = entry.episodes.Count()
+        if count > 0 then text = text + "  •  " + Str(count).Trim() + " episódios"
+        if year <> "" then text = text + "  •  " + year
+        genre = firstGenre(strField(entry, "genres"))
+        if genre <> "" then text = text + "  •  " + genre
+        return text
     end if
-    if year <> "" then return "Filme  •  " + year
+    text = "Filme"
+    if year <> "" then text = text + "  •  " + year
     genre = firstGenre(strField(entry, "genres"))
-    if genre <> "" then return "Filme  •  " + genre
-    return "Filme"
+    if genre <> "" then text = text + "  •  " + genre
+    return text
 end function
 
 

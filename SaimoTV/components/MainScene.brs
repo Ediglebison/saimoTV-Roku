@@ -14,6 +14,7 @@ sub init()
     m.hint = m.top.findNode("hint")
     m.itemList = m.top.findNode("itemList")
     m.vodGrid = m.top.findNode("vodGrid")
+    m.shelfList = m.top.findNode("shelfList")
     m.previewPanel = m.top.findNode("previewPanel")
     m.previewBackdropGroup = m.top.findNode("previewBackdropGroup")
     m.previewBackdrop = m.top.findNode("previewBackdrop")
@@ -25,6 +26,8 @@ sub init()
     m.previewDesc = m.top.findNode("previewDesc")
     m.previewCtaText = m.top.findNode("previewCtaText")
     m.emptyLabel = m.top.findNode("emptyLabel")
+    m.emptyIcon = m.top.findNode("emptyIcon")
+    m.emptyAction = m.top.findNode("emptyAction")
     m.status = m.top.findNode("status")
     m.settingsGroup = m.top.findNode("settingsGroup")
     m.settingsList = m.top.findNode("settingsList")
@@ -35,6 +38,8 @@ sub init()
     m.aboutGroup = m.top.findNode("aboutGroup")
     m.aboutText = m.top.findNode("aboutText")
     m.playerOverlay = m.top.findNode("playerOverlay")
+    m.playerSpinner = m.top.findNode("playerSpinner")
+    m.playerCenterState = m.top.findNode("playerCenterState")
     m.playerTitle = m.top.findNode("playerTitle")
     m.playerSubtitle = m.top.findNode("playerSubtitle")
     m.playerState = m.top.findNode("playerState")
@@ -45,10 +50,12 @@ sub init()
     m.progressFill = m.top.findNode("progressFill")
     m.toastAccent = m.top.findNode("toastAccent")
     m.toastBg = m.top.findNode("toastBg")
+    m.toastIcon = m.top.findNode("toastIcon")
     m.toast = m.top.findNode("toast")
     m.toastTimer = m.top.findNode("toastTimer")
     m.failoverTimer = m.top.findNode("failoverTimer")
     m.progressTimer = m.top.findNode("progressTimer")
+    m.playerAutoHideTimer = m.top.findNode("playerAutoHideTimer")
     m.vodRefreshTimer = m.top.findNode("vodRefreshTimer")
 
     m.registry = CreateObject("roRegistrySection", "SaimoTV")
@@ -89,6 +96,9 @@ sub init()
     m.saimoBases = {}
     m.saimoCovers = {}
     m.saimoHighlights = []
+    m.saimoShelves = []
+    m.shelfRows = []
+    m.discoverHero = false
     m.saimoIndexLoaded = false
     m.saimoIndexSignature = ""
     m.saimoBase = ""
@@ -148,6 +158,8 @@ sub init()
     m.itemList.observeField("itemSelected", "onItemSelected")
     m.vodGrid.observeField("itemSelected", "onVodItemSelected")
     m.vodGrid.observeField("itemFocused", "onVodItemFocused")
+    m.shelfList.observeField("rowItemSelected", "onShelfItemSelected")
+    m.shelfList.observeField("rowItemFocused", "onShelfItemFocused")
     m.itemList.observeField("itemFocused", "onItemFocused")
     m.settingsList.observeField("itemSelected", "onSettingsSelected")
     m.settingsList.observeField("itemFocused", "onSettingsFocused")
@@ -158,6 +170,7 @@ sub init()
     m.toastTimer.observeField("fire", "hideToast")
     m.failoverTimer.observeField("fire", "onFailoverTimer")
     m.progressTimer.observeField("fire", "onProgressTimer")
+    m.playerAutoHideTimer.observeField("fire", "hidePlayerOverlay")
     m.progressTimer.control = "start"
     m.vodRefreshTimer.observeField("fire", "onVodRefreshTimer")
 
@@ -246,6 +259,8 @@ sub loadCachedVodCatalog()
     m.vodLoaded = false
     m.saimoIndexLetters = []
     m.saimoHighlights = []
+    m.saimoShelves = []
+    m.saimoShelves = []
     m.saimoBases = {}
     m.saimoCovers = {}
     m.saimoIndexLoaded = false
@@ -289,6 +304,8 @@ sub loadCachedSaimoIndex()
     if type(parsed.bases) = "roAssociativeArray" then m.saimoBases = parsed.bases
     if type(parsed.covers) = "roAssociativeArray" then m.saimoCovers = parsed.covers
     if type(parsed.highlights) = "roArray" then m.saimoHighlights = parsed.highlights
+    if type(parsed.shelves) = "roArray" then m.saimoShelves = parsed.shelves
+    if type(parsed.shelves) = "roArray" then m.saimoShelves = parsed.shelves
     if type(parsed.signature) = "roString" then m.saimoIndexSignature = parsed.signature
     if m.saimoIndexSignature = "" then m.saimoIndexSignature = saimoIndexSignature(m.saimoIndexLetters, m.saimoBases)
     m.saimoBase = base
@@ -398,7 +415,7 @@ sub clearCache()
     writeSetting("playlistLastSync", "0")
     m.epg = {}
     m.epgLoaded = false
-    showToast("Cache local apagado.")
+    showToastType("Cache local apagado.", "success")
 end sub
 
 sub invalidateSaimoDerivedCaches()
@@ -558,7 +575,7 @@ sub handlePlaylistResult(task as object)
         message = strField(task, "error")
         if message = "" then message = "Falha ao baixar a lista."
         m.status.text = message
-        if notify or m.activeView = "channels" then showToast(message)
+        if notify or m.activeView = "channels" then showToastType(message, "error")
         if m.channels.Count() = 0 and m.activeView = "channels" then showEmptyState(message)
         return
     end if
@@ -566,7 +583,7 @@ sub handlePlaylistResult(task as object)
     channels = ParseJson(task.resultJson)
     if type(channels) <> "roArray" or channels.Count() = 0 then
         m.status.text = "A lista não possui canais válidos."
-        if notify or m.activeView = "channels" then showToast("A lista não possui canais válidos.")
+        if notify or m.activeView = "channels" then showToastType("A lista não possui canais válidos.", "error")
         if m.channels.Count() = 0 and m.activeView = "channels" then showEmptyState("A lista não possui canais válidos.")
         return
     end if
@@ -576,7 +593,7 @@ sub handlePlaylistResult(task as object)
     clock = CreateObject("roDateTime")
     m.playlistLastSync = clock.AsSeconds()
     writeSetting("playlistLastSync", Str(m.playlistLastSync).Trim())
-    if notify or m.activeView = "channels" then showToast(Str(m.channels.Count()).Trim() + " canais atualizados.")
+    if notify or m.activeView = "channels" then showToastType(Str(m.channels.Count()).Trim() + " canais atualizados.", "success")
     if m.epgUrl <> "" and not m.epgLoaded then loadEpg()
 end sub
 
@@ -731,6 +748,19 @@ end function
 ' ---------------------------------------------------------------------------
 
 sub setViewHeader(eyebrow as string, title as string, subText as string)
+    m.shelfList.visible = false
+    if m.discoverHero then
+        m.discoverHero = false
+        m.previewPoster.translation = [1216, 234]
+        m.previewPoster.width = 240
+        m.previewPoster.height = 360
+        m.previewPoster.visible = false
+        m.previewBackdropGroup.clippingRect = [0, 0, 1520, 1080]
+        m.listEyebrow.translation = [452, 53]
+        m.listTitle.translation = [450, 79]
+        m.listSub.translation = [454, 157]
+        hidePreviewBackdrop()
+    end if
     if m.listEyebrow <> invalid then m.listEyebrow.text = eyebrow
     if m.listTitle <> invalid then m.listTitle.text = title
     if m.listSub <> invalid then m.listSub.text = subText
@@ -863,7 +893,7 @@ sub populateChannels(groupName as string, forceFocus as boolean)
     setViewHeader("AO VIVO", title, Str(m.visibleChannels.Count()).Trim() + " canais  •  " + Str(sourceTotal).Trim() + " fontes  •  OK abre")
     m.emptyLabel.text = "Nenhum canal neste grupo."
     hidePreviewBackdrop()
-    setPreviewBadge("AO VIVO", "0x4FE3D0FF", "0x4FE3D024")
+    setPreviewBadge("AO VIVO", "0xE5484DFF", "0xE5484D24")
     setPreviewCta("OK  ASSISTIR")
     renderEntries(false)
 
@@ -894,6 +924,19 @@ sub renderEntries(resetPosition as boolean)
             prefix = ""
             if m.favorites[ch.title] = true then prefix = "★ "
             item.title = prefix + ch.title
+            if ch.tvgId <> "" and m.epg[ch.tvgId] <> invalid then
+                programme = m.epg[ch.tvgId]
+                programmeTitle = strField(programme, "nowTitle")
+                if programmeTitle <> "" then item.title = item.title + "  •  " + programmeTitle
+                if Val(strField(programme, "nowStop")) > Val(strField(programme, "nowStart")) then
+                    elapsed = CreateObject("roDateTime").AsSeconds() - Val(strField(programme, "nowStart"))
+                    duration = Val(strField(programme, "nowStop")) - Val(strField(programme, "nowStart"))
+                    percent = Int(100 * elapsed / duration)
+                    if percent < 0 then percent = 0
+                    if percent > 100 then percent = 100
+                    item.title = item.title + "  ·  " + Str(percent).Trim() + "%"
+                end if
+            end if
         else if entry.kind = "movie" or entry.kind = "vod" then
             itemData = entry.data
             title = strField(itemData, "title")
@@ -991,7 +1034,16 @@ sub previewChannel(ch as object)
         if ch.sources.Count() > 1 then detail = detail + Chr(10) + "Se a primeira falhar, o player tenta as outras automaticamente."
     end if
     m.previewDesc.text = detail
-    setPreviewBadge("AO VIVO", "0x4FE3D0FF", "0x4FE3D024")
+    if ch.tvgId <> "" and m.epg[ch.tvgId] <> invalid then
+        programme = m.epg[ch.tvgId]
+        programmeTitle = strField(programme, "nowTitle")
+        nextTitle = strField(programme, "nextTitle")
+        if programmeTitle <> "" then detail = "Agora: " + programmeTitle
+        if nextTitle <> "" then detail = detail + Chr(10) + "A seguir: " + nextTitle
+        if ch.sources.Count() > 1 then detail = detail + Chr(10) + Str(ch.sources.Count()).Trim() + " fontes disponíveis"
+    end if
+    m.previewDesc.text = detail
+    setPreviewBadge("AO VIVO", "0xE5484DFF", "0xE5484D24")
     setPreviewCta("OK  ASSISTIR")
 end sub
 
@@ -1083,6 +1135,8 @@ sub showEmptyState(message as string)
     clearPreview()
     setViewHeader("AO VIVO", "Canais", "Nenhum conteúdo carregado")
     m.emptyLabel.text = message + Chr(10) + Chr(10) + "Abra Ajustes para configurar sua lista de canais e, separadamente, o catálogo VOD autorizado."
+    m.emptyIcon.visible = true
+    m.emptyAction.visible = true
     m.status.text = message
     if not m.settingsVisible and not m.guideVisible and not m.aboutVisible then
         m.navList.setFocus(true)
@@ -1185,7 +1239,7 @@ sub handleVodCatalogResult(task as object)
         message = strField(task, "error")
         if message = "" then message = "Não foi possível atualizar o catálogo."
         m.status.text = message
-        showToast(message)
+        showToastType(message, "error")
         if m.activeView = "vod" and not m.vodLoaded then
             m.emptyLabel.text = message + Chr(10) + Chr(10) + "Confira a URL M3U em Ajustes."
             m.emptyLabel.visible = true
@@ -1198,7 +1252,7 @@ sub handleVodCatalogResult(task as object)
 
     parsed = ParseJson(task.resultJson)
     if type(parsed) <> "roArray" or parsed.Count() = 0 then
-        showToast("O catálogo retornou dados vazios; o cache foi preservado.")
+        showToastType("O catálogo retornou dados vazios; o cache foi preservado.", "error")
         return
     end if
 
@@ -1210,7 +1264,7 @@ sub handleVodCatalogResult(task as object)
     m.vodLastSync = clock.AsSeconds()
     writeSetting("vodLastSync", Str(m.vodLastSync).Trim())
     m.status.text = Str(m.vodAll.Count()).Trim() + " títulos sincronizados."
-    showToast(Str(m.vodAll.Count()).Trim() + " títulos no catálogo atualizados.")
+    showToastType(Str(m.vodAll.Count()).Trim() + " títulos no catálogo atualizados.", "success")
 
     if m.activeView = "vod" then
         showVod(m.vodFilter)
@@ -1242,13 +1296,13 @@ sub handleSaimoIndexResult(task as object)
             m.emptyLabel.visible = true
             m.listSub.text = "Catálogo temporariamente indisponível"
         end if
-        if m.saimoIndexLoaded then showToast("Catálogo offline: usando índice em cache.") else showToast(message)
+        if m.saimoIndexLoaded then showToast("Catálogo offline: usando índice em cache.") else showToastType(message, "error")
         return
     end if
 
     parsed = ParseJson(task.resultJson)
     if type(parsed) <> "roAssociativeArray" or type(parsed.letters) <> "roArray" or parsed.letters.Count() = 0 then
-        showToast("O índice recebido não é válido; o cache foi preservado.")
+        showToastType("O índice recebido não é válido; o cache foi preservado.", "error")
         return
     end if
 
@@ -1261,6 +1315,7 @@ sub handleSaimoIndexResult(task as object)
     if type(parsed.bases) = "roAssociativeArray" then m.saimoBases = parsed.bases
     if type(parsed.covers) = "roAssociativeArray" then m.saimoCovers = parsed.covers
     if type(parsed.highlights) = "roArray" then m.saimoHighlights = parsed.highlights
+    if type(parsed.shelves) = "roArray" then m.saimoShelves = parsed.shelves
     m.saimoIndexSignature = newSignature
     m.saimoBase = base
     m.saimoIndexLoaded = true
@@ -1341,6 +1396,11 @@ sub showSaimoHome(filter as string)
 
     featured = pickSaimoHighlights(m.saimoHighlights, filter, 12)
 
+    if m.saimoShelves.Count() > 0 then
+        showSaimoShelves(filter)
+        return
+    end if
+
     if featured.Count() = 0 then
         showSaimoLetters(filter)
         showToast("Destaques indisponíveis; abrindo o catálogo por letra.")
@@ -1364,7 +1424,7 @@ sub showSaimoHome(filter as string)
     setViewHeader("DESCOBRIR", "Em alta agora", subText)
     setPreviewBadge("DESTAQUE", "0x4FE3D0FF", "0x4FE3D024")
     setPreviewCta("OK  ABRIR")
-    ' Três colunas deixam a grade inteira à esquerda do painel de prévia.
+    ' A grade ocupa a área livre ao lado da navegação.
     m.vodGrid.numColumns = 3
     ' Duas fileiras ficam visíveis; a terceira entra com a navegação vertical.
     ' Isso evita que os cartões invadam a barra inferior de status em 1080p.
@@ -1374,6 +1434,111 @@ sub showSaimoHome(filter as string)
     if featured.Count() > 0 then onVodItemFocused()
     if m.hint <> invalid then m.hint.text = "Setas navegam  •  OK abre o título no catálogo  •  Replay busca  •  Back retorna"
     m.vodGrid.setFocus(true)
+end sub
+
+sub showSaimoShelves(filter as string)
+    root = CreateObject("roSGNode", "ContentNode")
+    m.shelfRows = []
+    for each shelf in m.saimoShelves
+        rowItems = []
+        if type(shelf.items) <> "roArray" then continue for
+        for each entry in shelf.items
+            entryType = strField(entry, "type")
+            if filter = "movies" and entryType <> "movie" then continue for
+            if filter = "series" and entryType <> "series" then continue for
+            rowItems.Push(entry)
+        end for
+        if rowItems.Count() = 0 then continue for
+        rowTitle = strField(shelf, "title")
+        row = root.CreateChild("ContentNode")
+        row.title = rowTitle
+        for each entry in rowItems
+            card = row.CreateChild("ContentNode")
+            card.title = strField(entry, "title")
+            poster = strField(entry, "cover")
+            if poster = "" then poster = "pkg:/images/placeholder.png"
+            card.hdPosterUrl = poster
+        end for
+        m.shelfRows.Push({ title: rowTitle, items: rowItems })
+    end for
+
+    m.activeView = "saimo_home"
+    m.vodFilter = filter
+    m.seriesDetail = invalid
+    m.searchActive = false
+    m.vodVisibleItems = []
+    m.saimoCurrentItems = []
+    m.itemList.visible = false
+    m.vodGrid.visible = false
+    m.shelfList.visible = true
+    m.shelfList.content = root
+    m.previewPanel.visible = false
+    hidePreviewBackdrop()
+    m.previewPoster.visible = false
+    m.previewTitle.visible = false
+    m.previewMeta.visible = false
+    m.previewDesc.visible = false
+    setViewHeader("DESCOBRIR", "Descubra filmes e séries", Str(m.shelfRows.Count()).Trim() + " fileiras editoriais  •  selecione um título para abrir")
+    m.discoverHero = true
+    m.previewPoster.translation = [430, 30]
+    m.previewPoster.width = 98
+    m.previewPoster.height = 147
+    m.previewPoster.visible = m.shelfRows.Count() > 0
+    m.previewBackdropGroup.clippingRect = [0, 0, 1520, 210]
+    m.listEyebrow.translation = [548, 53]
+    m.listTitle.translation = [546, 79]
+    m.listSub.translation = [550, 157]
+    m.shelfList.visible = m.shelfRows.Count() > 0
+    m.emptyLabel.visible = m.shelfRows.Count() = 0
+    if m.shelfRows.Count() = 0 then
+        m.emptyLabel.text = "Não há títulos nesta seleção. Escolha outra categoria."
+        m.navList.setFocus(true)
+        return
+    end if
+    if m.hint <> invalid then m.hint.text = "↑ ↓ percorre fileiras  •  ← → percorre títulos  •  OK abre  •  Replay busca"
+    m.shelfList.setFocus(true)
+end sub
+
+sub onShelfItemFocused()
+    focus = m.shelfList.rowItemFocused
+    if type(focus) <> "roArray" or focus.Count() < 2 then return
+    rowIndex = focus[0]
+    itemIndex = focus[1]
+    if rowIndex < 0 or rowIndex >= m.shelfRows.Count() then return
+    row = m.shelfRows[rowIndex]
+    if itemIndex < 0 or itemIndex >= row.items.Count() then return
+    entry = row.items[itemIndex]
+    title = strField(entry, "title")
+    cover = strField(entry, "cover")
+    if cover = "" then cover = "pkg:/images/placeholder.png"
+    m.previewPoster.uri = cover
+    if Left(cover, 4) = "http" then showPreviewBackdrop(cover) else hidePreviewBackdrop()
+    itemType = LCase(strField(entry, "type"))
+    eyebrow = "FILME"
+    if itemType = "series" then eyebrow = "SÉRIE"
+    m.listEyebrow.text = row.title + "  •  " + eyebrow
+    m.listTitle.text = title
+    m.listSub.text = saimoItemSubtitle(entry) + "  •  OK abre"
+end sub
+
+sub onShelfItemSelected()
+    selection = m.shelfList.rowItemSelected
+    if type(selection) <> "roArray" or selection.Count() < 2 then return
+    rowIndex = selection[0]
+    itemIndex = selection[1]
+    if rowIndex < 0 or rowIndex >= m.shelfRows.Count() then return
+    row = m.shelfRows[rowIndex]
+    if itemIndex < 0 or itemIndex >= row.items.Count() then return
+    entry = row.items[itemIndex]
+    m.saimoBackToHome = true
+    m.saimoPendingFocusTitle = strField(entry, "title")
+    m.saimoPendingFocusType = strField(entry, "type")
+    letter = strField(entry, "letter")
+    if letter = "" then
+        showToast("Este destaque ainda não tem uma letra de catálogo válida.")
+        return
+    end if
+    loadSaimoLetter(letter)
 end sub
 
 sub showSaimoLetters(filter as string)
@@ -1490,7 +1655,7 @@ sub handleSaimoLetterResult(task as object)
             m.emptyLabel.text = message + Chr(10) + Chr(10) + "Tente novamente quando a conexão estiver disponível."
             m.emptyLabel.visible = true
         else
-            showToast("Atualização falhou; mantendo os títulos em cache.")
+            showToastType("Atualização falhou; mantendo os títulos em cache.", "error")
         end if
         return
     end if
@@ -1509,14 +1674,15 @@ sub handleSaimoLetterResult(task as object)
         if m.saimoPendingFocusTitle <> "" then focusSaimoTitle(m.saimoPendingFocusTitle, m.saimoPendingFocusType)
     end if
     m.status.text = Str(items.Count()).Trim() + " títulos carregados da letra " + strField(parsed, "letter") + "."
-    if strField(task, "error") <> "" then showToast(strField(task, "error"))
+    if strField(task, "error") <> "" then showToastType(strField(task, "error"), "error")
 end sub
 
 sub showSaimoGrid(items as object)
     m.activeView = "saimo_catalog"
     if m.previewPanel <> invalid then m.previewPanel.visible = false
     hidePreviewBackdrop()
-    m.vodGrid.numColumns = 5
+    m.vodGrid.basePosterSize = [210, 315]
+    m.vodGrid.numColumns = 6
     m.vodGrid.numRows = 2
     m.saimoCurrentItems = items
     m.vodVisibleItems = items
@@ -1598,7 +1764,7 @@ sub handleSaimoEpisodesResult(task as object)
         m.emptyLabel.text = message
         m.emptyLabel.visible = true
         m.listSub.text = "Falha ao carregar a série  •  tente novamente"
-        showToast(message)
+        showToastType(message, "error")
         return
     end if
     episodes = ParseJson(task.resultJson)
@@ -1618,7 +1784,8 @@ sub showSaimoEpisodes(episodes as object)
     m.activeView = "saimo_episodes"
     if m.previewPanel <> invalid then m.previewPanel.visible = false
     hidePreviewBackdrop()
-    m.vodGrid.numColumns = 5
+    m.vodGrid.basePosterSize = [310, 174]
+    m.vodGrid.numColumns = 4
     m.vodGrid.numRows = 2
     m.vodVisibleItems = episodes
     m.itemList.visible = false
@@ -1671,7 +1838,7 @@ sub handleSaimoSearchResult(task as object)
     if task.success <> true then
         message = strField(task, "error")
         if message = "" then message = "Não foi possível pesquisar o catálogo VOD."
-        showToast(message)
+        showToastType(message, "error")
         return
     end if
     found = ParseJson(task.resultJson)
@@ -1705,7 +1872,8 @@ sub showVod(filter as string)
     m.activeView = "vod"
     if m.previewPanel <> invalid then m.previewPanel.visible = false
     hidePreviewBackdrop()
-    m.vodGrid.numColumns = 5
+    m.vodGrid.basePosterSize = [210, 315]
+    m.vodGrid.numColumns = 6
     m.vodGrid.numRows = 2
     m.vodFilter = filter
     m.seriesDetail = invalid
@@ -1746,16 +1914,34 @@ end sub
 
 sub buildVodGrid(items as object)
     root = CreateObject("roSGNode", "ContentNode")
+    gridDisplayMode = "scaleToZoom"
     for each entry in items
         node = root.CreateChild("ContentNode")
         node.title = strField(entry, "title")
         poster = strField(entry, "cover")
         if poster = "" then poster = "pkg:/images/placeholder.png"
         node.hdGridPosterUrl = poster
-        node.shortDescriptionLine1 = strField(entry, "title")
-        node.shortDescriptionLine2 = saimoGridSubtitle(entry)
+        itemType = strField(entry, "type")
+        if itemType = "episode" then
+            gridDisplayMode = "scaleToFit"
+            episodeNumber = Val(strField(entry, "episode"))
+            episodeTitle = strField(entry, "title").Trim()
+            episodeCode = "E" + Right("00" + Str(episodeNumber).Trim(), 2)
+            if episodeNumber > 0 and LCase(episodeTitle) <> LCase(episodeCode) and LCase(episodeTitle) <> LCase("T" + Right("00" + Str(Val(strField(entry, "season"))).Trim(), 2) + " " + episodeCode) then
+                node.shortDescriptionLine1 = episodeCode + "  •  " + episodeTitle
+            else if episodeTitle <> "" then
+                node.shortDescriptionLine1 = episodeTitle
+            else
+                node.shortDescriptionLine1 = episodeCode
+            end if
+            node.shortDescriptionLine2 = saimoGridSubtitle(entry)
+        else
+            node.shortDescriptionLine1 = strField(entry, "title")
+            node.shortDescriptionLine2 = saimoGridSubtitle(entry)
+        end if
     end for
     m.vodGrid.content = root
+    m.vodGrid.posterDisplayMode = gridDisplayMode
     m.vodGrid.jumpToItem = 0
 end sub
 
@@ -1855,6 +2041,9 @@ sub showSeriesEpisodes(series as object)
     m.vodVisibleItems = series.episodes
     hidePreviewBackdrop()
     setViewHeader("SÉRIE", strField(series, "title"), Str(series.episodes.Count()).Trim() + " episódios  •  selecione um episódio para reproduzir")
+    m.vodGrid.basePosterSize = [310, 174]
+    m.vodGrid.numColumns = 4
+    m.vodGrid.numRows = 2
     m.vodGrid.visible = true
     m.itemList.visible = false
     m.previewPoster.visible = false
@@ -1870,7 +2059,7 @@ sub playVodEntry(entry as object)
     if entry = invalid then return
     sources = entry.sources
     if type(sources) <> "roArray" or sources.Count() = 0 then
-        showToast("Este item não possui um endereço de reprodução válido.")
+        showToastType("Este item não possui um endereço de reprodução válido.", "error")
         return
     end if
     channel = {
@@ -2200,7 +2389,7 @@ sub onEditSettingButton()
         m.epg = {}
         m.epgLoaded = false
         if m.epgUrl <> "" then loadEpg()
-        showToast("EPG atualizado.")
+        showToastType("EPG atualizado.", "success")
         if m.settingsVisible then m.settingsList.setFocus(true)
     else if key = "ua" then
         if value.Trim() = "" then
@@ -2209,7 +2398,7 @@ sub onEditSettingButton()
             m.userAgent = value.Trim()
         end if
         writeSetting("userAgent", m.userAgent)
-        showToast("User-Agent salvo.")
+        showToastType("User-Agent salvo.", "success")
         if m.settingsVisible then m.settingsList.setFocus(true)
     end if
 end sub
@@ -2261,23 +2450,49 @@ sub closeGuide()
     focusListOrNav()
 end sub
 
+function formatEpgClock(epoch as integer) as string
+    if epoch <= 0 then return "--:--"
+    dateTime = CreateObject("roDateTime")
+    dateTime.FromSeconds(epoch)
+    dateTime.ToLocalTime()
+    return Right("0" + Str(dateTime.GetHours()).Trim(), 2) + ":" + Right("0" + Str(dateTime.GetMinutes()).Trim(), 2)
+end function
+
 sub buildGuide()
     m.guideChannels = []
     root = CreateObject("roSGNode", "ContentNode")
     for each ch in m.channels
         title = ch.title
         nowText = ""
+        nextText = ""
+        timeText = ""
         if ch.tvgId <> "" then
             entry = m.epg[ch.tvgId]
             if type(entry) = "roAssociativeArray" then
                 nowText = strField(entry, "nowTitle")
+                nextText = strField(entry, "nextTitle")
+                nowStart = Val(strField(entry, "nowStart"))
+                nowStop = Val(strField(entry, "nowStop"))
+                nextStart = Val(strField(entry, "nextStart"))
+                if nowStart > 0 and nowStop > nowStart then
+                    timeText = formatEpgClock(nowStart) + "–" + formatEpgClock(nowStop)
+                end if
+                if nowText <> "" and nowStop > nowStart then
+                    currentSeconds = CreateObject("roDateTime").AsSeconds()
+                    progress = Int(100 * (currentSeconds - nowStart) / (nowStop - nowStart))
+                    if progress < 0 then progress = 0
+                    if progress > 100 then progress = 100
+                    nowText = nowText + "  " + Str(progress).Trim() + "%"
+                end if
             end if
         end if
         if nowText <> "" then
+            if timeText <> "" then title = title + "  •  " + timeText
             title = title + "  •  " + nowText
         else
             title = title + "  •  sem programação"
         end if
+        if nextText <> "" then title = title + "  •  a seguir " + formatEpgClock(nextStart) + "  " + nextText
         item = root.CreateChild("ContentNode")
         item.title = title
         m.guideChannels.Push(ch)
@@ -2327,7 +2542,7 @@ sub onEpgState()
         m.epg = parsed
         m.epgLoaded = true
         if m.guideVisible then buildGuide()
-        showToast("EPG carregado.")
+        showToastType("EPG carregado.", "success")
     end if
 end sub
 
@@ -2365,7 +2580,7 @@ end sub
 
 sub playChannel(channel as object)
     if channel = invalid or type(channel.sources) <> "roArray" or channel.sources.Count() = 0 then
-        showToast("Canal sem fonte reproduzivel.")
+        showToastType("Canal sem fonte reproduzivel.", "error")
         return
     end if
 
@@ -2385,7 +2600,11 @@ sub playChannel(channel as object)
     m.aboutVisible = false
 
     m.homeGroup.visible = false
+    m.playerAutoHideTimer.control = "stop"
     m.playerOverlay.visible = true
+    m.playerSpinner.control = "start"
+    m.playerSpinner.visible = true
+    m.playerCenterState.visible = false
     m.video.visible = true
     m.playerVisible = true
     m.playerTitle.text = channel.title
@@ -2428,6 +2647,10 @@ sub startSource(index as integer)
     m.switchingSource = false
     m.allSourcesFailed = false
     m.currentSourceIndex = index
+    m.playerAutoHideTimer.control = "stop"
+    m.playerSpinner.control = "start"
+    m.playerSpinner.visible = true
+    m.playerCenterState.visible = false
     m.playerOverlay.visible = true
     m.playerState.color = "0xA79FBAFF"
     m.playerState.text = "Carregando fonte " + Str(index + 1).Trim() + " de " + Str(m.currentSources.Count()).Trim() + "..."
@@ -2472,17 +2695,30 @@ sub onVideoState()
     state = LCase(m.video.state)
     if state = "playing" then
         m.failoverTimer.control = "stop"
-        m.playerOverlay.visible = false
+        m.playerSpinner.control = "stop"
+        m.playerSpinner.visible = false
+        m.playerCenterState.visible = false
+        showPlayerOverlay()
         m.playerState.text = ""
     else if state = "paused" then
+        m.playerAutoHideTimer.control = "stop"
+        m.playerSpinner.control = "stop"
+        m.playerSpinner.visible = false
+        m.playerCenterState.visible = true
         m.playerOverlay.visible = true
         m.playerState.color = "0xA79FBAFF"
         m.playerState.text = "Pausado"
     else if state = "buffering" or state = "loading" or state = "startup" then
+        m.playerAutoHideTimer.control = "stop"
+        m.playerSpinner.control = "start"
+        m.playerSpinner.visible = true
+        m.playerCenterState.visible = false
         m.playerOverlay.visible = true
         if m.playerState.text = "" then m.playerState.text = "Carregando..."
     else if state = "error" then
         m.failoverTimer.control = "stop"
+        m.playerSpinner.control = "stop"
+        m.playerSpinner.visible = false
         errorText = strField(m.video, "errorMsg")
         errorCode = strField(m.video, "errorCode")
         if errorCode <> "" and errorText <> "" then
@@ -2495,6 +2731,9 @@ sub onVideoState()
         if not m.switchingSource then nextSource()
     else if state = "finished" then
         m.failoverTimer.control = "stop"
+        m.playerAutoHideTimer.control = "stop"
+        m.playerSpinner.control = "stop"
+        m.playerSpinner.visible = false
         if m.currentIsLive then
             nextSource()
         else
@@ -2503,6 +2742,17 @@ sub onVideoState()
             m.playerState.text = "Fim da reprodução. Back para sair."
         end if
     end if
+end sub
+
+sub showPlayerOverlay()
+    m.playerOverlay.visible = true
+    m.playerAutoHideTimer.control = "stop"
+    if LCase(m.video.state) = "playing" then m.playerAutoHideTimer.control = "start"
+end sub
+
+sub hidePlayerOverlay()
+    if not m.playerVisible or LCase(m.video.state) <> "playing" then return
+    m.playerOverlay.visible = false
 end sub
 
 sub onFailoverTimer()
@@ -2527,6 +2777,10 @@ sub allSourcesFailed()
     m.switchingSource = false
     m.allSourcesFailed = true
     m.failoverTimer.control = "stop"
+    m.playerAutoHideTimer.control = "stop"
+    m.playerSpinner.control = "stop"
+    m.playerSpinner.visible = false
+    m.playerCenterState.visible = false
     m.video.control = "stop"
     m.playerOverlay.visible = true
     m.playerState.color = "0xFFFF8A8AFF"
@@ -2541,6 +2795,10 @@ sub closePlayer()
     m.allSourcesFailed = false
     m.switchingSource = false
     m.failoverTimer.control = "stop"
+    m.playerAutoHideTimer.control = "stop"
+    m.playerSpinner.control = "stop"
+    m.playerSpinner.visible = false
+    m.playerCenterState.visible = false
     m.video.control = "stop"
     m.video.visible = false
     m.video.content = invalid
@@ -2558,6 +2816,7 @@ sub togglePlayback()
     if not m.playerVisible then return
     if m.allSourcesFailed then return
     if m.currentIsLive then
+        m.playerAutoHideTimer.control = "stop"
         m.playerOverlay.visible = true
         m.playerState.color = "0xA79FBAFF"
         m.playerState.text = "Transmissão ao vivo  •  pausa indisponível."
@@ -2566,11 +2825,14 @@ sub togglePlayback()
     state = LCase(m.video.state)
     if state = "playing" then
         m.video.control = "pause"
+        m.playerAutoHideTimer.control = "stop"
+        m.playerCenterState.visible = true
         m.playerOverlay.visible = true
         m.playerState.color = "0xA79FBAFF"
         m.playerState.text = "Pausado"
     else if state = "paused" then
         m.video.control = "play"
+        m.playerCenterState.visible = false
         m.playerState.text = "Retomando..."
     end if
 end sub
@@ -2578,6 +2840,7 @@ end sub
 sub seekBy(seconds as integer)
     if not m.playerVisible then return
     if m.currentIsLive then
+        m.playerAutoHideTimer.control = "stop"
         m.playerOverlay.visible = true
         m.playerState.color = "0xA79FBAFF"
         m.playerState.text = "Ao vivo: busca indisponível."
@@ -2588,7 +2851,7 @@ sub seekBy(seconds as integer)
     target = position + seconds
     if target < 0 then target = 0
     m.video.seek = target
-    m.playerOverlay.visible = true
+    showPlayerOverlay()
     m.playerState.color = "0xA79FBAFF"
     m.playerState.text = "Buscando..."
 end sub
@@ -2611,7 +2874,7 @@ sub onProgressTimer()
     percent = position / duration
     if percent < 0 then percent = 0
     if percent > 1 then percent = 1
-    m.progressFill.width = Int(1780 * percent)
+    m.progressFill.width = Int(1728 * percent)
     m.playerTime.text = formatTime(position) + " / " + formatTime(duration)
 end sub
 
@@ -2684,7 +2947,7 @@ function onKeyEvent(key as string, press as boolean) as boolean
             seekBy(30)
             return true
         else if k = "up" or k = "down" then
-            m.playerOverlay.visible = true
+            showPlayerOverlay()
             return true
         end if
         return false
@@ -2754,6 +3017,15 @@ function onKeyEvent(key as string, press as boolean) as boolean
         return true
     end if
 
+    if k = "left" and m.shelfList.hasFocus() then
+        focus = m.shelfList.rowItemFocused
+        if type(focus) = "roArray" and focus.Count() >= 2 and focus[1] = 0 then
+            m.navList.setFocus(true)
+            return true
+        end if
+        return false
+    end if
+
     if k = "left" and (m.itemList.hasFocus() or m.vodGrid.hasFocus()) then
         if m.activeView = "saimo_letters" or m.activeView = "saimo_home" or m.activeView = "search" or m.activeView = "channels" or m.activeView = "vod" then
             m.navList.setFocus(true)
@@ -2766,7 +3038,10 @@ function onKeyEvent(key as string, press as boolean) as boolean
     end if
 
     if k = "right" and m.navList.hasFocus() then
-        if m.activeView = "vod" or m.activeView = "vod_episodes" or m.activeView = "saimo_home" or m.activeView = "saimo_catalog" or m.activeView = "saimo_episodes" or m.activeView = "saimo_episodes_loading" then
+        if m.activeView = "saimo_home" and m.shelfList.visible then
+            m.shelfList.setFocus(true)
+            return true
+        else if m.activeView = "vod" or m.activeView = "vod_episodes" or m.activeView = "saimo_home" or m.activeView = "saimo_catalog" or m.activeView = "saimo_episodes" or m.activeView = "saimo_episodes_loading" then
             if m.vodVisibleItems.Count() > 0 then
                 m.vodGrid.setFocus(true)
                 return true
@@ -2791,6 +3066,10 @@ function onKeyEvent(key as string, press as boolean) as boolean
 end function
 
 sub focusListOrNav()
+    if m.activeView = "saimo_home" and m.shelfList.visible then
+        m.shelfList.setFocus(true)
+        return
+    end if
     if m.activeView = "vod" or m.activeView = "vod_episodes" or m.activeView = "saimo_home" or m.activeView = "saimo_catalog" or m.activeView = "saimo_episodes" or m.activeView = "saimo_episodes_loading" then
         if m.vodVisibleItems.Count() > 0 then
             m.vodGrid.setFocus(true)
@@ -2809,17 +3088,36 @@ end sub
 ' ---------------------------------------------------------------------------
 
 sub showToast(message as string)
+    showToastType(message, "info")
+end sub
+
+sub showToastType(message as string, kind as string)
     if message = "" then return
     m.toast.text = message
+    if kind = "success" then
+        m.toastIcon.text = "✓"
+        m.toastAccent.color = "0x35C98AFF"
+        m.toastIcon.color = "0x35C98AFF"
+    else if kind = "error" then
+        m.toastIcon.text = "!"
+        m.toastAccent.color = "0xE5484DFF"
+        m.toastIcon.color = "0xE5484DFF"
+    else
+        m.toastIcon.text = "i"
+        m.toastAccent.color = "0x4FE3D0FF"
+        m.toastIcon.color = "0x4FE3D0FF"
+    end if
     m.toastAccent.visible = true
     m.toastBg.visible = true
     m.toast.visible = true
+    m.toastIcon.visible = true
     m.toastTimer.control = "stop"
     m.toastTimer.control = "start"
 end sub
 
 sub hideToast()
     m.toast.visible = false
+    m.toastIcon.visible = false
     m.toastAccent.visible = false
     m.toastBg.visible = false
 end sub
