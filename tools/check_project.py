@@ -36,10 +36,16 @@ def main() -> int:
         APP / "source/bslib.brs",
         APP / "components/MainScene.xml",
         APP / "components/MainScene.brs",
+        APP / "components/VodCard.xml",
+        APP / "components/VodCard.brs",
+        APP / "components/EpisodeCard.xml",
+        APP / "components/EpisodeCard.brs",
         APP / "components/FetchTask.xml",
         APP / "components/FetchTask.brs",
         APP / "components/EpgTask.xml",
         APP / "components/EpgTask.brs",
+        APP / "components/ActionPill.xml",
+        APP / "components/ActionPill.brs",
         APP / "images/icon_focus_fhd.png",
         APP / "images/splash_fhd.png",
         APP / "images/bg_app.png",
@@ -51,6 +57,13 @@ def main() -> int:
         APP / "images/guide_focus.png",
         APP / "images/focus_grid.png",
         APP / "images/nav_live.png",
+        APP / "images/ficha_veil_side.png",
+        APP / "images/ficha_veil_bottom.png",
+        APP / "images/focus_episode.png",
+        APP / "images/focus_chip.png",
+        APP / "images/focus_shelf.png",
+        APP / "images/action_pill_normal.png",
+        APP / "images/action_pill_focus.png",
         ROOT / "tools/test_parsers.py",
         ROOT / "tools/tests/parsers_test.brs",
         ROOT / "tools/tests/fixtures/indice.txt",
@@ -67,13 +80,13 @@ def main() -> int:
     except json.JSONDecodeError as exc:
         ERRORS.append(f"JSON inválido: {exc}")
         package, config = {}, {}
-    check(package.get("version") == "2.5.2", "package.json deve apontar para 2.5.2")
+    check(package.get("version") == "2.5.12", "package.json deve apontar para 2.5.12")
     try:
         lock = json.loads(read(ROOT / "package-lock.json"))
     except json.JSONDecodeError:
         lock = {}
-    check(lock.get("version") == "2.5.2" and lock.get("packages", {}).get("", {}).get("version") == "2.5.2",
-          "package-lock.json deve apontar para 2.5.2")
+    check(lock.get("version") == "2.5.12" and lock.get("packages", {}).get("", {}).get("version") == "2.5.12",
+          "package-lock.json deve apontar para 2.5.12")
     check(package.get("scripts", {}).get("test") == "python3 tools/test_parsers.py",
           "package.json deve expor npm test para a suíte de parsers")
     check("brighterscript" in package.get("devDependencies", {}), "Dependência brighterscript ausente")
@@ -82,8 +95,8 @@ def main() -> int:
 
     manifest = read(APP / "manifest")
     version_fields = dict(line.split("=", 1) for line in manifest.splitlines() if "=" in line)
-    check((version_fields.get("major_version"), version_fields.get("minor_version"), version_fields.get("build_version")) == ("2", "5", "2"),
-          "Versão do manifest não corresponde a 2.5.2")
+    check((version_fields.get("major_version"), version_fields.get("minor_version"), version_fields.get("build_version")) == ("2", "5", "12"),
+          "Versão do manifest não corresponde a 2.5.12")
     check("ui_resolutions=fhd" in manifest, "Resolução FHD do manifest deve permanecer definida")
 
     main_brs = read(APP / "components/MainScene.brs")
@@ -91,6 +104,9 @@ def main() -> int:
     fetch_brs = read(APP / "components/FetchTask.brs")
     fetch_xml = read(APP / "components/FetchTask.xml")
     bslib = read(APP / "source/bslib.brs")
+    check('function readCacheAscii(path as string)' in bslib and 'fs.Exists(path)' in bslib
+          and 'readCacheAscii("cachefs:/' in main_brs and 'readCacheAscii("cachefs:/' in fetch_brs,
+          "Leituras de cache devem verificar a existência dos arquivos antes de abrir")
     readme = read(ROOT / "README.md")
     tests = read(ROOT / "tools/tests/parsers_test.brs")
 
@@ -119,13 +135,15 @@ def main() -> int:
 
     check('id="vodGrid"' in main_xml_text and 'itemSelected", "onVodItemSelected"' in main_brs,
           "Grade de pôsteres não conectada ao handler")
-    check('basePosterSize="[210, 315]"' in main_xml_text and 'columnSpacings="[24, 24, 24, 24]"' in main_xml_text,
-          "Grade de pôsteres não define dimensões 2:3 e espaçamento da interface")
-    check('caption2NumLines="1"' in main_xml_text and 'focusBitmapUri="pkg:/images/focus_grid.png"' in main_xml_text,
-          "Grade de pôsteres não usa legenda compacta e foco personalizado")
-    check('id="vodGrid"' in main_xml_text and 'useAtlas="false"' in main_xml_text
-          and "m.vodGrid.posterDisplayMode = gridDisplayMode" in main_brs,
-          "Escala das capas deve ser aplicada pelo PosterGrid")
+    vod_card_xml = read(APP / "components/VodCard.xml")
+    vod_card_brs = read(APP / "components/VodCard.brs")
+    check('itemComponentName="VodCard"' in main_xml_text and 'itemSize="[210, 362]"' in main_xml_text
+          and 'numColumns="6"' in main_xml_text and 'm.vodGrid.numColumns = 6' in main_brs,
+          "Catálogo deve usar cartões próprios em seis colunas")
+    check('id="poster"' in vod_card_xml and 'itemHasFocus' in vod_card_brs
+          and 'sub showItem()' in vod_card_brs and 'loadPoster()' in vod_card_brs
+          and 'sub loadPoster()' in vod_card_brs and 'pkg:/images/placeholder.png' in vod_card_brs,
+          "Pôsteres do catálogo devem começar a carregar ao renderizar cada card")
     check('id="appBg"' in main_xml_text and 'uri="pkg:/images/bg_app.png"' in main_xml_text
           and 'id="sidebarBg"' in main_xml_text and 'uri="pkg:/images/bg_sidebar.png"' in main_xml_text,
           "Fundos da identidade visual 2.5.2 ausentes")
@@ -134,37 +152,58 @@ def main() -> int:
     check('id="clock"' in main_xml_text and 'id="syncHint"' in main_xml_text
           and "sub updateClock()" in main_brs and "sub updateSyncHint()" in main_brs,
           "Relógio/indicador de sincronização ausentes")
-    check('id="previewBackdropGroup"' in main_xml_text and 'id="previewBadge"' in main_xml_text
-          and "sub showPreviewBackdrop" in main_brs and "sub setPreviewBadge" in main_brs,
-          "Prévia cinematográfica com badge/backdrop ausente")
+    # B9 (E3): preview rail removido — check desativado
+    # (previewBackdropGroup, previewBadge, showPreviewBackdrop, setPreviewBadge removidos)
+    # check('id="previewBackdropGroup"' in main_xml_text and 'id="previewBadge"' in main_xml_text
+          # "Prévia cinematográfica com badge/backdrop ausente")
     check('id="playerLive"' in main_xml_text and 'id="toastAccent"' in main_xml_text
           and "m.playerLive.visible = m.currentIsLive" in main_brs,
           "Sobreposição do player/toast 2.5.2 incompleta")
     check('focusBitmapUri="pkg:/images/nav_focus.png"' in main_xml_text
           and 'HDListItemIconUrl' in main_brs, "Navegação com pílula de foco/ícones ausente")
-    check('numColumns="5"' in main_xml_text and "m.vodGrid.numColumns = 6" in main_brs,
+    check('numColumns="6"' in main_xml_text and "m.vodGrid.numColumns = 6" in main_brs,
           "Catálogo completo deve usar seis colunas")
     check('id="shelfList"' in main_xml_text and 'itemComponentName="ShelfCard"' in main_xml_text
-          and "sub showSaimoShelves" in main_brs,
+          and "sub showSaimoShelves" in main_brs
+          and 'if type(parsed.shelves) = "roArray" then m.saimoShelves = parsed.shelves' in main_brs,
           "Tela Descobrir deve manter suas fileiras editoriais")
     check('if k = "left" and m.shelfList.hasFocus() then' in main_brs
           and 'focus[1] = 0 then' in main_brs,
           "Navegação horizontal das fileiras deve manter o foco entre capas")
-    check("m.previewPoster.translation = [430, 30]" in main_brs
-          and "m.previewBackdropGroup.clippingRect = [0, 0, 1520, 210]" in main_brs
-          and 'm.listTitle.text = title' in main_brs,
-          "Descobrir deve atualizar hero e metadados conforme o foco")
+    # B9 (E3): preview rail removido — checks de preview desativados
+    # (m.previewPoster, m.previewBackdropGroup, previewPanel removidos)
+    # Descobrir atualiza hero/metadados via shelfList (não preview)
     check("focusScale = 1.0" in read(APP / "components/ShelfCard.brs"),
           "Cartões das fileiras devem destacar o foco sem ampliar a capa")
-    check("m.vodGrid.basePosterSize = [310, 174]" in main_brs,
-          "Episódios devem usar cartões em proporção 16:9")
-    check('m.vodGrid.posterDisplayMode = gridDisplayMode' in main_brs
-          and 'gridDisplayMode = "scaleToFit"' in main_brs
-          and 'node.shortDescriptionLine2 = saimoGridSubtitle(entry)' in main_brs,
-          "Capas de episódios devem preservar artwork vertical e exibir contexto")
-    check('m.vodGrid.basePosterSize = [310, 174]' in main_brs
-          and 'm.vodGrid.numColumns = 4' in main_brs,
-          "Episódios VOD e Saimo devem compartilhar o layout 16:9")
+    episode_xml = read(APP / "components/EpisodeCard.xml")
+    episode_brs = read(APP / "components/EpisodeCard.brs")
+    check('id="episodeGrid"' in main_xml_text and 'itemComponentName="EpisodeCard"' in main_xml_text
+          and 'itemSize="[396, 310]"' in main_xml_text,
+          "Episódios devem usar cartões 396x310 com componente próprio")
+    check('sub buildEpisodeGrid(items as object)' in main_brs
+          and 'node.episodeSynopsis = synopsis' in main_brs
+          and 'm.episodeGrid.setFocus(true)' in main_brs,
+          "Grade de episódios deve informar título, número e sinopse")
+    check('m.video.control = "resume"' in main_brs
+          and 'm.video.control = "play"' in main_brs,
+          "Retomada deve preservar a posição atual e play iniciar novas fontes")
+    check('sub focusListOrNav()' in main_brs
+          and 'if m.activeView = "vod_episodes" or m.activeView = "saimo_episodes" then' in main_brs
+          and 'm.episodeGrid.setFocus(true)' in main_brs,
+          "Ao fechar o player, o foco deve voltar à lista de episódios")
+    check('if m.pendingSaimoLetter <> "" then' in main_brs
+          and 'kind <> "saimo_letter" and m.pendingSaimoLetter' not in main_brs,
+          "Atualizacao de capas nao deve perder a letra pendente durante carregamento do catalogo")
+    check('id="tmdbId"' in fetch_xml
+          and 'enrichSaimoEpisodes(items, tmdbId' in fetch_brs
+          and '/api/tmdb/tv/' in fetch_brs
+          and 'item.cover = "https://image.tmdb.org/t/p/w300" + still' in fetch_brs
+          and 'item.runtime = runtime' in fetch_brs,
+          "Episódios devem carregar metadados do Worker TMDB com imagens e duração")
+    check('id="poster"' in episode_xml and 'id="episodeCode"' in episode_xml
+          and 'id="synopsis"' in episode_xml and 'sub updateFocus()' in episode_brs
+          and 'sub showItem()' in episode_brs and 'loadPoster()' in episode_brs,
+          "Cartão de episódio deve carregar a arte ao renderizar, além do foco personalizado")
     check('id="playerSpinner"' in main_xml_text and 'id="playerAutoHideTimer"' in main_xml_text
           and 'uri="pkg:/images/player_veil_top.png"' in main_xml_text,
           "Player deve usar spinner, auto-hide e gradientes")
@@ -172,18 +211,65 @@ def main() -> int:
           "Toasts devem diferenciar estados semânticos")
     check('id="emptyIcon"' in main_xml_text and 'id="emptyAction"' in main_xml_text,
           "Estado vazio deve incluir ícone e uma ação")
-    check('uri="pkg:/fonts/Inter-Regular.ttf"' in main_xml_text
-          and 'uri="pkg:/fonts/Inter-SemiBold.ttf"' in main_xml_text
-          and 'uri="pkg:/fonts/Inter-Bold.ttf"' in main_xml_text,
-          "Papéis tipográficos Inter devem estar definidos na cena")
-    check((APP / "fonts/OFL.txt").is_file()
-          and (APP / "fonts/Inter-Regular.ttf").is_file()
-          and (APP / "fonts/Inter-SemiBold.ttf").is_file()
-          and (APP / "fonts/Inter-Bold.ttf").is_file(),
-          "Fontes Inter e licença OFL devem estar empacotadas")
-    check('id="previewPanel"' in main_xml_text and 'm.previewPanel.visible = true' in main_brs,
-          "Painel visual da prévia não é configurado por tela")
-    check('caption1NumLines="2"' in main_xml_text, "Os cartões devem permitir títulos maiores e menos truncamento")
+    action_xml = read(APP / "components/ActionPill.xml")
+    action_brs = read(APP / "components/ActionPill.brs")
+    chip_xml = read(APP / "components/SeasonChip.xml")
+    group_start = main_xml_text.find('<Group id="vodDetailGroup"')
+    group_open = ""
+    if group_start >= 0:
+        group_open = main_xml_text[group_start:main_xml_text.find(">", group_start) + 1]
+    check('translation="[400, 0]"' in group_open,
+          "vodDetailGroup deve começar na área de conteúdo (translation [400, 0])")
+    check('id="fichaBackdrop"' in main_xml_text and 'id="fichaVeilSide"' in main_xml_text
+          and 'id="fichaVeilBottom"' in main_xml_text
+          and 'uri="pkg:/images/ficha_veil_side.png"' in main_xml_text
+          and 'uri="pkg:/images/ficha_veil_bottom.png"' in main_xml_text,
+          "Ficha deve usar backdrop próprio e os dois véus PNG")
+    check('id="vodDetailTipo"' in main_xml_text and 'id="vodDetailFrase"' in main_xml_text
+          and 'm.vodDetailTipo.text' in main_brs and 'm.vodDetailFrase.text' in main_brs,
+          "Tipo e frase da ficha devem existir no XML e ser preenchidos")
+    check('itemComponentName="ActionPill"' in main_xml_text
+          and 'sub showItem()' in action_brs and 'sub updateFocus()' in action_brs
+          and 'action_pill_normal.png' in action_xml and 'action_pill_focus.png' in action_xml
+          and 'm.pillFocus.opacity' in action_brs and 'm.pillLabel.color' in action_brs,
+          "Ações da ficha devem usar ActionPill com inversão de foco")
+    check('sub showFichaBackdrop(cover as string)' in main_brs
+          and main_brs.count("showFichaBackdrop(") >= 2,
+          "As telas de ficha devem compartilhar showFichaBackdrop")
+    check('node.addFields({ kind: entry.kind })' in main_brs,
+          "Ações da ficha devem carregar title e kind no node emitido")
+    check('id="episodeNumber"' in episode_xml and 'uri="pkg:/images/focus_episode.png"' in episode_xml
+          and 'm.focusHalo.opacity = m.top.focusPercent' in episode_brs,
+          "Cartão de episódio deve ter numeral, thumb 16:9 e foco interpolado")
+    check('uri="pkg:/images/focus_chip.png"' in chip_xml and 'chipEdge' not in chip_xml,
+          "Chip de temporada deve usar o bitmap de foco no lugar da borda retangular")
+    check('node.episodeArt =' in main_brs and 'node.episodeNumber =' in main_brs,
+          "Grade de episódios deve emitir arte e numeral para cada card")
+    check('uri="pkg:/fonts/Roboto-Regular.ttf"' in main_xml_text
+          and 'uri="pkg:/fonts/Roboto-Medium.ttf"' in main_xml_text
+          and 'uri="pkg:/fonts/Roboto-Bold.ttf"' in main_xml_text
+          and 'uri="pkg:/fonts/Roboto-Italic.ttf"' in main_xml_text,
+          "Papéis tipográficos Roboto devem estar definidos na cena")
+    check((APP / "fonts/Roboto-LICENSE.txt").is_file()
+          and (APP / "fonts/Roboto-Regular.ttf").is_file()
+          and (APP / "fonts/Roboto-Medium.ttf").is_file()
+          and (APP / "fonts/Roboto-Bold.ttf").is_file()
+          and (APP / "fonts/Roboto-Black.ttf").is_file()
+          and (APP / "fonts/Roboto-Italic.ttf").is_file()
+          and not (APP / "fonts/OFL.txt").exists()
+          and not any((APP / "fonts").glob("Inter-*.ttf")),
+          "Fontes Roboto e licença devem estar empacotadas sem Inter/OFL")
+    inter_xml = [path for path in sorted(APP.rglob("*.xml")) if "Inter-" in read(path)]
+    check(not inter_xml,
+          "Nenhuma uri Inter pode restar em XML: " + ", ".join(str(path.relative_to(ROOT)) for path in inter_xml))
+    # B9 (E3): preview removido — check desativado (não há mais painel único)
+    # preview_start = main_xml_text.find('<Group id="previewPanel"')
+    # preview_end = main_xml_text.find('id="emptyIcon"')
+    # check(preview_start >= 0 and preview_end > preview_start
+          # "Todo o conteúdo da prévia deve ser ocultado dentro de um único painel")
+    check('id="title"' in vod_card_xml and 'id="meta"' in vod_card_xml
+          and 'maxLines="1"' in vod_card_xml,
+          "Cartões do catálogo devem exibir título e metadados em linhas compactas")
     check('numRows="12"' in main_xml_text, "A lista de ajustes não exibe as 12 opções configuradas")
 
     check("parseSaimoIndexLetters" in bslib and "parseSaimoMovieItems" in bslib
@@ -212,11 +298,16 @@ def main() -> int:
           "Cache por letra/assinatura ausente na tarefa")
     check("applySaimoArtwork(items, fichas, fallbackCovers)" in fetch_brs,
           "Capas e gêneros devem ser aplicados dentro da FetchTask")
-    check('ReadAsciiFile("cachefs:/saimo_vod_fichas.txt")' not in main_brs,
+    check("function isStringValue(value as dynamic) as boolean" in bslib
+          and "not isStringValue(fichas)" in fetch_brs,
+          "A resposta de fichas deve aceitar strings do Roku e do simulador")
+    check('readCacheAscii("cachefs:/saimo_vod_fichas.txt")' not in main_brs,
           "fichas.txt não deve ser lido na linha principal")
     check('WriteAsciiFile("cachefs:/saimo_vod_fichas.ready", "1")' in fetch_brs
-          and 'ReadAsciiFile("cachefs:/saimo_vod_fichas.ready")' in main_brs,
-          "Marcador de fichas prontas ausente")
+          and 'readCacheAscii("cachefs:/saimo_vod_fichas.ready")' in fetch_brs
+          and 'httpGet(base + "fichas.txt"' in fetch_brs
+          and 'startSaimoArtworkFetch(base)' not in main_brs,
+          "Fichas completas devem ser carregadas sob demanda em segundo plano")
     check("invalidateSaimoDerivedCaches()" in main_brs
           and 'DeleteFile("cachefs:/saimo_vod_letters.url")' in main_brs
           and 'DeleteFile("cachefs:/saimo_vod_search.txt")' in main_brs,
@@ -259,9 +350,12 @@ def main() -> int:
     check("TESTS_FAILED" in test_runner and "TESTS_PASS" in test_runner,
           "O runner de testes deve falhar quando TESTS_FAILED for emitido")
 
-    check("2.5.2" in readme, "README precisa documentar a versão 2.5.2")
+    check("2.5.12" in readme and "sob demanda" in readme,
+          "README precisa documentar a versão 2.5.12 e o carregamento sob demanda")
     check("identidade visual" in readme.lower() or "interface" in readme.lower(),
           "README precisa documentar a renovação visual")
+    check("Roboto" in readme and "SaimoTV/fonts" in readme,
+          "README precisa documentar a tipografia Roboto e a pasta de fontes")
     check("saimo-filmes.pages.dev" in readme and "saimo-canais.pages.dev" in readme,
           "README precisa documentar as fontes canônicas")
     check("15 minutos" in readme and "6 horas" in readme,

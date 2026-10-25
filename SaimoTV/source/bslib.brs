@@ -1,11 +1,17 @@
 ' Funcoes compartilhadas entre a cena principal e as tarefas.
 ' Nada aqui depende de estado da interface.
 
+function isStringValue(value as dynamic) as boolean
+    if value = invalid then return false
+    valueType = type(value)
+    return valueType = "roString" or valueType = "String"
+end function
+
 function strField(obj as object, key as string) as string
     if obj = invalid then return ""
     value = obj[key]
     if value = invalid then return ""
-    if type(value) = "roString" then return value
+    if isStringValue(value) then return value
     return value.ToStr()
 end function
 
@@ -20,6 +26,18 @@ end function
 function trimText(value as dynamic) as string
     if value = invalid then return ""
     return value.ToStr().Trim()
+end function
+
+' cachefs comeca vazio em uma instalacao nova. Verifica antes de ler para que
+' misses normais de cache nao gerem erros no console do Roku/simulador.
+function readCacheAscii(path as string) as string
+    fs = CreateObject("roFileSystem")
+    ' Alguns simuladores nao implementam roFileSystem; nesses casos mantem a
+    ' leitura normal e o cache funcional em vez de tratar tudo como ausente.
+    if fs <> invalid and not fs.Exists(path) then return ""
+    value = ReadAsciiFile(path)
+    if value = invalid then return ""
+    return value
 end function
 
 function isValidUrl(url as string) as boolean
@@ -1213,6 +1231,14 @@ function saimoGridSubtitle(entry as object) as string
     return text
 end function
 
+function saimoArtworkTitleKey(title as string) as string
+    value = foldText(stripYear(title))
+    separators = [" ", ".", "-", "_", ",", ":", ";", "!", "?", "'", Chr(34), "(", ")", "[", "]"]
+    for each separator in separators
+        value = value.Replace(separator, "")
+    end for
+    return LCase(value)
+end function
 
 function applySaimoArtwork(items as object, fichasText as string, fallbackCovers as object) as object
     if type(items) <> "roArray" then return items
@@ -1223,7 +1249,7 @@ function applySaimoArtwork(items as object, fichasText as string, fallbackCovers
             kind = LCase(strField(item, "type"))
             prefix = "f:"
             if kind = "series" then prefix = "s:"
-            key = prefix + LCase(stripYear(strField(item, "title")))
+            key = prefix + saimoArtworkTitleKey(strField(item, "title"))
             cover = fallbackCovers[key]
             if strField(item, "cover") = "" and cover <> invalid and cover <> "" then item.cover = cover
             wanted[key] = item
@@ -1233,13 +1259,16 @@ function applySaimoArtwork(items as object, fichasText as string, fallbackCovers
             kind = LCase(strField(item, "type"))
             prefix = "f:"
             if kind = "series" then prefix = "s:"
-            key = prefix + LCase(stripYear(strField(item, "title")))
+            key = prefix + saimoArtworkTitleKey(strField(item, "title"))
             wanted[key] = item
         end for
     end if
 
     if fichasText = invalid or fichasText = "" then return items
     coverBase = ""
+    fichaRows = 0
+    matchedRows = 0
+    posterRows = 0
     for each raw in fichasText.Split(Chr(10))
         line = raw.Trim()
         if LCase(Left(line, 5)) = "capa:" then
@@ -1253,26 +1282,33 @@ function applySaimoArtwork(items as object, fichasText as string, fallbackCovers
                 if rowType = "f" then prefix = "f:"
                 if rowType = "s" then prefix = "s:"
                 if prefix <> "" then
-                    key = prefix + LCase(stripYear(fields[1].Trim()))
+                    fichaRows = fichaRows + 1
+                    key = prefix + saimoArtworkTitleKey(fields[1].Trim())
                     target = wanted[key]
                     if target <> invalid then
+                        matchedRows = matchedRows + 1
+                        tmdbId = fields[2].Trim()
+                        if tmdbId <> "" and Val(tmdbId) > 0 then target.tmdbId = tmdbId
                         if strField(target, "genres") = "" and fields.Count() > 4 then target.genres = fields[4].Trim()
-                        if strField(target, "cover") = "" then
-                            poster = fields[3].Trim()
-                            if poster <> "" then
-                                if Left(poster, 1) = "/" then
-                                    poster = coverBase + Mid(poster, 2, Len(poster) - 1)
-                                else if Left(LCase(poster), 8) <> "https://" and Left(LCase(poster), 7) <> "http://" then
-                                    poster = coverBase + poster
-                                end if
-                                if poster <> "" then target.cover = poster
+                        poster = fields[3].Trim()
+                        if poster <> "" then
+                            posterRows = posterRows + 1
+                            if Left(poster, 1) = "/" then
+                                poster = coverBase + Mid(poster, 2, Len(poster) - 1)
+                            else if Left(LCase(poster), 8) <> "https://" and Left(LCase(poster), 7) <> "http://" then
+                                poster = coverBase + poster
                             end if
+                            ' fichas.txt é a referência de arte para o acervo; os
+                            ' destaques ficam como fallback quando a ficha não
+                            ' traz poster para o título.
+                            if poster <> "" then target.cover = poster
                         end if
                     end if
                 end if
             end if
         end if
     end for
+    print "SAIMO_ART fichas rows=" + Str(fichaRows).Trim() + " matched=" + Str(matchedRows).Trim() + " posters=" + Str(posterRows).Trim()
     return items
 end function
 

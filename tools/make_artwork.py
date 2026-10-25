@@ -331,35 +331,33 @@ def badge(pixels, width, height, cx, cy, size):
              TEAL + (255,))
 
 
+BLUE = (51, 77, 255)  # faixa azul do aurora (meio)
+
 def make_bg_app():
+    """Aurora 1920x1080: base quase preto azulado (#0b0e14),
+    brilho teal (#4fe3d0) no canto superior direito, faixa azul
+    no meio, faixa roxa/violeta no quadrante inferior esquerdo.
+    Alvo: android-ref/apk-art/fundo_app.jpg"""
     width, height = 1920, 1080
-    pixels = gradient(width, height, BG, BG2, [
-        (0.16, 0.02, 0.62, VIOLET, 0.16),
-        (0.58, -0.10, 0.70, PINK, 0.07),
-        (0.92, 1.04, 0.55, TEAL, 0.06),
-    ])
+    pixels = canvas(width, height, (11, 14, 20))  # base #0b0e14
+    # Brilho teal no canto superior direito (gradiente radial)
+    cx, cy = width * 0.85, height * 0.15
+    max_r = math.hypot(width * 0.45, height * 0.45)
     for y in range(height):
         for x in range(width):
-            edge = max(0.0, (abs(x - width / 2) / (width / 2) - 0.72) / 0.28)
-            edge = max(edge, max(0.0, (y / height - 0.80) / 0.20))
-            if edge > 0:
-                blend(pixels, width, x, y, (0, 0, 0, 255), min(0.45, edge * 0.45))
+            dx = x - cx
+            dy = y - cy
+            r = math.hypot(dx, dy)
+            strength = max(0.0, 1.0 - r / max_r) ** 1.5
+            blend(pixels, width, x, y, TEAL + (int(255 * strength * 0.35),))
     save_png(IMAGES / "bg_app.png", width, height, pixels)
 
 
 def make_bg_sidebar():
+    """Superfície escura da sidebar: #0b0e14 sem gradiente colorido
+    (deixa a cor flat, como o Android)."""
     width, height = 400, 1080
-    pixels = gradient(width, height, (17, 13, 30), (7, 6, 12), [
-        (0.30, 0.02, 0.55, VIOLET, 0.20),
-        (0.55, 0.52, 0.60, PINK, 0.04),
-        (0.40, 0.98, 0.45, TEAL, 0.04),
-    ])
-    for y in range(height):
-        for x in range(width):
-            if x >= width - 2:
-                blend(pixels, width, x, y, VIOLET + (90,), 0.35)
-            elif x >= width - 3:
-                blend(pixels, width, x, y, LILAC + (60,), 0.22)
+    pixels = canvas(width, height, (11, 14, 20))  # #0b0e14
     save_png(IMAGES / "bg_sidebar.png", width, height, pixels)
 
 
@@ -375,6 +373,43 @@ def make_player_veils():
             blend(bottom_pixels, width, x, y, BG + (255,), bottom_strength)
     save_png(IMAGES / "player_veil_top.png", width, height, top_pixels)
     save_png(IMAGES / "player_veil_bottom.png", width, height, bottom_pixels)
+
+
+def make_ficha_veils():
+    """Véus da ficha com as direções do Android (bg_ficha_lado / bg_ficha_baixo).
+
+    Lateral (1520x1080): horizontal, opaco #f50b0e14 na borda ESQUERDA,
+    passa por #c80b0e14 no meio e chega a #200b0e14 na borda DIREITA
+    (bg_ficha_lado, ângulo 0: startColor à esquerda).
+    Inferior (1520x520): vertical, opaco #ff0b0e14 na borda INFERIOR,
+    passa por #b30b0e14 no meio e chega a #000b0e14 na borda SUPERIOR
+    (bg_ficha_baixo, ângulo 90: startColor embaixo).
+    """
+    width, height = 1520, 1080
+    side_pixels = canvas(width, height)
+    for x in range(width):
+        t = x / (width - 1)
+        if t <= 0.5:
+            alpha = round(0xF5 + (0xC8 - 0xF5) * (t / 0.5))
+        else:
+            alpha = round(0xC8 + (0x20 - 0xC8) * ((t - 0.5) / 0.5))
+        color = (0x0B, 0x0E, 0x14, alpha)
+        for y in range(height):
+            blend(side_pixels, width, x, y, color, alpha / 255.0)
+    save_png(IMAGES / "ficha_veil_side.png", width, height, side_pixels)
+
+    strip_height = 520
+    bottom_pixels = canvas(width, strip_height)
+    for y in range(strip_height):
+        u = y / (strip_height - 1)
+        if u <= 0.5:
+            alpha = round(0x00 + 0xB3 * (u / 0.5))
+        else:
+            alpha = round(0xB3 + (0xFF - 0xB3) * ((u - 0.5) / 0.5))
+        color = (0x0B, 0x0E, 0x14, alpha)
+        for x in range(width):
+            blend(bottom_pixels, width, x, y, color, alpha / 255.0)
+    save_png(IMAGES / "ficha_veil_bottom.png", width, strip_height, bottom_pixels)
 
 
 def make_spinner():
@@ -446,6 +481,25 @@ def make_grid_focus(path, width, height, active):
     save_png(path, width, height, pixels)
 
 
+def make_row_focus(path, width, height):
+    """Foco no estilo Android row_focus: preenchimento #26ffffff, borda 3px
+    accent e raio 14. Cobre episódios, chips, fileiras e a grade de capas."""
+    pixels = canvas(width, height)
+    rounded_fill(pixels, width, height, 0, 0, width - 1, height - 1, 14,
+                 (255, 255, 255, 0x26))
+    rounded_outline(pixels, width, height, 0, 0, width - 1, height - 1, 14,
+                    TEAL + (255,), 3)
+    save_png(path, width, height, pixels)
+
+
+def make_action_pill(path, width, height, focused):
+    """Pílula da ficha (botao_ficha): raio 20px, repouso #26ffffff, foco branco."""
+    pixels = canvas(width, height)
+    color = (255, 255, 255, 255) if focused else (255, 255, 255, 0x26)
+    rounded_fill(pixels, width, height, 0, 0, width - 1, height - 1, 20, color)
+    save_png(path, width, height, pixels)
+
+
 def nav_icon(path, kind):
     size = 36
     pixels = canvas(size, size)
@@ -470,6 +524,10 @@ def nav_icon(path, kind):
         line(pixels, size, size, 11, 27, 29, 27, color, 2)
         line(pixels, size, size, 11, 30, 24, 30, muted, 2)
         triangle(pixels, size, size, ((14, 10), (23, 14), (14, 18)), color)
+    elif kind == "favorites":
+        circle_fill(pixels, size, size, 13, 14, 6, color)
+        circle_fill(pixels, size, size, 23, 14, 6, color)
+        triangle(pixels, size, size, ((7, 16), (29, 16), (18, 30)), color)
     elif kind == "search":
         circle_outline(pixels, size, size, 15, 15, 8, color, 2)
         line(pixels, size, size, 21, 21, 29, 29, color, 3)
@@ -507,6 +565,7 @@ def main():
     make_bg_app()
     make_bg_sidebar()
     make_player_veils()
+    make_ficha_veils()
     make_spinner()
     make_icon(IMAGES / "icon_focus_fhd.png", 540, 405)
     make_icon(IMAGES / "icon_focus_hd.png", 290, 218)
@@ -523,9 +582,14 @@ def main():
     make_nav_focus(IMAGES / "item_focus_idle.png", 730, 58, False)
     make_nav_focus(IMAGES / "guide_focus.png", 1720, 54, True)
     make_nav_focus(IMAGES / "guide_focus_idle.png", 1720, 54, False)
-    make_grid_focus(IMAGES / "focus_grid.png", 210, 315, True)
-    make_grid_focus(IMAGES / "focus_grid_idle.png", 210, 315, False)
-    for kind in ("live", "discover", "catalog", "movies", "series",
+    make_row_focus(IMAGES / "focus_episode.png", 396, 310)
+    make_row_focus(IMAGES / "focus_chip.png", 280, 80)
+    make_row_focus(IMAGES / "focus_grid.png", 210, 315)
+    make_row_focus(IMAGES / "focus_shelf.png", 168, 248)
+    make_row_focus(IMAGES / "focus_grid_idle.png", 210, 315)
+    make_action_pill(IMAGES / "action_pill_normal.png", 296, 104, False)
+    make_action_pill(IMAGES / "action_pill_focus.png", 296, 104, True)
+    for kind in ("live", "discover", "catalog", "movies", "series", "favorites",
                  "search", "guide", "settings", "sync", "group", "blank"):
         nav_icon(IMAGES / ("nav_" + kind + ".png"), kind)
     print("Arte gerada em", IMAGES)

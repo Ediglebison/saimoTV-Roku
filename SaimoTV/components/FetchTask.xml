@@ -8,6 +8,7 @@
         <field id="title" type="string" />
         <field id="year" type="string" />
         <field id="signature" type="string" />
+        <field id="tmdbId" type="string" />
         <field id="userAgent" type="string" />
         <field id="resultJson" type="string" />
         <field id="sourcesJson" type="string" />

@@ -8,10 +8,10 @@ Launching the channel creates the SceneGraph scene, restores settings and favori
 
 **Flow:**
 
-1. `SaimoTV/manifest` — supplies the channel title, version 2.5.2, icon, splash, and FHD resolution.
+1. `SaimoTV/manifest` — supplies the channel title, version 2.5.12, icon, splash, and FHD resolution.
 2. `SaimoTV/source/main.brs` — creates `roSGScreen`, opens `MainScene`, and waits for the screen to close.
 3. `SaimoTV/components/MainScene.xml` — defines the layout, video node, and 15-minute refresh timer.
-   - The scene defines Inter Regular, SemiBold, and Bold font roles from bundled SIL Open Font License assets.
+   - The scene defines Roboto Regular, Medium, Italic, Bold, and Black font roles from bundled Apache License 2.0 assets under `SaimoTV/fonts/`.
 4. `SaimoTV/components/MainScene.brs` — `init` reads registry settings, applies canonical URL defaults, loads favorites and cached content, starts timers and scheduled sync, and loads EPG when configured.
 5. `SaimoTV/source/bslib.brs` — provides URL detection, cache signatures, and parser helpers used during restoration.
 6. `SaimoTV/components/FetchTask.brs` — performs the first background playlist or catalog refresh when a cached source is stale.
@@ -55,7 +55,7 @@ The Discover view preserves the editorial shelves from the Saimo index and opens
 
 1. `SaimoTV/components/MainScene.brs` — `buildNav` and `onNavSelected` route the Discover entry to `openVodHome("all")`.
 2. `SaimoTV/components/MainScene.brs` — `showSaimoHome` renders cached highlights or falls back to the letter list.
-3. `SaimoTV/components/FetchTask.brs` — `loadSaimoIndex` downloads `destaques.txt` and parses its shelves.
+3. `SaimoTV/components/FetchTask.brs` — `loadSaimoIndex` downloads `destaques.txt` and parses its shelves; `MainScene.brs` preserves them in fresh downloads and cache restores before showing the `RowList`.
 4. `SaimoTV/source/bslib.brs` — `parseHighlights` and `pickSaimoHighlights` normalize, filter, and mix the shelf entries.
 5. `SaimoTV/components/MainScene.brs` — `handleSaimoIndexResult` stores the highlights and artwork.
 6. `SaimoTV/components/FetchTask.brs` — returns both the flattened compatibility list and the original shelf groups.
@@ -67,7 +67,7 @@ The Discover view preserves the editorial shelves from the Saimo index and opens
 
 ## VOD Catalog Browsing
 
-The user browses the Saimo catalog by letter, sees six-column poster grids, and drills into 16:9 episode cards. Authorized M3U catalogs use a separate branch.
+The user browses the Saimo catalog by letter, sees six-column poster grids, and drills into the cinematic detail view with 396x310 episode cards. Authorized M3U catalogs use a separate branch.
 
 **Flow:**
 
@@ -77,13 +77,19 @@ The user browses the Saimo catalog by letter, sees six-column poster grids, and 
 4. `SaimoTV/source/bslib.brs` — `parseSaimoIndexLetters` and `parseBases` parse letter counts and video bases.
 5. `SaimoTV/components/MainScene.brs` — `handleSaimoIndexResult` stores the index, detects signature changes, and invalidates derived caches.
 6. `SaimoTV/components/MainScene.brs` — `loadSaimoLetter` shows a cached letter immediately and starts a `saimo_letter` task.
-7. `SaimoTV/components/FetchTask.brs` — `loadSaimoLetter` downloads `filmes-LETTER.txt` and `series-LETTER.txt` and applies artwork inside the task.
+7. `SaimoTV/components/FetchTask.brs` — `loadSaimoLetter` downloads the requested letter and loads full artwork fichas only when the catalog is opened.
 8. `SaimoTV/source/bslib.brs` — `parseSaimoMovieItems`, `parseSaimoSeriesItems`, `applySaimoArtwork`, and `sortSaimoItems` produce the sorted grid items.
 9. `SaimoTV/components/MainScene.brs` — `handleSaimoLetterResult`, `showSaimoGrid`, and `buildVodGrid` render the six-column poster grid.
 10. `SaimoTV/components/MainScene.brs` — `loadSaimoEpisodes` starts the episode task and `handleSaimoEpisodesResult` receives the result.
 11. `SaimoTV/components/FetchTask.brs` — `loadSaimoEpisodes` downloads the selected series fragment.
 12. `SaimoTV/source/bslib.brs` — `parseSaimoEpisodeItems` groups and sorts the episode sources.
-13. `SaimoTV/components/MainScene.brs` — `showSaimoEpisodes` and `showSeriesEpisodes` render 16:9 episode cards; `buildVodGrid` fits inherited portrait covers without cropping them and gives each card episode title, season, and source count.
+13. `SaimoTV/components/MainScene.brs` — `onVodItemSelected` opens a movie detail screen or a series detail screen; series details group episodes by season and keep the 396x310 episode grid beside the selector.
+14. `SaimoTV/components/MainScene.brs` — `updateVodDetailContent`, `showFichaBackdrop`, `vodDetailTypeLabel`, `vodDetailsMeta`, `vodDetailFrase`, and `renderVodDetailActions` show the backdrop with veils, type label, frase, metadata, synopsis, and the horizontal action pills (play, favorite, seasons) tagged with `kind`.
+15. `SaimoTV/components/MainScene.brs` — `showSeriesDetails`, `buildSeriesSeasonList`, and `onSeriesSeasonFocused` filter episodes as the season selector moves; directional key handling links the action pills, seasons, episode grid, and sidebar.
+16. `SaimoTV/components/VodCard.xml` — renders each poster card and its focus state in the catalog, Discover, and favorites grids.
+17. `SaimoTV/components/SeasonChip.xml` — renders each season chip in the series season selector.
+18. `SaimoTV/components/EpisodeCard.xml` — renders each 396x310 episode card beside the season selector, with a 16:9 thumbnail, episode-number fallback art, code badge, title, and meta.
+19. `SaimoTV/components/ActionPill.xml` — renders each detail action button and its focus overlay.
 
 **Branch — M3U VOD:**
 
@@ -126,7 +132,7 @@ Search covers live channels and the VOD catalog. The public catalog path uses an
 
 ## Favorites
 
-Favorites apply to live channels. The app stores channel titles in the device registry and marks them with a star.
+Live channel favorites remain separate from movie and series favorites. VOD favorites have a dedicated navigation entry and persist in the device registry.
 
 **Flow:**
 
@@ -134,6 +140,8 @@ Favorites apply to live channels. The app stores channel titles in the device re
 2. `SaimoTV/components/MainScene.brs` — `onKeyEvent` maps Options, Info, and `*` to `toggleFavorite`.
 3. `SaimoTV/components/MainScene.brs` — `toggleFavorite` updates the title list and `saveFavorites` writes it back as JSON.
 4. `SaimoTV/components/MainScene.brs` — `renderEntries` prefixes favorite channels with `★`; `previewChannel` keeps the preview in sync.
+5. `SaimoTV/components/MainScene.brs` — `toggleVodFavorite` stores/removes films and series by normalized type, title, and year; `saveVodFavorites` writes the VOD list to the registry.
+6. `SaimoTV/components/MainScene.brs` — `buildNav`, `showVodFavorites`, and `onVodItemSelected` expose the Favoritos tab and open saved titles through the same details flow.
 
 ---
 
@@ -161,7 +169,7 @@ The app checks for updates every 15 minutes, downloads only when the cache is ol
 1. `SaimoTV/components/MainScene.xml` — `vodRefreshTimer` fires every 900 seconds.
 2. `SaimoTV/components/MainScene.brs` — `onVodRefreshTimer` calls `runScheduledSync`; `isSyncStale` applies the 21,600-second threshold.
 3. `SaimoTV/components/MainScene.brs` — `refreshPlaylist` and `refreshVodCatalog` start the appropriate background task without changing the active screen.
-4. `SaimoTV/components/FetchTask.brs` — `loadPlaylist`, `loadSaimoIndex`, `loadSaimoLetter`, `loadSaimoArtwork`, and `loadSaimoSearch` write raw and derived data under `cachefs:`.
+4. `SaimoTV/components/FetchTask.brs` — `loadPlaylist`, `loadSaimoIndex`, `loadSaimoLetter`, and `loadSaimoSearch` write raw and derived data under `cachefs:`; full artwork fichas load on catalog demand.
 5. `SaimoTV/components/MainScene.brs` — result handlers update in-memory state and registry sync times; failures keep the existing cache.
 6. `SaimoTV/components/MainScene.brs` — `loadCachedPlaylist`, `loadCachedVodCatalog`, and `loadCachedSaimoIndex` restore cached data on the next start.
 7. `SaimoTV/components/MainScene.brs` — `invalidateSaimoDerivedCaches` clears letter and search caches when the index signature changes.

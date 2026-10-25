@@ -1,6 +1,6 @@
 {
   "name": "saimo-tv-roku",
-  "version": "2.5.2",
+  "version": "2.5.12",
   "private": true,
   "description": "Cliente pessoal nao oficial Saimo TV para Roku, com destaques VOD, catalogo por fragmentos, busca e sincronizacao automatica",
   "scripts": {

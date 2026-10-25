@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="ActionPill" extends="Group">
+    <interface>
+        <field id="itemContent" type="node" onChange="showItem" />
+        <field id="focusPercent" type="float" onChange="updateFocus" />
+        <field id="itemHasFocus" type="boolean" onChange="updateFocus" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/source/bslib.brs" />
+    <script type="text/brightscript" uri="pkg:/components/ActionPill.brs" />
+    <children>
+        <Label visible="false"><Font id="pillFont" role="font" uri="pkg:/fonts/Roboto-Medium.ttf" size="28" /></Label>
+        <Poster id="pillBg" width="296" height="104" uri="pkg:/images/action_pill_normal.png"
+                loadSync="true" />
+        <Poster id="pillFocus" width="296" height="104" uri="pkg:/images/action_pill_focus.png"
+                opacity="0" loadSync="true" />
+        <Label id="pillLabel" translation="[10, 0]" width="276" height="104"
+               font="dictionary:pillFont" color="0xFFFFFFFF" wrap="true" maxLines="2"
+               horizAlign="center" vertAlign="center" text="" />
+    </children>
+</component>

@@ -11,10 +11,12 @@
 
     <children>
         <Label visible="false">
-            <Font id="shelfCardFont" role="font" uri="pkg:/fonts/Inter-SemiBold.ttf" size="18" />
+            <Font id="shelfCardFont" role="font" uri="pkg:/fonts/Roboto-Medium.ttf" size="18" />
         </Label>
         <Poster id="poster" translation="[4, 4]" width="160" height="240"
-                loadDisplayMode="scaleToFit" />
+                loadDisplayMode="scaleToFit"
+                loadingBitmapUri="pkg:/images/placeholder.png"
+                failedBitmapUri="pkg:/images/placeholder.png" />
         <Poster id="focusHalo" translation="[0, 0]" width="168" height="248"
                 uri="pkg:/images/focus_grid.png" opacity="0" loadSync="true" />
         <Label id="cardTitle" translation="[4, 252]" width="160" height="40"

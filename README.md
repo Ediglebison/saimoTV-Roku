@@ -1,12 +1,58 @@
-# Saimo TV para Roku — versão 2.5.2
+# Saimo TV para Roku — versão 2.5.12
 
-Cliente pessoal não oficial em BrightScript/SceneGraph para Roku. A versão **2.5.2** renova a identidade visual e a experiência de navegação com inspiração no site e nos aplicativos Saimo, mantendo o catálogo VOD por letras, as capas, o cache e a sincronização automática da versão anterior.
+Cliente pessoal não oficial em BrightScript/SceneGraph para Roku. A versão **2.5.12** corrige a retomada de vídeos pausados e devolve o foco à lista de episódios após fechar o player.
 
 Use somente listas e fontes de mídia que você tenha autorização para acessar. O cliente não inclui conteúdo audiovisual nem fornece um catálogo próprio de filmes/séries. Itens com marcadores adultos conhecidos em título ou categoria são excluídos.
 
-## Novidades da versão 2.5.2
+## Novidades da versão 2.5.12
 
-- Nova identidade visual alinhada ao site Saimo: fundo quase preto, destaques em violeta, ciano e vermelho ao vivo, painéis translúcidos e tipografia Inter com hierarquia mais clara.
+- Usa o comando de retomada do player, mantendo o ponto atual do VOD após a pausa.
+- Ao sair da reprodução de um episódio, retorna à mesma grade de episódios para continuar navegando e escolher outro.
+
+## Novidades da versão 2.5.11
+
+- Descobrir, catálogo e episódios iniciam o carregamento das capas ao renderizar os cards visíveis, sem aguardar o foco.
+- A grade continua virtualizada; ao navegar, novos grupos visíveis são carregados conforme entram na tela.
+
+## Novidades da versão 2.5.10
+
+- Aceita strings tipadas como `String` pelo brs-desktop e `roString` pelo Roku nas respostas e caches.
+- Mantém o carregamento sob demanda de `fichas.txt` e aplica as capas ao catálogo e às séries.
+
+## Novidades da versão 2.5.9
+
+- Associação de pôsteres mais tolerante a diferenças de pontuação, acentuação e ano entre os fragmentos do catálogo e `fichas.txt`; o console registra linhas processadas, correspondências e capas associadas.
+- Mantém o rastreamento do estado das imagens remotas para separar erro de associação de erro de download.
+
+### Base da versão 2.5.8
+
+- Leituras de cache verificam primeiro se o arquivo existe; uma instalação limpa deixa de emitir erros de cache ausente no console.
+- O console informa o resultado do download de `fichas.txt`, quantos itens receberam capa e se os pôsteres focados carregaram ou falharam.
+
+### Base da versão 2.5.7
+
+- Imagens das grades de filmes, séries, destaques e episódios são solicitadas somente quando o seletor aproxima o foco do card, reduzindo requisições simultâneas e tráfego inicial.
+- As fichas completas de capas são baixadas em segundo plano apenas ao entrar no catálogo e ficam em cache local; Descobrir usa as capas leves dos destaques.
+- A grade do catálogo usa seis colunas e cartões próprios, preservando a legenda junto ao pôster.
+- Episódios continuam em cards 16:9 com fallback para a capa da série.
+
+### Base da versão 2.5.6
+
+- Corrigida a fila de atualização do catálogo: se as fichas de capas terminam durante o carregamento de uma letra, a lista é recarregada para aplicar os pôsteres sem exigir nova navegação.
+- Episódios consultam o Worker TMDB configurado pelo usuário por ID de série e temporada, sem expor a chave TMDB no Roku.
+- Cards widescreen podem exibir imagem de cena, título, sinopse e duração de cada episódio; a capa da série permanece como fallback quando não há imagem de cena.
+- Respostas por temporada ficam em cache local por 24 horas, com uso do cache anterior se a rede falhar.
+- Capas de `fichas.txt` prevalecem sobre as capas de destaque; IDs TMDB das fichas ficam associados aos itens do catálogo.
+
+### Base da versão 2.5.3
+
+- Painel de prévia agrupado: badge, descrição e ações deixam de invadir o catálogo e as demais telas quando ocultos.
+- Episódios usam cartões próprios 396x310 com thumb 16:9, numeral do episódio quando não há arte, badge de temporada/episódio, título, fontes e sinopse quando fornecida pelos dados.
+- Descobrir informa quantas fileiras editoriais estão carregadas e mantém navegação vertical entre elas.
+
+### Base da versão 2.5.2
+
+- Nova identidade visual alinhada ao site Saimo: fundo quase preto, destaques em violeta, ciano e vermelho ao vivo, painéis translúcidos e tipografia Roboto com hierarquia mais clara.
 - Logotipo oficial na barra lateral, ícones de navegação, pílulas de foco personalizadas e relógio no cabeçalho.
 - Cartões de pôster em proporção **2:3** com legenda compacta (filme/série + ano ou contagem de episódios) e mais espaço entre as colunas.
 - Painel de prévia redesenhado com badge de tipo, fundo cinematográfico ampliado e escurecido, metadados, descrição e chamada de ação.
@@ -48,6 +94,7 @@ O cache fica em `cachefs:` e pode ser descartado pelo Roku quando a memória est
 - `SaimoTV/components/MainScene.brs`: interface, navegação, sincronização e player.
 - `SaimoTV/components/FetchTask.brs`: download e processamento em tarefa separada.
 - `SaimoTV/images/`: ícone, splash, fundos, logotipo, ícones de navegação e bitmaps de foco.
+- `SaimoTV/fonts/`: fontes Roboto empacotadas (Regular, Medium, Bold, Black e Italic) sob licença Apache 2.0 (`Roboto-LICENSE.txt`), usadas em toda a interface.
 - `tools/tests/parsers_test.brs`: suíte BRS dos parsers.
 - `tools/test_parsers.py`: executa a suíte BRS e falha quando algum teste não passa.
 - `tools/check_project.py`: valida arquivos, XML, versão, fontes, cache e referências.

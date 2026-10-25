@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="SeasonChip" extends="Group">
+    <interface>
+        <field id="itemContent" type="node" onChange="showItem" />
+        <field id="focusPercent" type="float" onChange="updateFocus" />
+        <field id="itemHasFocus" type="boolean" onChange="updateFocus" />
+    </interface>
+    <children>
+        <Label visible="false"><Font id="chipFont" role="font" uri="pkg:/fonts/Roboto-Medium.ttf" size="28" /></Label>
+        <Rectangle id="chipBg" width="280" height="80" color="0x0B0E14CC" />
+        <Poster id="chipFocus" width="280" height="80" uri="pkg:/images/focus_chip.png"
+                opacity="0" loadSync="true" />
+        <Label id="chipText" translation="[16, 0]" width="248" height="80"
+               font="dictionary:chipFont" color="0xA8B4C0FF" horizAlign="center" vertAlign="center" />
+    </children>
+    <script type="text/brightscript" uri="pkg:/source/bslib.brs" />
+    <script type="text/brightscript" uri="pkg:/components/SeasonChip.brs" />
+</component>

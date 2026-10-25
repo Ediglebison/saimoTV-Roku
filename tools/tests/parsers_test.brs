@@ -243,6 +243,7 @@ sub testArtwork()
     applySaimoArtwork(items, fichas, {})
     teia = findExact(items, "A Teia")
     eqStr(teia.cover, "https://img.example/w342/a-teia.jpg", "capa relativa recebe base capa:")
+    eqStr(teia.tmdbId, "123", "id TMDB da ficha associado ao titulo")
     eqStr(teia.genres, "Ação,Drama", "generos aplicados junto da capa")
     onda = findExact(items, "A 5a Onda (2016)")
     eqStr(onda.cover, "https://direct.example/poster.jpg", "capa absoluta preservada")
@@ -253,25 +254,32 @@ sub testArtwork()
     existing = []
     existing.Push({ title: "A Teia", type: "movie", cover: "https://already.example/cover.jpg", genres: "" })
     applySaimoArtwork(existing, fichas, {})
-    eqStr(existing[0].cover, "https://already.example/cover.jpg", "capa existente nao e sobrescrita")
+    eqStr(existing[0].cover, "https://img.example/w342/a-teia.jpg", "capa da ficha prevalece sobre o destaque")
     eqStr(existing[0].genres, "Ação,Drama", "generos preenchem item com capa existente")
 
     fallbackItems = []
     fallbackItems.Push({ title: "A Teia", type: "movie", cover: "", genres: "" })
-    fallback = { "f:a teia": "https://destaque.example/a-teia.jpg" }
+    fallback = { "f:ateia": "https://destaque.example/a-teia.jpg" }
     applySaimoArtwork(fallbackItems, "", fallback)
     eqStr(fallbackItems[0].cover, "https://destaque.example/a-teia.jpg", "capa de destaque usada como fallback")
+
+    normalizedItems = []
+    normalizedItems.Push({ title: "B O (2024)", type: "movie", cover: "", genres: "" })
+    normalizedFichas = "capa: https://img.example/w342" + Chr(10)
+    normalizedFichas = normalizedFichas + "f" + Chr(9) + "B.O." + Chr(9) + "321" + Chr(9) + "/bo.jpg" + Chr(9) + "Drama"
+    applySaimoArtwork(normalizedItems, normalizedFichas, {})
+    eqStr(normalizedItems[0].cover, "https://img.example/w342/bo.jpg", "capa encontra título com pontuação e ano diferentes")
 end sub
 
 sub testSubtitle()
     eqStr(saimoItemSubtitle({ type: "movie", year: "2024", genres: "Ação,Drama" }), "Filme  •  2024  •  Ação", "legenda de filme")
     eqStr(saimoItemSubtitle({ type: "series", year: "2024", episodeCount: 8, genres: "Comédia" }), "Série  •  2024  •  8 episódios  •  Comédia", "legenda de serie")
     eqStr(saimoItemSubtitle({ type: "episode", season: 1, episode: 2 }), "Temporada 1  •  Episódio 2", "legenda de episodio")
-    eqStr(saimoGridSubtitle({ type: "movie", year: "2024", genres: "Ação" }), "Filme  •  2024", "legenda compacta de filme")
+    eqStr(saimoGridSubtitle({ type: "movie", year: "2024", genres: "Ação" }), "Filme  •  2024  •  Ação", "legenda compacta de filme")
     eqStr(saimoGridSubtitle({ type: "movie", year: "", genres: "Ação,Drama" }), "Filme  •  Ação", "legenda compacta por genero")
-    eqStr(saimoGridSubtitle({ type: "series", year: "2024", episodeCount: 8, genres: "Comédia" }), "Série  •  8 episódios", "legenda compacta de serie")
+    eqStr(saimoGridSubtitle({ type: "series", year: "2024", episodeCount: 8, genres: "Comédia" }), "Série  •  8 episódios  •  2024  •  Comédia", "legenda compacta de serie")
     eqStr(saimoGridSubtitle({ type: "series", year: "2024", episodeCount: 0 }), "Série  •  2024", "legenda compacta de serie sem contagem")
-    eqStr(saimoGridSubtitle({ type: "episode", season: 1, episode: 2 }), "T1  E2", "legenda compacta de episodio")
+    eqStr(saimoGridSubtitle({ type: "episode", season: 1, episode: 2 }), "Temporada 1", "legenda compacta de episodio")
     eqStr(saimoGridSubtitle({ type: "movie" }), "Filme", "legenda compacta padrao")
     eqStr(firstGenre("Ação, Drama"), "Ação", "primeiro genero")
     eqStr(firstGenre(""), "", "genero vazio")

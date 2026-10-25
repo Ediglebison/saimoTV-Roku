@@ -9,3 +9,4 @@ opencode.json
 .ignore
 /chatgpt-session.md
 /session-*.md
+snapshots/
