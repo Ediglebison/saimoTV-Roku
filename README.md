@@ -1,6 +1,10 @@
 # Saimo TV para Roku — versão 2.5.12
 
+[![Download build compilado](https://img.shields.io/badge/Download-build%20compilado-7c3aed?style=for-the-badge&logo=github)](https://github.com/Ediglebison/saimoTV-Roku/releases/latest/download/SaimoTV-roku.zip)
+
 Cliente pessoal não oficial em BrightScript/SceneGraph para Roku. A versão **2.5.12** corrige a retomada de vídeos pausados e devolve o foco à lista de episódios após fechar o player.
+
+Build compilado pronto para sideload: [SaimoTV-roku.zip](https://github.com/Ediglebison/saimoTV-Roku/releases/latest/download/SaimoTV-roku.zip) (checksum SHA-256 em [SaimoTV-roku.zip.sha256](https://github.com/Ediglebison/saimoTV-Roku/releases/latest/download/SaimoTV-roku.zip.sha256)).
 
 Use somente listas e fontes de mídia que você tenha autorização para acessar. O cliente não inclui conteúdo audiovisual nem fornece um catálogo próprio de filmes/séries. Itens com marcadores adultos conhecidos em título ou categoria são excluídos.
 
