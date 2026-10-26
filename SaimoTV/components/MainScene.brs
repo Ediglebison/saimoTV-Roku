@@ -188,7 +188,6 @@ sub init()
     m.vodSeasonList.observeField("itemFocused", "onSeriesSeasonFocused")
     m.shelfList.observeField("rowItemSelected", "onShelfItemSelected")
     m.shelfList.observeField("rowItemFocused", "onShelfItemFocused")
-    m.itemList.observeField("itemFocused", "onItemFocused")
     m.settingsList.observeField("itemSelected", "onSettingsSelected")
     m.settingsList.observeField("itemFocused", "onSettingsFocused")
     m.guideList.observeField("itemSelected", "onGuideSelected")
@@ -498,7 +497,7 @@ sub refreshPlaylist(notify as boolean)
         return
     end if
 
-    if not startFetch("playlist", m.playlistUrl, "", "", "", "", "") then return
+    if not startFetch("playlist", m.playlistUrl, "", "", "", "") then return
     m.playlistLoading = true
     m.playlistNotify = notify
     m.status.text = "Baixando lista de canais..."
@@ -518,9 +517,9 @@ sub refreshVodCatalog(notify as boolean)
 
     if isSaimoVodUrl(m.vodUrl) then
         base = saimoBaseUrl(m.vodUrl)
-        if not startFetch("saimo_index", base + "indice.txt", base, "", "", "", "") then return
+        if not startFetch("saimo_index", base + "indice.txt", base, "", "", "") then return
     else
-        if not startFetch("vod_catalog", m.vodUrl, "", "", "", "", "") then return
+        if not startFetch("vod_catalog", m.vodUrl, "", "", "", "") then return
     end if
     m.vodRefreshing = true
     m.status.text = "Sincronizando catálogo de filmes e séries..."
@@ -546,7 +545,7 @@ sub onVodRefreshTimer()
     runScheduledSync()
 end sub
 
-function startFetch(mode as string, url as string, base as string, letter as string, title as string, signature as string, tmdbId as string) as boolean
+function startFetch(mode as string, url as string, base as string, letter as string, title as string, signature as string) as boolean
     if m.fetchTask <> invalid then return false
     task = CreateObject("roSGNode", "FetchTask")
     task.mode = mode
@@ -555,7 +554,6 @@ function startFetch(mode as string, url as string, base as string, letter as str
     task.letter = letter
     task.title = title
     task.signature = signature
-    task.tmdbId = tmdbId
     task.userAgent = m.userAgent
     task.observeField("state", "onFetchState")
     m.fetchTask = task
@@ -801,7 +799,7 @@ function findNavIndex(kind as string, value as string) as integer
 end function
 
 ' ---------------------------------------------------------------------------
-' Cromo da tela: cabecalho, relogio, sincronizacao e previa
+' Cromo da tela: cabecalho, relogio e sincronizacao
 ' ---------------------------------------------------------------------------
 
 sub setViewHeader(eyebrow as string, title as string, subText as string)
@@ -809,45 +807,13 @@ sub setViewHeader(eyebrow as string, title as string, subText as string)
     if m.vodDetailGroup <> invalid then m.vodDetailGroup.visible = false
     if m.discoverHero then
         m.discoverHero = false
-        m.previewPoster.translation = [1216, 234]
-        m.previewPoster.width = 240
-        m.previewPoster.height = 360
-        m.previewPoster.visible = false
-        m.previewBackdropGroup.clippingRect = [0, 0, 1520, 1080]
         m.listEyebrow.translation = [452, 53]
         m.listTitle.translation = [450, 79]
         m.listSub.translation = [454, 157]
-        hidePreviewBackdrop()
     end if
     if m.listEyebrow <> invalid then m.listEyebrow.text = eyebrow
     if m.listTitle <> invalid then m.listTitle.text = title
     if m.listSub <> invalid then m.listSub.text = subText
-end sub
-
-sub setPreviewBadge(label as string, color as string, background as string)
-    if m.previewBadge = invalid then return
-    m.previewBadge.text = label
-    m.previewBadge.color = color
-    m.previewBadgeBg.color = background
-end sub
-
-sub setPreviewCta(label as string)
-    if m.previewCtaText <> invalid then m.previewCtaText.text = label
-end sub
-
-sub showPreviewBackdrop(uri as string)
-    if m.previewBackdropGroup = invalid then return
-    if uri = "" then
-        hidePreviewBackdrop()
-        return
-    end if
-    m.previewBackdrop.uri = uri
-    m.previewBackdropGroup.visible = true
-end sub
-
-sub hidePreviewBackdrop()
-    if m.previewBackdropGroup = invalid then return
-    m.previewBackdropGroup.visible = false
 end sub
 
 ' Fundo proprio da ficha: cover http vira uri do fichaBackdrop; qualquer
@@ -888,6 +854,9 @@ function syncHintText() as string
 end function
 
 sub updateChrome()
+    if m.syncHint <> invalid then m.syncHint.color = m.palette.textSecondary
+    if m.clock <> invalid then m.clock.color = m.palette.textPrimary
+    if m.hint <> invalid then m.hint.color = m.palette.textSecondary
     updateClock()
     updateSyncHint()
 end sub
@@ -942,15 +911,10 @@ end sub
 sub populateChannels(groupName as string, forceFocus as boolean)
     previousIndex = m.itemList.itemFocused
     m.activeView = "channels"
-    if m.previewPanel <> invalid then m.previewPanel.visible = false
     m.searchActive = false
     m.itemList.visible = true
     m.vodGrid.visible = false
     m.episodeGrid.visible = false
-    m.previewPoster.visible = false
-    m.previewTitle.visible = true
-    m.previewMeta.visible = true
-    m.previewDesc.visible = true
     m.selectedGroup = groupName
     m.listEntries = []
     m.visibleChannels = []
@@ -968,9 +932,6 @@ sub populateChannels(groupName as string, forceFocus as boolean)
     if groupName <> "" then title = groupName
     setViewHeader("AO VIVO", title, Str(m.visibleChannels.Count()).Trim() + " canais  •  " + Str(sourceTotal).Trim() + " fontes  •  OK abre")
     m.emptyLabel.text = "Nenhum canal neste grupo."
-    hidePreviewBackdrop()
-    setPreviewBadge("AO VIVO", "0xE5484DFF", "0xE5484D24")
-    setPreviewCta("OK  ASSISTIR")
     renderEntries(false)
 
     ' Uma atualizacao em segundo plano preserva o item em foco.
@@ -978,7 +939,6 @@ sub populateChannels(groupName as string, forceFocus as boolean)
     if not forceFocus and previousIndex >= 0 and previousIndex < m.listEntries.Count() then focusIndex = previousIndex
     if m.listEntries.Count() > 0 then
         if not forceFocus and focusIndex > 0 then m.itemList.jumpToItem = focusIndex
-        previewEntry(focusIndex)
     end if
     if forceFocus and not m.settingsVisible and not m.guideVisible and not m.aboutVisible then
         m.itemList.setFocus(true)
@@ -1045,144 +1005,6 @@ sub renderEntries(resetPosition as boolean)
     if resetPosition and m.listEntries.Count() > 0 then m.itemList.jumpToItem = 0
     empty = m.listEntries.Count() = 0
     m.emptyLabel.visible = empty
-    ' A mensagem vazia ocupa a area toda; o painel de previa sairia vazio atras dela.
-    if m.previewPanel <> invalid then m.previewPanel.visible = not empty
-end sub
-
-sub previewEntry(index as integer)
-    if index < 0 or index >= m.listEntries.Count() then
-        clearPreview()
-        return
-    end if
-    entry = m.listEntries[index]
-    if entry.kind = "header" then
-        clearPreview()
-        return
-    end if
-    if entry.kind = "channel" then
-        previewChannel(entry.data)
-    else if entry.kind = "movie" or entry.kind = "vod" then
-        previewMovie(entry.data)
-    else if entry.kind = "saimo_letter" then
-        row = entry.data
-        hidePreviewBackdrop()
-        m.previewPoster.uri = "pkg:/images/placeholder.png"
-        m.previewTitle.text = "Letra " + strField(row, "letter")
-        m.previewMeta.text = "Catálogo Saimo  •  dados por fragmento"
-        m.previewDesc.text = "Escolha esta letra para ver os títulos." + Chr(10) + Chr(10) + "Filmes: " + Str(Val(strField(row, "moviesCount"))).Trim() + Chr(10) + "Séries: " + Str(Val(strField(row, "seriesCount"))).Trim() + Chr(10) + Chr(10) + "As fontes de vídeo são carregadas apenas quando você abre um título."
-        setPreviewBadge("CATÁLOGO", "0xA78BFAFF", "0x8B5CF624")
-        setPreviewCta("OK  ABRIR")
-    else if entry.kind = "saimo_search_result" then
-        row = entry.data
-        hidePreviewBackdrop()
-        m.previewPoster.uri = "pkg:/images/placeholder.png"
-        m.previewTitle.text = strField(row, "title")
-        m.previewMeta.text = strField(row, "group") + "  •  Letra " + strField(row, "letter")
-        if strField(row, "type") = "series" then
-            m.previewDesc.text = "Série do catálogo. Pressione OK para abrir a letra e selecionar a série; os episódios são carregados sob demanda."
-            setPreviewBadge("SÉRIE", "0x4FE3D0FF", "0x4FE3D024")
-        else
-            m.previewDesc.text = "Filme do catálogo. Pressione OK para abrir a letra e selecionar o título; as fontes são consultadas sob demanda."
-            setPreviewBadge("FILME", "0xA78BFAFF", "0x8B5CF624")
-        end if
-        setPreviewCta("OK  ABRIR")
-    else
-        clearPreview()
-    end if
-end sub
-
-sub previewChannel(ch as object)
-    if ch.logo <> "" then
-        m.previewPoster.uri = ch.logo
-    else
-        m.previewPoster.uri = "pkg:/images/placeholder.png"
-    end if
-    hidePreviewBackdrop()
-    m.previewTitle.text = ch.title
-    m.previewMeta.text = ch.group + "  •  " + Str(ch.sources.Count()).Trim() + " fontes"
-    detail = "OK abre este canal."
-    if ch.sources.Count() > 0 then
-        first = ch.sources[0]
-        label = sourceLabel(first, 0)
-        detail = "Fonte principal: " + label
-        host = hostFromUrl(first.url)
-        if host <> "" then detail = detail + Chr(10) + "Servidor: " + host
-        if ch.sources.Count() > 1 then detail = detail + Chr(10) + "Se a primeira falhar, o player tenta as outras automaticamente."
-    end if
-    m.previewDesc.text = detail
-    hasProgramme = false
-    if ch.tvgId <> "" and m.epg[ch.tvgId] <> invalid then
-        hasProgramme = true
-        programme = m.epg[ch.tvgId]
-        programmeTitle = strField(programme, "nowTitle")
-        nextTitle = strField(programme, "nextTitle")
-        nowStart = Val(strField(programme, "nowStart"))
-        nowStop = Val(strField(programme, "nowStop"))
-        if programmeTitle <> "" then
-            detail = "Agora"
-            if nowStart > 0 and nowStop > nowStart then
-                progress = Int(100 * (CreateObject("roDateTime").AsSeconds() - nowStart) / (nowStop - nowStart))
-                if progress < 0 then progress = 0
-                if progress > 100 then progress = 100
-                detail = detail + "  •  " + formatEpgClock(nowStart) + "–" + formatEpgClock(nowStop) + "  •  " + Str(progress).Trim() + "%"
-            end if
-            detail = detail + ": " + programmeTitle
-        end if
-        if nextTitle <> "" then detail = detail + Chr(10) + "A seguir"
-        if nextTitle <> "" and Val(strField(programme, "nextStart")) > 0 then detail = detail + "  •  " + formatEpgClock(Val(strField(programme, "nextStart")))
-        if nextTitle <> "" then detail = detail + ": " + nextTitle
-        if ch.sources.Count() > 1 then detail = detail + Chr(10) + Str(ch.sources.Count()).Trim() + " fontes disponíveis"
-    end if
-    if not hasProgramme then detail = detail + Chr(10) + "Guia de programação indisponível para este canal."
-    m.previewDesc.text = detail
-    setPreviewBadge("AO VIVO", "0xE5484DFF", "0xE5484D24")
-    setPreviewCta("OK  ASSISTIR")
-end sub
-
-sub previewMovie(movie as object)
-    if movie.cover <> "" then
-        m.previewPoster.uri = movie.cover
-        showPreviewBackdrop(movie.cover)
-    else
-        m.previewPoster.uri = "pkg:/images/placeholder.png"
-        hidePreviewBackdrop()
-    end if
-    m.previewTitle.text = movie.title
-    meta = saimoItemSubtitle(movie)
-    if meta = "" then meta = "Filme"
-    m.previewMeta.text = meta
-    kind = LCase(strField(movie, "type"))
-    if kind = "series" then
-        setPreviewBadge("SÉRIE", "0x4FE3D0FF", "0x4FE3D024")
-        setPreviewCta("OK  ABRIR")
-    else if kind = "episode" then
-        setPreviewBadge("EPISÓDIO", "0xEC4899FF", "0xEC489924")
-        setPreviewCta("OK  ASSISTIR")
-    else
-        setPreviewBadge("FILME", "0xA78BFAFF", "0x8B5CF624")
-        setPreviewCta("OK  ASSISTIR")
-    end if
-    if kind = "series" and type(movie.episodes) = "roArray" and movie.episodes.Count() > 0 then
-        m.previewDesc.text = Str(movie.episodes.Count()).Trim() + " episódios disponíveis." + Chr(10) + "OK abre as temporadas e episódios."
-    else
-        sourceCount = 0
-        if type(movie.sources) = "roArray" then sourceCount = movie.sources.Count()
-        m.previewDesc.text = Str(sourceCount).Trim() + " fontes cadastradas." + Chr(10) + "OK inicia a reprodução."
-    end if
-end sub
-
-sub clearPreview()
-    hidePreviewBackdrop()
-    m.previewPoster.uri = "pkg:/images/placeholder.png"
-    m.previewTitle.text = ""
-    m.previewMeta.text = ""
-    m.previewDesc.text = ""
-    setPreviewBadge("DESTAQUE", "0x4FE3D0FF", "0x4FE3D024")
-    setPreviewCta("OK  ABRIR")
-end sub
-
-sub onItemFocused()
-    previewEntry(m.itemList.itemFocused)
 end sub
 
 sub onItemSelected()
@@ -1221,14 +1043,9 @@ sub showEmptyState(message as string)
     m.itemList.visible = true
     m.vodGrid.visible = false
     m.episodeGrid.visible = false
-    m.previewPoster.visible = false
-    m.previewTitle.visible = true
-    m.previewMeta.visible = true
-    m.previewDesc.visible = true
     m.listEntries = []
     m.visibleChannels = []
     renderEntries(false)
-    clearPreview()
     setViewHeader("AO VIVO", "Canais", "Nenhum conteúdo carregado")
     m.emptyLabel.text = message + Chr(10) + Chr(10) + "Abra Ajustes para configurar sua lista de canais e, separadamente, o catálogo VOD autorizado."
     m.emptyIcon.visible = true
@@ -1302,12 +1119,6 @@ sub openVod(filter as string)
     m.itemList.visible = false
     m.vodGrid.visible = true
     m.episodeGrid.visible = false
-    if m.previewPanel <> invalid then m.previewPanel.visible = false
-    hidePreviewBackdrop()
-    m.previewPoster.visible = false
-    m.previewTitle.visible = false
-    m.previewMeta.visible = false
-    m.previewDesc.visible = false
     m.emptyLabel.visible = true
     if m.vodUrl = "" then
         m.emptyLabel.text = "Para carregar o catálogo completo, abra Ajustes e informe a URL M3U/M3U8 de filmes e séries que você tem permissão para acessar.\n\nO app verifica novidades a cada 15 minutos e baixa o catálogo quando o cache tem mais de 6 horas."
@@ -1324,16 +1135,10 @@ sub showVodFavorites()
     m.seriesDetail = invalid
     m.vodVisibleItems = m.vodFavoriteItems
     m.searchActive = false
-    if m.previewPanel <> invalid then m.previewPanel.visible = false
-    hidePreviewBackdrop()
     m.itemList.visible = false
     m.vodGrid.visible = true
     m.episodeGrid.visible = false
     m.shelfList.visible = false
-    m.previewPoster.visible = false
-    m.previewTitle.visible = false
-    m.previewMeta.visible = false
-    m.previewDesc.visible = false
     setViewHeader("FAVORITOS", "Seus filmes e séries", Str(m.vodFavoriteItems.Count()).Trim() + " títulos salvos  •  OK abre os detalhes")
     m.emptyLabel.visible = m.vodFavoriteItems.Count() = 0
     if m.vodFavoriteItems.Count() = 0 then
@@ -1472,16 +1277,10 @@ sub showSaimoHome(filter as string)
     if filter <> "movies" and filter <> "series" then filter = "all"
     if not m.saimoIndexLoaded then
         m.activeView = "saimo_home"
-        if m.previewPanel <> invalid then m.previewPanel.visible = false
-        hidePreviewBackdrop()
         m.vodFilter = filter
         m.itemList.visible = false
         m.vodGrid.visible = false
         m.episodeGrid.visible = false
-        m.previewPoster.visible = false
-        m.previewTitle.visible = false
-        m.previewMeta.visible = false
-        m.previewDesc.visible = false
         setViewHeader("DESCOBRIR", "Descubra filmes e séries", "Sincronizando o catálogo público...")
         m.emptyLabel.text = "Estamos carregando os destaques do catálogo." + Chr(10) + Chr(10) + "Assim que o índice estiver disponível, esta tela mostrará títulos em destaque. Você também pode usar Catálogo A-Z para navegar por letra."
         m.emptyLabel.visible = true
@@ -1511,15 +1310,8 @@ sub showSaimoHome(filter as string)
     m.itemList.visible = false
     m.vodGrid.visible = true
     m.episodeGrid.visible = false
-    if m.previewPanel <> invalid then m.previewPanel.visible = false
-    m.previewPoster.visible = false
-    m.previewTitle.visible = true
-    m.previewMeta.visible = true
-    m.previewDesc.visible = true
     subText = Str(featured.Count()).Trim() + " destaques  •  filmes e séries  •  use Catálogo A-Z para explorar"
     setViewHeader("DESCOBRIR", "Em alta agora", subText)
-    setPreviewBadge("DESTAQUE", "0x4FE3D0FF", "0x4FE3D024")
-    setPreviewCta("OK  ABRIR")
     ' A grade ocupa a área livre ao lado da navegação.
     m.vodGrid.numColumns = 3
     ' Duas fileiras ficam visíveis; a terceira entra com a navegação vertical.
@@ -1569,19 +1361,8 @@ sub showSaimoShelves(filter as string)
     m.episodeGrid.visible = false
     m.shelfList.visible = true
     m.shelfList.content = root
-    m.previewPanel.visible = false
-    hidePreviewBackdrop()
-    m.previewPoster.visible = false
-    m.previewTitle.visible = false
-    m.previewMeta.visible = false
-    m.previewDesc.visible = false
     setViewHeader("DESCOBRIR", "Descubra filmes e séries", Str(m.shelfRows.Count()).Trim() + " fileiras editoriais  •  ↑ ↓ percorre as fileiras")
     m.discoverHero = true
-    m.previewPoster.translation = [430, 30]
-    m.previewPoster.width = 98
-    m.previewPoster.height = 147
-    m.previewPoster.visible = m.shelfRows.Count() > 0
-    m.previewBackdropGroup.clippingRect = [0, 0, 1520, 210]
     m.listEyebrow.translation = [548, 53]
     m.listTitle.translation = [546, 79]
     m.listSub.translation = [550, 157]
@@ -1606,10 +1387,6 @@ sub onShelfItemFocused()
     if itemIndex < 0 or itemIndex >= row.items.Count() then return
     entry = row.items[itemIndex]
     title = strField(entry, "title")
-    cover = strField(entry, "cover")
-    if cover = "" then cover = "pkg:/images/placeholder.png"
-    m.previewPoster.uri = cover
-    if Left(cover, 4) = "http" then showPreviewBackdrop(cover) else hidePreviewBackdrop()
     itemType = LCase(strField(entry, "type"))
     eyebrow = "FILME"
     if itemType = "series" then eyebrow = "SÉRIE"
@@ -1634,21 +1411,13 @@ sub showSaimoLetters(filter as string)
     if filter <> "movies" and filter <> "series" then filter = "all"
     m.saimoBackToHome = false
     m.activeView = "saimo_letters"
-    if m.previewPanel <> invalid then m.previewPanel.visible = false
-    hidePreviewBackdrop()
     m.vodFilter = filter
     m.saimoReturnFilter = filter
     m.searchActive = false
     m.itemList.visible = true
     m.vodGrid.visible = false
     m.episodeGrid.visible = false
-    m.previewPoster.visible = false
-    m.previewTitle.visible = true
-    m.previewMeta.visible = true
-    m.previewDesc.visible = true
     setViewHeader("CATÁLOGO", vodTitleForFilter(filter) + "  •  A–Z", "")
-    setPreviewBadge("CATÁLOGO", "0xA78BFAFF", "0x8B5CF624")
-    setPreviewCta("OK  ABRIR")
     m.listEntries = []
 
     for each row in m.saimoIndexLetters
@@ -1683,7 +1452,6 @@ sub showSaimoLetters(filter as string)
     end if
     renderEntries(true)
     if m.listEntries.Count() > 0 then
-        previewEntry(0)
         m.itemList.setFocus(true)
     else
         m.navList.setFocus(true)
@@ -1693,8 +1461,6 @@ end sub
 
 sub loadSaimoLetter(letter as string)
     if letter = "" then return
-    if m.previewPanel <> invalid then m.previewPanel.visible = false
-    hidePreviewBackdrop()
     if m.fetchTask <> invalid then
         m.pendingSaimoLetter = letter
         showToast("Aguarde a requisição atual terminar; esta letra será aberta em seguida.")
@@ -1706,10 +1472,6 @@ sub loadSaimoLetter(letter as string)
     m.itemList.visible = false
     m.vodGrid.visible = true
     m.episodeGrid.visible = false
-    m.previewPoster.visible = false
-    m.previewTitle.visible = false
-    m.previewMeta.visible = false
-    m.previewDesc.visible = false
     setViewHeader("CATÁLOGO", vodTitleForFilter(m.vodFilter) + "  •  " + letter, "Carregando títulos...  •  OK abre  •  Back volta às letras")
     m.emptyLabel.visible = false
     m.navList.setFocus(true)
@@ -1729,7 +1491,7 @@ sub loadSaimoLetter(letter as string)
 
     if m.fetchTask = invalid then
         base = saimoBaseUrl(m.vodUrl)
-        if not startFetch("saimo_letter", base, base, letter, m.vodFilter, m.saimoIndexSignature, "") then return
+        if not startFetch("saimo_letter", base, base, letter, m.vodFilter, m.saimoIndexSignature) then return
         m.status.text = "Baixando fragmentos da letra " + letter + "..."
     else
         m.pendingSaimoLetter = letter
@@ -1801,8 +1563,6 @@ end sub
 
 sub showSaimoGrid(items as object)
     m.activeView = "saimo_catalog"
-    if m.previewPanel <> invalid then m.previewPanel.visible = false
-    hidePreviewBackdrop()
     m.vodGrid.itemSize = [210, 362]
     m.vodGrid.numColumns = 6
     m.vodGrid.numRows = 2
@@ -1811,10 +1571,6 @@ sub showSaimoGrid(items as object)
     m.itemList.visible = false
     m.vodGrid.visible = true
     m.episodeGrid.visible = false
-    m.previewPoster.visible = false
-    m.previewTitle.visible = false
-    m.previewMeta.visible = false
-    m.previewDesc.visible = false
     setViewHeader("CATÁLOGO", vodTitleForFilter(m.vodFilter) + "  •  " + m.saimoCurrentLetter, Str(items.Count()).Trim() + " títulos  •  capas carregadas automaticamente  •  OK abre")
     m.emptyLabel.visible = items.Count() = 0
     if items.Count() = 0 then
@@ -1864,7 +1620,7 @@ sub loadSaimoEpisodes(series as object)
     if letter = "#" then fileLetter = "%23"
     piece = Str(Val(strField(series, "piece"))).Trim()
     url = base + "series-" + fileLetter + "-" + piece + ".txt"
-    startFetch("saimo_episodes", url, base, letter, strField(series, "title"), "", strField(series, "tmdbId"))
+    startFetch("saimo_episodes", url, base, letter, strField(series, "title"), "")
 end sub
 
 sub handleSaimoEpisodesResult(task as object)
@@ -1905,19 +1661,13 @@ sub showSeriesDetailLoading(series as object)
     m.vodGrid.visible = false
     m.episodeGrid.visible = false
     m.shelfList.visible = false
-    m.previewPoster.visible = false
-    m.previewTitle.visible = false
-    m.previewMeta.visible = false
-    m.previewDesc.visible = false
     m.emptyLabel.visible = false
-    if m.previewPanel <> invalid then m.previewPanel.visible = false
     m.vodSeasonHeading.visible = false
     m.vodSeasonList.visible = false
     m.vodEpisodeEmpty.text = "Consultando temporadas e episódios..."
     m.vodEpisodeEmpty.visible = true
     setViewHeader("SÉRIE", strField(series, "title"), "Informações da série  •  carregando temporadas...")
     updateVodDetailContent(series)
-    hidePreviewBackdrop()
     renderVodDetailActions(series, true)
     m.vodDetailGroup.visible = true
     m.vodDetailActions.setFocus(true)
@@ -1937,13 +1687,7 @@ sub showSeriesDetails(series as object, episodes as object, view as string, retu
     m.itemList.visible = false
     m.vodGrid.visible = false
     m.shelfList.visible = false
-    m.previewPoster.visible = false
-    m.previewTitle.visible = false
-    m.previewMeta.visible = false
-    m.previewDesc.visible = false
     m.emptyLabel.visible = false
-    if m.previewPanel <> invalid then m.previewPanel.visible = false
-    hidePreviewBackdrop()
     m.episodeGrid.visible = episodes.Count() > 0
     m.vodEpisodeEmpty.visible = episodes.Count() = 0
     if episodes.Count() = 0 then
@@ -2057,18 +1801,11 @@ sub startSaimoSearch(query as string, channelEntries as object)
     m.itemList.visible = true
     m.vodGrid.visible = false
     m.episodeGrid.visible = false
-    if m.previewPanel <> invalid then m.previewPanel.visible = false
-    hidePreviewBackdrop()
-    m.previewPoster.visible = false
-    m.previewTitle.visible = true
-    m.previewMeta.visible = true
-    m.previewDesc.visible = true
     setViewHeader("BUSCA", "Busca: " + query, "Pesquisando títulos no catálogo completo...")
     m.listEntries = channelEntries
     renderEntries(true)
-    if m.listEntries.Count() > 0 then previewEntry(0)
     base = saimoBaseUrl(m.vodUrl)
-    startFetch("saimo_search", base + "busca.txt", base, "", query, "", "")
+    startFetch("saimo_search", base + "busca.txt", base, "", query, "")
 end sub
 
 sub handleSaimoSearchResult(task as object)
@@ -2091,16 +1828,10 @@ sub handleSaimoSearchResult(task as object)
     m.itemList.visible = true
     m.vodGrid.visible = false
     m.episodeGrid.visible = false
-    if m.previewPanel <> invalid then m.previewPanel.visible = false
-    m.previewPoster.visible = false
-    m.previewTitle.visible = true
-    m.previewMeta.visible = true
-    m.previewDesc.visible = true
     m.listSub.text = Str(entries.Count()).Trim() + " resultados  •  OK abre a letra correspondente"
     if entries.Count() = 0 then m.emptyLabel.text = "Nenhum resultado para a busca."
     renderEntries(true)
     if entries.Count() > 0 then
-        previewEntry(0)
         m.itemList.setFocus(true)
     else
         m.navList.setFocus(true)
@@ -2109,8 +1840,6 @@ end sub
 
 sub showVod(filter as string)
     m.activeView = "vod"
-    if m.previewPanel <> invalid then m.previewPanel.visible = false
-    hidePreviewBackdrop()
     m.vodGrid.itemSize = [210, 362]
     m.vodGrid.numColumns = 6
     m.vodGrid.numRows = 2
@@ -2120,10 +1849,6 @@ sub showVod(filter as string)
     m.itemList.visible = false
     m.vodGrid.visible = true
     m.episodeGrid.visible = false
-    m.previewPoster.visible = false
-    m.previewTitle.visible = false
-    m.previewMeta.visible = false
-    m.previewDesc.visible = false
     setViewHeader("CATÁLOGO", vodTitleForFilter(filter), "")
 
     if filter = "movies" then
@@ -2224,41 +1949,7 @@ sub onVodItemFocused()
     if type(entry.sources) = "roArray" and entry.sources.Count() > 1 then
         detail = detail + "  •  " + Str(entry.sources.Count()).Trim() + " fontes"
     end if
-    if itemType = "series" then
-        setPreviewBadge("SÉRIE", "0x4FE3D0FF", "0x4FE3D024")
-        setPreviewCta("OK  ABRIR")
-    else if itemType = "episode" then
-        setPreviewBadge("EPISÓDIO", "0xEC4899FF", "0xEC489924")
-        setPreviewCta("OK  ASSISTIR")
-    else
-        setPreviewBadge("FILME", "0xA78BFAFF", "0x8B5CF624")
-        setPreviewCta("OK  ASSISTIR")
-    end if
-    if m.activeView = "saimo_home" then
-        cover = strField(entry, "cover")
-        if cover <> "" then
-            m.previewPoster.uri = cover
-            showPreviewBackdrop(cover)
-        else
-            m.previewPoster.uri = "pkg:/images/placeholder.png"
-            hidePreviewBackdrop()
-        end if
-        m.previewTitle.text = title
-        m.previewMeta.text = subtitle
-        m.previewDesc.text = "Selecione para abrir este título no catálogo e consultar as fontes disponíveis." + Chr(10) + Chr(10) + "O catálogo verifica atualizações a cada 15 minutos enquanto o app está aberto."
-        m.listSub.text = detail
-    else
-        m.listSub.text = detail
-    end if
-end sub
-
-sub onPreviewPosterLoadStatus()
-    status = m.previewPoster.loadStatus
-    uri = m.previewPoster.uri
-    if Left(LCase(uri), 7) <> "http://" and Left(LCase(uri), 8) <> "https://" then return
-    if status = "loading" or status = "ready" or status = "failed" then
-        print "SAIMO_IMAGE preview " + status + " " + uri
-    end if
+    m.listSub.text = detail
 end sub
 
 sub onVodItemSelected()
@@ -2380,18 +2071,11 @@ sub runSearch(query as string)
     m.itemList.visible = true
     m.vodGrid.visible = false
     m.episodeGrid.visible = false
-    if m.previewPanel <> invalid then m.previewPanel.visible = false
-    hidePreviewBackdrop()
-    m.previewPoster.visible = false
-    m.previewTitle.visible = true
-    m.previewMeta.visible = true
-    m.previewDesc.visible = true
     m.listEntries = entries
     setViewHeader("BUSCA", "Busca: " + query, Str(entries.Count()).Trim() + " resultados  •  OK abre")
     m.emptyLabel.text = "Nenhum resultado para \"" + query + "\"."
     renderEntries(true)
     if entries.Count() > 0 then
-        previewEntry(0)
         m.itemList.setFocus(true)
     else
         m.navList.setFocus(true)
@@ -2524,14 +2208,8 @@ sub showVodMovieDetails(item as object, returnView as string, returnIndex as int
     m.vodSeasonHeading.visible = false
     m.vodSeasonList.visible = false
     m.vodEpisodeEmpty.visible = false
-    if m.previewPanel <> invalid then m.previewPanel.visible = false
-    m.previewPoster.visible = false
-    m.previewTitle.visible = false
-    m.previewMeta.visible = false
-    m.previewDesc.visible = false
     setViewHeader("FILME", strField(item, "title"), "Detalhes do filme  •  escolha uma ação")
     updateVodDetailContent(item)
-    hidePreviewBackdrop()
     renderVodDetailActions(item, false)
     m.vodDetailGroup.visible = true
     m.vodDetailActions.setFocus(true)
@@ -2601,11 +2279,6 @@ sub restoreVodDetailReturn()
         m.vodGrid.visible = false
         m.episodeGrid.visible = false
         m.itemList.visible = true
-        if m.previewPanel <> invalid then m.previewPanel.visible = false
-        m.previewPoster.visible = false
-        m.previewTitle.visible = true
-        m.previewMeta.visible = true
-        m.previewDesc.visible = true
         setViewHeader("BUSCA", "Resultados", Str(m.listEntries.Count()).Trim() + " itens  •  OK abre")
         renderEntries(false)
         if m.listEntries.Count() > 0 then
@@ -2641,11 +2314,6 @@ sub restoreSeriesDetailReturn()
         m.vodGrid.visible = false
         m.episodeGrid.visible = false
         m.itemList.visible = true
-        if m.previewPanel <> invalid then m.previewPanel.visible = false
-        m.previewPoster.visible = false
-        m.previewTitle.visible = true
-        m.previewMeta.visible = true
-        m.previewDesc.visible = true
         setViewHeader("BUSCA", "Resultados", Str(m.listEntries.Count()).Trim() + " itens  •  OK abre")
         renderEntries(false)
         if m.listEntries.Count() > 0 then
@@ -2713,7 +2381,6 @@ sub toggleFavorite()
     renderEntries(false)
     m.itemList.jumpToItem = index
     m.itemList.setFocus(true)
-    previewEntry(index)
 end sub
 
 ' ---------------------------------------------------------------------------
@@ -3716,16 +3383,16 @@ sub showToastType(message as string, kind as string)
     m.toast.text = message
     if kind = "success" then
         m.toastIcon.text = "✓"
-        m.toastAccent.color = "0x35C98AFF"
-        m.toastIcon.color = "0x35C98AFF"
+        m.toastAccent.color = m.palette.accent
+        m.toastIcon.color = m.palette.accent
     else if kind = "error" then
         m.toastIcon.text = "!"
-        m.toastAccent.color = "0xE5484DFF"
-        m.toastIcon.color = "0xE5484DFF"
+        m.toastAccent.color = m.palette.live
+        m.toastIcon.color = m.palette.live
     else
         m.toastIcon.text = "i"
-        m.toastAccent.color = "0x4FE3D0FF"
-        m.toastIcon.color = "0x4FE3D0FF"
+        m.toastAccent.color = m.palette.textSecondary
+        m.toastIcon.color = m.palette.textSecondary
     end if
     m.toastAccent.visible = true
     m.toastBg.visible = true

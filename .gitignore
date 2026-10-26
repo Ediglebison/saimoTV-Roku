@@ -10,3 +10,6 @@ opencode.json
 /chatgpt-session.md
 /session-*.md
 snapshots/
+# Python bytecode
+__pycache__/
+*.pyc

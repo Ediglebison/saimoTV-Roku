@@ -15,7 +15,7 @@
             <Label visible="false"><Font id="fontFichaTitle" role="font" uri="pkg:/fonts/Roboto-Medium.ttf" size="64" /></Label>
             <Label visible="false"><Font id="fontFichaFrase" role="font" uri="pkg:/fonts/Roboto-Italic.ttf" size="30" /></Label>
             <Label visible="false"><Font id="fontFichaSynopsis" role="font" uri="pkg:/fonts/Roboto-Regular.ttf" size="34" /></Label>
-            <Label visible="false"><Font id="fontSeasonHeading" role="font" uri="pkg:/fonts/Roboto-Medium.ttf" size="44" /></Label>
+            <Label visible="false"><Font id="fontSeasonHeading" role="font" uri="pkg:/fonts/Roboto-Black.ttf" size="44" /></Label>
         </Group>
         <Poster id="appBg" translation="[0, 0]" width="1920" height="1080"
                 uri="pkg:/images/bg_app.png" loadSync="true" />
@@ -248,7 +248,7 @@
         <Rectangle id="toastAccent" visible="false" translation="[430, 934]" width="4" height="56"
                    color="0x4FE3D0FF" />
         <Rectangle id="toastBg" visible="false" translation="[434, 934]" width="936" height="56"
-                   color="0x1A1526F2" />
+                   color="0xD90B0E14" />
         <Label id="toastIcon" visible="false" translation="[452, 943]" width="40" height="36"
                font="dictionary:fontLabel" color="0x4FE3D0FF" horizAlign="center"
                text="i" />

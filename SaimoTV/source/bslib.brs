@@ -1266,9 +1266,6 @@ function applySaimoArtwork(items as object, fichasText as string, fallbackCovers
 
     if fichasText = invalid or fichasText = "" then return items
     coverBase = ""
-    fichaRows = 0
-    matchedRows = 0
-    posterRows = 0
     for each raw in fichasText.Split(Chr(10))
         line = raw.Trim()
         if LCase(Left(line, 5)) = "capa:" then
@@ -1282,33 +1279,28 @@ function applySaimoArtwork(items as object, fichasText as string, fallbackCovers
                 if rowType = "f" then prefix = "f:"
                 if rowType = "s" then prefix = "s:"
                 if prefix <> "" then
-                    fichaRows = fichaRows + 1
                     key = prefix + saimoArtworkTitleKey(fields[1].Trim())
                     target = wanted[key]
                     if target <> invalid then
-                        matchedRows = matchedRows + 1
-                        tmdbId = fields[2].Trim()
-                        if tmdbId <> "" and Val(tmdbId) > 0 then target.tmdbId = tmdbId
                         if strField(target, "genres") = "" and fields.Count() > 4 then target.genres = fields[4].Trim()
-                        poster = fields[3].Trim()
-                        if poster <> "" then
-                            posterRows = posterRows + 1
-                            if Left(poster, 1) = "/" then
-                                poster = coverBase + Mid(poster, 2, Len(poster) - 1)
-                            else if Left(LCase(poster), 8) <> "https://" and Left(LCase(poster), 7) <> "http://" then
-                                poster = coverBase + poster
+                        if strField(target, "cover") = "" then
+                            poster = fields[3].Trim()
+                            if poster <> "" then
+                                if Left(poster, 1) = "/" then
+                                    poster = coverBase + Mid(poster, 2, Len(poster) - 1)
+                                else if Left(LCase(poster), 8) <> "https://" and Left(LCase(poster), 7) <> "http://" then
+                                    poster = coverBase + poster
+                                end if
+                                ' A ficha completa preenche apenas itens sem capa;
+                                ' a capa do destaque existente e preservada.
+                                if poster <> "" then target.cover = poster
                             end if
-                            ' fichas.txt é a referência de arte para o acervo; os
-                            ' destaques ficam como fallback quando a ficha não
-                            ' traz poster para o título.
-                            if poster <> "" then target.cover = poster
                         end if
                     end if
                 end if
             end if
         end if
     end for
-    print "SAIMO_ART fichas rows=" + Str(fichaRows).Trim() + " matched=" + Str(matchedRows).Trim() + " posters=" + Str(posterRows).Trim()
     return items
 end function
 

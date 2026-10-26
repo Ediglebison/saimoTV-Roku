@@ -20,7 +20,7 @@ Launching the channel creates the SceneGraph scene, restores settings and favori
 
 ## Live TV Browsing
 
-The user browses live channels by category, sees a preview, and selects a channel to watch.
+The user browses live channels by category, sees the channel list with status, and selects a channel to watch.
 
 **Flow:**
 
@@ -29,7 +29,7 @@ The user browses live channels by category, sees a preview, and selects a channe
 3. `SaimoTV/source/bslib.brs` — `parsePlaylist` selects `parseCustom` or `parseM3u` and returns normalized channels.
 4. `SaimoTV/components/MainScene.brs` — `handlePlaylistResult` applies the channels, saves the cache, and records the sync time.
 5. `SaimoTV/components/MainScene.brs` — `applyChannels`, `buildGroups`, `buildNav`, and `populateChannels` build the category navigation and channel rows.
-6. `SaimoTV/components/MainScene.brs` — `previewChannel` shows the logo, group, and source count; `onItemSelected` starts playback.
+6. `SaimoTV/components/MainScene.brs` — `populateChannels` updates the header, counts, and empty state; `onItemSelected` starts playback.
 
 ---
 
@@ -139,7 +139,7 @@ Live channel favorites remain separate from movie and series favorites. VOD favo
 1. `SaimoTV/components/MainScene.brs` — `init` calls `loadFavorites`, which reads the `favorites` registry entry.
 2. `SaimoTV/components/MainScene.brs` — `onKeyEvent` maps Options, Info, and `*` to `toggleFavorite`.
 3. `SaimoTV/components/MainScene.brs` — `toggleFavorite` updates the title list and `saveFavorites` writes it back as JSON.
-4. `SaimoTV/components/MainScene.brs` — `renderEntries` prefixes favorite channels with `★`; `previewChannel` keeps the preview in sync.
+4. `SaimoTV/components/MainScene.brs` — `renderEntries` prefixes favorite channels with `★`; `onItemSelected` keeps the list state in sync.
 5. `SaimoTV/components/MainScene.brs` — `toggleVodFavorite` stores/removes films and series by normalized type, title, and year; `saveVodFavorites` writes the VOD list to the registry.
 6. `SaimoTV/components/MainScene.brs` — `buildNav`, `showVodFavorites`, and `onVodItemSelected` expose the Favoritos tab and open saved titles through the same details flow.
 

@@ -152,10 +152,15 @@ def main() -> int:
     check('id="clock"' in main_xml_text and 'id="syncHint"' in main_xml_text
           and "sub updateClock()" in main_brs and "sub updateSyncHint()" in main_brs,
           "Relógio/indicador de sincronização ausentes")
-    # B9 (E3): preview rail removido — check desativado
-    # (previewBackdropGroup, previewBadge, showPreviewBackdrop, setPreviewBadge removidos)
-    # check('id="previewBackdropGroup"' in main_xml_text and 'id="previewBadge"' in main_xml_text
-          # "Prévia cinematográfica com badge/backdrop ausente")
+    preview_tokens = ("previewPanel", "previewPoster", "previewBackdrop", "previewBadge",
+                      "previewTitle", "previewMeta", "previewDesc", "previewCta",
+                      "clearPreview", "previewEntry", "previewChannel", "previewMovie",
+                      "setPreviewBadge", "setPreviewCta", "showPreviewBackdrop",
+                      "hidePreviewBackdrop", "onPreviewPosterLoadStatus")
+    preview_leftovers = [token for token in preview_tokens if token in main_brs or token in main_xml_text]
+    check(not preview_leftovers,
+          "Trilho de prévia (B9) deve estar ausente do XML/BRS, sem referências órfãs: "
+          + ", ".join(preview_leftovers))
     check('id="playerLive"' in main_xml_text and 'id="toastAccent"' in main_xml_text
           and "m.playerLive.visible = m.currentIsLive" in main_brs,
           "Sobreposição do player/toast 2.5.2 incompleta")
@@ -170,9 +175,10 @@ def main() -> int:
     check('if k = "left" and m.shelfList.hasFocus() then' in main_brs
           and 'focus[1] = 0 then' in main_brs,
           "Navegação horizontal das fileiras deve manter o foco entre capas")
-    # B9 (E3): preview rail removido — checks de preview desativados
-    # (m.previewPoster, m.previewBackdropGroup, previewPanel removidos)
-    # Descobrir atualiza hero/metadados via shelfList (não preview)
+    check("sub onShelfItemFocused()" in main_brs
+          and "m.listTitle.text = title" in main_brs
+          and "m.listSub.text = saimoItemSubtitle(entry)" in main_brs,
+          "Foco das fileiras deve atualizar o herói textual (título e metadados)")
     check("focusScale = 1.0" in read(APP / "components/ShelfCard.brs"),
           "Cartões das fileiras devem destacar o foco sem ampliar a capa")
     episode_xml = read(APP / "components/EpisodeCard.xml")
@@ -194,12 +200,10 @@ def main() -> int:
     check('if m.pendingSaimoLetter <> "" then' in main_brs
           and 'kind <> "saimo_letter" and m.pendingSaimoLetter' not in main_brs,
           "Atualizacao de capas nao deve perder a letra pendente durante carregamento do catalogo")
-    check('id="tmdbId"' in fetch_xml
-          and 'enrichSaimoEpisodes(items, tmdbId' in fetch_brs
-          and '/api/tmdb/tv/' in fetch_brs
-          and 'item.cover = "https://image.tmdb.org/t/p/w300" + still' in fetch_brs
-          and 'item.runtime = runtime' in fetch_brs,
-          "Episódios devem carregar metadados do Worker TMDB com imagens e duração")
+    check('id="tmdbId"' not in fetch_xml
+          and 'enrichSaimoEpisodes' not in fetch_brs
+          and '/api/tmdb/tv/' not in fetch_brs,
+          "Episódios não devem enriquecer por Worker TMDB (contrato de dados preservado)")
     check('id="poster"' in episode_xml and 'id="episodeCode"' in episode_xml
           and 'id="synopsis"' in episode_xml and 'sub updateFocus()' in episode_brs
           and 'sub showItem()' in episode_brs and 'loadPoster()' in episode_brs,
@@ -262,11 +266,10 @@ def main() -> int:
     inter_xml = [path for path in sorted(APP.rglob("*.xml")) if "Inter-" in read(path)]
     check(not inter_xml,
           "Nenhuma uri Inter pode restar em XML: " + ", ".join(str(path.relative_to(ROOT)) for path in inter_xml))
-    # B9 (E3): preview removido — check desativado (não há mais painel único)
-    # preview_start = main_xml_text.find('<Group id="previewPanel"')
-    # preview_end = main_xml_text.find('id="emptyIcon"')
-    # check(preview_start >= 0 and preview_end > preview_start
-          # "Todo o conteúdo da prévia deve ser ocultado dentro de um único painel")
+    check('kind: "saimo_letter"' in main_brs
+          and "sub loadSaimoLetter(letter as string)" in main_brs
+          and "preview" not in main_brs,
+          "Catálogo por letras deve abrir a letra via loadSaimoLetter sem trilho de prévia")
     check('id="title"' in vod_card_xml and 'id="meta"' in vod_card_xml
           and 'maxLines="1"' in vod_card_xml,
           "Cartões do catálogo devem exibir título e metadados em linhas compactas")

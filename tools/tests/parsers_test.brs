@@ -243,7 +243,6 @@ sub testArtwork()
     applySaimoArtwork(items, fichas, {})
     teia = findExact(items, "A Teia")
     eqStr(teia.cover, "https://img.example/w342/a-teia.jpg", "capa relativa recebe base capa:")
-    eqStr(teia.tmdbId, "123", "id TMDB da ficha associado ao titulo")
     eqStr(teia.genres, "Ação,Drama", "generos aplicados junto da capa")
     onda = findExact(items, "A 5a Onda (2016)")
     eqStr(onda.cover, "https://direct.example/poster.jpg", "capa absoluta preservada")
@@ -254,7 +253,7 @@ sub testArtwork()
     existing = []
     existing.Push({ title: "A Teia", type: "movie", cover: "https://already.example/cover.jpg", genres: "" })
     applySaimoArtwork(existing, fichas, {})
-    eqStr(existing[0].cover, "https://img.example/w342/a-teia.jpg", "capa da ficha prevalece sobre o destaque")
+    eqStr(existing[0].cover, "https://already.example/cover.jpg", "capa existente nao e sobrescrita")
     eqStr(existing[0].genres, "Ação,Drama", "generos preenchem item com capa existente")
 
     fallbackItems = []

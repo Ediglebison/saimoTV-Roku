@@ -18,7 +18,7 @@
                 loadingBitmapUri="pkg:/images/placeholder.png"
                 failedBitmapUri="pkg:/images/placeholder.png" />
         <Poster id="focusHalo" translation="[0, 0]" width="168" height="248"
-                uri="pkg:/images/focus_grid.png" opacity="0" loadSync="true" />
+                uri="pkg:/images/focus_shelf.png" opacity="0" loadSync="true" />
         <Label id="cardTitle" translation="[4, 252]" width="160" height="40"
                font="dictionary:shelfCardFont" color="0xF7F3FFFF" wrap="true" />
     </children>

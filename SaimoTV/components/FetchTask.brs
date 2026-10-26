@@ -220,7 +220,6 @@ sub loadSaimoLetter()
     ' A operação ocorre nesta tarefa em segundo plano, nunca durante a abertura.
     if not isStringValue(fichas) or fichas = "" then
         response = httpGet(base + "fichas.txt", m.top.userAgent, "")
-        print "SAIMO_ART fichas http=" + Str(response.code).Trim() + " bytes=" + Str(Len(response.body)).Trim() + " error=" + response.error
         if response.ok and not looksLikeHtml(response.body) and response.body <> "" then
             fichas = response.body
             WriteAsciiFile("cachefs:/saimo_vod_fichas.txt", fichas)
@@ -230,11 +229,6 @@ sub loadSaimoLetter()
     end if
     if not isStringValue(fichas) then fichas = ""
     applySaimoArtwork(items, fichas, fallbackCovers)
-    coveredItems = 0
-    for each artworkItem in items
-        if strField(artworkItem, "cover") <> "" then coveredItems = coveredItems + 1
-    end for
-    print "SAIMO_ART letter=" + letter + " items=" + Str(items.Count()).Trim() + " covers=" + Str(coveredItems).Trim()
 
     if items.Count() = 0 then
         m.top.error = "Nenhum titulo valido foi encontrado nesta letra."
@@ -272,100 +266,9 @@ sub loadSaimoEpisodes()
         return
     end if
 
-    tmdbId = m.top.tmdbId.Trim()
-    if tmdbId = "" then
-        ' A tarefa de capas pode terminar depois que a série já foi aberta.
-        ' Aproveita o cache local para recuperar o ID sem reler fichas na UI.
-        fichas = invalid
-        cachedFichasBase = readCacheAscii("cachefs:/saimo_vod_fichas.url")
-        fichasReady = readCacheAscii("cachefs:/saimo_vod_fichas.ready")
-        if isStringValue(cachedFichasBase) and cachedFichasBase.Trim() = base and isStringValue(fichasReady) and fichasReady.Trim() = "1" then
-            fichas = readCacheAscii("cachefs:/saimo_vod_fichas.txt")
-        else
-            fichasResponse = httpGet(base + "fichas.txt", m.top.userAgent, "")
-            if fichasResponse.ok and not looksLikeHtml(fichasResponse.body) then
-                fichas = fichasResponse.body
-                WriteAsciiFile("cachefs:/saimo_vod_fichas.txt", fichas)
-                WriteAsciiFile("cachefs:/saimo_vod_fichas.url", base)
-                WriteAsciiFile("cachefs:/saimo_vod_fichas.ready", "1")
-            end if
-        end if
-        if isStringValue(fichas) and fichas <> "" then
-            series = [{ type: "series", title: m.top.title.Trim(), cover: "" }]
-            applySaimoArtwork(series, fichas, {})
-            tmdbId = strField(series[0], "tmdbId")
-        end if
-    end if
-    if tmdbId <> "" and Val(tmdbId) > 0 then enrichSaimoEpisodes(items, tmdbId, m.top.userAgent)
-
     m.top.resultJson = FormatJson(items)
     m.top.count = items.Count()
     m.top.success = true
-end sub
-
-sub enrichSaimoEpisodes(items as object, tmdbId as string, userAgent as string)
-    if type(items) <> "roArray" or Val(tmdbId) <= 0 then return
-    seasons = {}
-    for each item in items
-        season = Val(strField(item, "season"))
-        if season > 0 then seasons[Str(season).Trim()] = season
-    end for
-
-    for each seasonKey in seasons
-        season = seasons[seasonKey]
-        cacheBase = "cachefs:/saimo_tmdb_" + tmdbId + "_" + seasonKey
-        cached = readCacheAscii(cacheBase + ".json")
-        cachedAt = readCacheAscii(cacheBase + ".time")
-        useCache = false
-        if isStringValue(cached) and cached <> "" and isStringValue(cachedAt) then
-            now = CreateObject("roDateTime").AsSeconds()
-            if now - Val(cachedAt) < 86400 then useCache = true
-        end if
-
-        seasonJson = ""
-        if useCache then
-            seasonJson = cached
-        else
-            url = "https://saimotv-roku.ediglebison-sousa.workers.dev/api/tmdb/tv/" + tmdbId + "/season/" + seasonKey
-            response = httpGet(url, userAgent, "")
-            if response.ok and not looksLikeHtml(response.body) then
-                seasonJson = response.body
-                WriteAsciiFile(cacheBase + ".json", seasonJson)
-                WriteAsciiFile(cacheBase + ".time", Str(CreateObject("roDateTime").AsSeconds()).Trim())
-            else if isStringValue(cached) and cached <> "" then
-                seasonJson = cached
-            end if
-        end if
-        if seasonJson = "" then continue for
-
-        parsed = ParseJson(seasonJson)
-        if type(parsed) <> "roAssociativeArray" or type(parsed.episodes) <> "roArray" then continue for
-        for each tmdbEpisode in parsed.episodes
-            number = Val(strField(tmdbEpisode, "episode_number"))
-            if number <= 0 then number = Val(strField(tmdbEpisode, "episode"))
-            for each item in items
-                if Val(strField(item, "season")) = season and Val(strField(item, "episode")) = number then
-                    name = strField(tmdbEpisode, "name").Trim()
-                    if name <> "" then item.title = name
-                    overview = strField(tmdbEpisode, "overview").Trim()
-                    if overview <> "" then item.synopsis = overview
-                    runtime = Val(strField(tmdbEpisode, "runtime"))
-                    if runtime > 0 then item.runtime = runtime
-                    airDate = strField(tmdbEpisode, "air_date").Trim()
-                    if airDate <> "" then item.airDate = airDate
-                    still = strField(tmdbEpisode, "still_path").Trim()
-                    if still <> "" then
-                        if Left(LCase(still), 7) = "http://" or Left(LCase(still), 8) = "https://" then
-                            item.cover = still
-                        else if Left(still, 1) = "/" then
-                            item.cover = "https://image.tmdb.org/t/p/w300" + still
-                        end if
-                    end if
-                    exit for
-                end if
-            end for
-        end for
-    end for
 end sub
 
 sub loadSaimoSearch()

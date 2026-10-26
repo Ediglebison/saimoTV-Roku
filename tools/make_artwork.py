@@ -339,17 +339,33 @@ def make_bg_app():
     no meio, faixa roxa/violeta no quadrante inferior esquerdo.
     Alvo: android-ref/apk-art/fundo_app.jpg"""
     width, height = 1920, 1080
-    pixels = canvas(width, height, (11, 14, 20))  # base #0b0e14
+    pixels = canvas(width, height, (11, 14, 20, 255))  # base #0b0e14
     # Brilho teal no canto superior direito (gradiente radial)
     cx, cy = width * 0.85, height * 0.15
     max_r = math.hypot(width * 0.45, height * 0.45)
     for y in range(height):
         for x in range(width):
-            dx = x - cx
-            dy = y - cy
-            r = math.hypot(dx, dy)
+            r = math.hypot(x - cx, y - cy)
             strength = max(0.0, 1.0 - r / max_r) ** 1.5
-            blend(pixels, width, x, y, TEAL + (int(255 * strength * 0.35),))
+            blend(pixels, width, x, y, TEAL + (255,), strength * 0.35)
+    # Faixa azul na altura do meio (brilho horizontal suave)
+    band_y = height * 0.52
+    band_h = height * 0.11
+    for y in range(height):
+        band = max(0.0, 1.0 - abs(y - band_y) / band_h) ** 2
+        if band <= 0:
+            continue
+        for x in range(width):
+            horizontal = 0.55 + 0.45 * math.sin(math.pi * x / (width - 1))
+            blend(pixels, width, x, y, BLUE + (255,), band * horizontal * 0.14)
+    # Faixa roxa no quadrante inferior esquerdo (gradiente radial)
+    cx, cy = width * 0.18, height * 0.82
+    max_r = math.hypot(width * 0.30, height * 0.34)
+    for y in range(height):
+        for x in range(width):
+            r = math.hypot(x - cx, y - cy)
+            strength = max(0.0, 1.0 - r / max_r) ** 1.6
+            blend(pixels, width, x, y, VIOLET + (255,), strength * 0.30)
     save_png(IMAGES / "bg_app.png", width, height, pixels)
 
 
@@ -357,7 +373,7 @@ def make_bg_sidebar():
     """Superfície escura da sidebar: #0b0e14 sem gradiente colorido
     (deixa a cor flat, como o Android)."""
     width, height = 400, 1080
-    pixels = canvas(width, height, (11, 14, 20))  # #0b0e14
+    pixels = canvas(width, height, (11, 14, 20, 255))  # #0b0e14
     save_png(IMAGES / "bg_sidebar.png", width, height, pixels)
 
 
