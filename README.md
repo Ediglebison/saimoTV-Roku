@@ -152,7 +152,7 @@ O ZIP gerado é um pacote de sideload para modo desenvolvedor, não um pacote co
 
 ## Créditos e referência
 
-- Este cliente é um fork/derivação não oficial do projeto original **Saimo TV**, de Gabriel Saimo: https://github.com/gabrielsaimo/Saimo-TV. Créditos ao criador pelo projeto de referência.
+- Este cliente é uma derivação não oficial do projeto **Saimo TV**, agora mantido em https://github.com/saimotv. Créditos ao criador original e à equipe/projeto Saimo TV.
 - Use somente com listas e fontes de mídia que você tenha autorização para acessar.
 
 ## Referências técnicas
