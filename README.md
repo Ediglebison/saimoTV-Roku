@@ -150,6 +150,11 @@ O ZIP gerado é um pacote de sideload para modo desenvolvedor, não um pacote co
 - O player depende de streams permitidos e compatíveis com Roku. Alguns formatos, servidores, codecs ou requisitos de acesso podem não funcionar.
 - A disponibilidade das URLs externas varia; falhas de rede preservam o cache já carregado.
 
+## Créditos e referência
+
+- Este cliente é um fork/derivação não oficial do projeto original **Saimo TV**, de Gabriel Saimo: https://github.com/gabrielsaimo/Saimo-TV. Créditos ao criador pelo projeto de referência.
+- Use somente com listas e fontes de mídia que você tenha autorização para acessar.
+
 ## Referências técnicas
 
 - Documentação Roku SceneGraph PosterGrid: https://developer.roku.com/dev/docs/postergrid
