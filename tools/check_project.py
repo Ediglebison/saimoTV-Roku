@@ -80,13 +80,13 @@ def main() -> int:
     except json.JSONDecodeError as exc:
         ERRORS.append(f"JSON inválido: {exc}")
         package, config = {}, {}
-    check(package.get("version") == "2.5.12", "package.json deve apontar para 2.5.12")
+    check(package.get("version") == "2.5.13", "package.json deve apontar para 2.5.13")
     try:
         lock = json.loads(read(ROOT / "package-lock.json"))
     except json.JSONDecodeError:
         lock = {}
-    check(lock.get("version") == "2.5.12" and lock.get("packages", {}).get("", {}).get("version") == "2.5.12",
-          "package-lock.json deve apontar para 2.5.12")
+    check(lock.get("version") == "2.5.13" and lock.get("packages", {}).get("", {}).get("version") == "2.5.13",
+          "package-lock.json deve apontar para 2.5.13")
     check(package.get("scripts", {}).get("test") == "python3 tools/test_parsers.py",
           "package.json deve expor npm test para a suíte de parsers")
     check("brighterscript" in package.get("devDependencies", {}), "Dependência brighterscript ausente")
@@ -95,8 +95,8 @@ def main() -> int:
 
     manifest = read(APP / "manifest")
     version_fields = dict(line.split("=", 1) for line in manifest.splitlines() if "=" in line)
-    check((version_fields.get("major_version"), version_fields.get("minor_version"), version_fields.get("build_version")) == ("2", "5", "12"),
-          "Versão do manifest não corresponde a 2.5.12")
+    check((version_fields.get("major_version"), version_fields.get("minor_version"), version_fields.get("build_version")) == ("2", "5", "13"),
+          "Versão do manifest não corresponde a 2.5.13")
     check("ui_resolutions=fhd" in manifest, "Resolução FHD do manifest deve permanecer definida")
 
     main_brs = read(APP / "components/MainScene.brs")
@@ -353,8 +353,8 @@ def main() -> int:
     check("TESTS_FAILED" in test_runner and "TESTS_PASS" in test_runner,
           "O runner de testes deve falhar quando TESTS_FAILED for emitido")
 
-    check("2.5.12" in readme and "sob demanda" in readme,
-          "README precisa documentar a versão 2.5.12 e o carregamento sob demanda")
+    check("2.5.13" in readme and "sob demanda" in readme,
+          "README precisa documentar a versão 2.5.13 e o carregamento sob demanda")
     check("identidade visual" in readme.lower() or "interface" in readme.lower(),
           "README precisa documentar a renovação visual")
     check("Roboto" in readme and "SaimoTV/fonts" in readme,
