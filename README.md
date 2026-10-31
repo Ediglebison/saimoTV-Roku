@@ -1,4 +1,4 @@
-# Saimo TV para Roku — versão 2.5.15
+# Saimo TV para Roku — versão 2.5.16
 
 [![Download build compilado](https://img.shields.io/badge/Download-build%20compilado-7c3aed?style=for-the-badge&logo=github)](https://github.com/Ediglebison/saimoTV-Roku/releases/latest/download/SaimoTV-roku.zip)
 
@@ -84,7 +84,7 @@ Use somente listas e fontes de mídia que você tenha autorização para acessar
 
 ## Como o catálogo funciona
 
-A fonte padrão de filmes e séries é `https://saimo-filmes.pages.dev/`. O app aceita a raiz do catálogo ou o endereço direto do índice e acrescenta os nomes de arquivo necessários:
+A fonte padrão de filmes e séries é `https://filmes-saimo.pages.dev/`. O app aceita a raiz do catálogo ou o endereço direto do índice e acrescenta os nomes de arquivo necessários:
 
 - `indice.txt`: letras disponíveis, contagens, bases de vídeo e assinatura do catálogo.
 - `destaques.txt`: fileiras da tela Descobrir.

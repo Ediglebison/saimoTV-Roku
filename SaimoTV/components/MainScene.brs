@@ -73,7 +73,7 @@ sub init()
     if m.userAgent = "" then m.userAgent = m.defaultUA
     m.vodUrl = readSetting("vodUrl")
     m.publicCatalog = "https://saimo-canais.pages.dev/catalogo.txt"
-    m.defaultVodUrl = "https://saimo-filmes.pages.dev/"
+    m.defaultVodUrl = "https://filmes-saimo.pages.dev/"
     lowVod = LCase(m.vodUrl)
     if m.vodUrl = "" or Instr(1, lowVod, "filmes-saimo.pages.dev") > 0 or Instr(1, lowVod, "saimoplayer/main/vod") > 0 then
         m.vodUrl = m.defaultVodUrl
@@ -2481,7 +2481,7 @@ end sub
 sub buildSettings()
     entries = []
     entries.Push({ title: "URL da lista M3U de canais", key: "playlist", help: "Lista de canais ao vivo. Este endereço é independente do catálogo VOD." })
-    entries.Push({ title: "Fonte do catálogo de filmes e séries", key: "vod", help: "Padrão: catálogo Saimo, dividido por letras e atualizado pela rede. Também aceita uma URL de lista M3U/M3U8 autorizada. Endereço: https://saimo-filmes.pages.dev/" })
+    entries.Push({ title: "Fonte do catálogo de filmes e séries", key: "vod", help: "Padrão: catálogo Saimo, dividido por letras e atualizado pela rede. Também aceita uma URL de lista M3U/M3U8 autorizada. Endereço: https://filmes-saimo.pages.dev/" })
     entries.Push({ title: "Atualizar catálogo VOD agora", key: "vodrefresh", help: "Sincroniza filmes e séries imediatamente. Em segundo plano, o app verifica a cada 15 minutos e baixa quando o cache tem mais de 6 horas." })
     entries.Push({ title: "URL do EPG XMLTV (opcional)", key: "epg", help: "Endereço do guia XMLTV. Pode ficar vazio." })
     entries.Push({ title: "User-Agent HTTP", key: "ua", help: "Agente enviado nas requisições de listas e ao player." })

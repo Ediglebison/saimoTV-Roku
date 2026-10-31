@@ -207,7 +207,7 @@ function saimoBaseUrl(url as string) as string
     low = LCase(base)
     if Instr(1, low, "saimo-filmes.pages.dev") > 0 or Instr(1, low, "filmes-saimo.pages.dev") > 0 or Instr(1, low, "saimoplayer/main/vod") > 0 then
         ' Hosts publicos e aliases antigos apontam para a mesma raiz oficial.
-        base = "https://saimo-filmes.pages.dev/"
+        base = "https://filmes-saimo.pages.dev/"
     end if
     return normalizeSaimoBase(base)
 end function
@@ -217,6 +217,7 @@ function isSaimoCatalogUrl(url as string) as boolean
     if Instr(1, low, "saimo-canais.pages.dev") > 0 then return true
     if Instr(1, low, "canais-saimo.pages.dev") > 0 then return true
     if Instr(1, low, "raw.githubusercontent.com/gabrielsaimo/saimoplayer/main/catalogo.txt") > 0 then return true
+    if Instr(1, low, "raw.githubusercontent.com/saimotv/saimoplayer/main/catalogo.txt") > 0 then return true
     return false
 end function
 
