@@ -259,6 +259,7 @@
         <Timer id="failoverTimer" duration="20" repeat="false" />
         <Timer id="progressTimer" duration="2" repeat="true" />
         <Timer id="playerAutoHideTimer" duration="3" repeat="false" />
+        <Timer id="seekHoldTimer" duration="0.35" repeat="true" />
         <Timer id="vodRefreshTimer" duration="900" repeat="true" />
     </children>
 </component>

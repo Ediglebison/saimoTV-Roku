@@ -61,6 +61,7 @@ sub init()
     m.failoverTimer = m.top.findNode("failoverTimer")
     m.progressTimer = m.top.findNode("progressTimer")
     m.playerAutoHideTimer = m.top.findNode("playerAutoHideTimer")
+    m.seekHoldTimer = m.top.findNode("seekHoldTimer")
     m.vodRefreshTimer = m.top.findNode("vodRefreshTimer")
 
     m.registry = CreateObject("roRegistrySection", "SaimoTV")
@@ -164,6 +165,14 @@ sub init()
     m.editKey = ""
 
     m.playerVisible = false
+    m.pausedPosition = 0
+    m.resumePending = false
+    m.resumeAttempts = 0
+    m.resumeTarget = 0
+    m.seekHoldActive = false
+    m.seekHoldDirection = 0
+    m.seekHoldCount = 0
+    m.seekHoldStartedAt = 0
     m.currentChannel = invalid
     m.currentSources = []
     m.currentSourceIndex = 0
@@ -198,6 +207,7 @@ sub init()
     m.failoverTimer.observeField("fire", "onFailoverTimer")
     m.progressTimer.observeField("fire", "onProgressTimer")
     m.playerAutoHideTimer.observeField("fire", "hidePlayerOverlay")
+    if m.seekHoldTimer <> invalid then m.seekHoldTimer.observeField("fire", "onSeekHoldTimer")
     m.progressTimer.control = "start"
     m.vodRefreshTimer.observeField("fire", "onVodRefreshTimer")
 
@@ -2771,6 +2781,14 @@ sub playChannel(channel as object)
     m.switchingSource = false
     m.allSourcesFailed = false
     m.lastVideoError = ""
+    m.pausedPosition = 0
+    m.resumePending = false
+    m.resumeAttempts = 0
+    m.resumeTarget = 0
+    m.seekHoldActive = false
+    m.seekHoldDirection = 0
+    m.seekHoldCount = 0
+    if m.seekHoldTimer <> invalid then m.seekHoldTimer.control = "stop"
 
     m.settingsGroup.visible = false
     m.guideGroup.visible = false
@@ -2800,7 +2818,7 @@ sub playChannel(channel as object)
         if m.currentIsLive then
             m.playerHint.text = "AO VIVO  •  OK mostra informações  •  pausa e busca indisponíveis  •  Back sai"
         else
-            m.playerHint.text = "OK pausa  •  ← -10s  •  → +30s  •  Back sai"
+            m.playerHint.text = "OK/Play pausa  •  ← -10s  •  → +30s  •  segure para busca rápida  •  Back sai"
         end if
     end if
     m.video.control = "stop"
@@ -2880,6 +2898,18 @@ sub onVideoState()
         m.playerCenterState.visible = false
         showPlayerOverlay()
         m.playerState.text = ""
+        if m.resumePending then
+            target = m.resumeTarget
+            if target >= 0 then
+                position = m.video.position
+                if position = invalid then position = 0
+                if target > 2 and position < target - 2 and m.resumeAttempts < 2 then
+                    m.resumeAttempts = m.resumeAttempts + 1
+                    m.video.seek = target
+                end if
+            end if
+            m.resumePending = false
+        end if
     else if state = "paused" then
         m.playerAutoHideTimer.control = "stop"
         m.playerSpinner.control = "stop"
@@ -2976,6 +3006,7 @@ sub closePlayer()
     m.switchingSource = false
     m.failoverTimer.control = "stop"
     m.playerAutoHideTimer.control = "stop"
+    stopSeekHold()
     m.playerSpinner.control = "stop"
     m.playerSpinner.visible = false
     m.playerCenterState.visible = false
@@ -3004,6 +3035,10 @@ sub togglePlayback()
     end if
     state = LCase(m.video.state)
     if state = "playing" then
+        position = m.video.position
+        if position = invalid then position = 0
+        m.pausedPosition = position
+        m.resumeTarget = position
         m.video.control = "pause"
         m.playerAutoHideTimer.control = "stop"
         m.playerCenterState.visible = true
@@ -3011,9 +3046,14 @@ sub togglePlayback()
         m.playerState.color = "0xA79FBAFF"
         m.playerState.text = "Pausado"
     else if state = "paused" then
-        m.video.control = "resume"
+        if m.pausedPosition >= 0 then m.resumeTarget = m.pausedPosition else m.resumeTarget = 0
+        position = m.video.position
+        if position <> invalid and position > 0 and m.resumeTarget = 0 then m.resumeTarget = position
+        m.resumePending = true
+        m.resumeAttempts = 0
         m.playerCenterState.visible = false
         m.playerState.text = "Retomando..."
+        m.video.control = "resume"
     end if
 end sub
 
@@ -3028,13 +3068,73 @@ sub seekBy(seconds as integer)
     end if
     position = m.video.position
     if position = invalid then position = 0
+    duration = m.video.duration
+    if duration = invalid or duration <= 0 then duration = 0
     target = position + seconds
     if target < 0 then target = 0
+    if duration > 0 and target > duration - 1 then target = duration - 1
+    if target < 0 then target = 0
+    state = LCase(m.video.state)
+    if state = "paused" then m.pausedPosition = target
     m.video.seek = target
     showPlayerOverlay()
     m.playerState.color = "0xA79FBAFF"
     m.playerState.text = "Buscando..."
 end sub
+
+sub startSeekHold(direction as integer)
+    if not m.playerVisible then return
+    if m.currentIsLive then
+        if direction > 0 then seekBy(30) else seekBy(-10)
+        return
+    end if
+    if m.seekHoldActive and m.seekHoldDirection = direction then return
+    stopSeekHold()
+    m.seekHoldActive = true
+    m.seekHoldDirection = direction
+    m.seekHoldCount = 1
+    if direction > 0 then seekBy(30) else seekBy(-10)
+    if m.seekHoldTimer <> invalid then
+        m.seekHoldTimer.duration = 0.4
+        m.seekHoldTimer.control = "start"
+    end if
+end sub
+
+sub stopSeekHold()
+    if m.seekHoldTimer <> invalid then m.seekHoldTimer.control = "stop"
+    m.seekHoldActive = false
+    m.seekHoldDirection = 0
+    m.seekHoldCount = 0
+end sub
+
+sub onSeekHoldTimer()
+    if not m.playerVisible or not m.seekHoldActive or m.currentIsLive then
+        stopSeekHold()
+        return
+    end if
+    m.seekHoldCount = m.seekHoldCount + 1
+    amount = holdSeekAmount(m.seekHoldDirection, m.seekHoldCount)
+    seekBy(amount)
+    if m.seekHoldTimer <> invalid then
+        m.seekHoldTimer.control = "stop"
+        m.seekHoldTimer.duration = 0.25
+        m.seekHoldTimer.control = "start"
+    end if
+end sub
+
+function holdSeekAmount(direction as integer, count as integer) as integer
+    if direction > 0 then
+        if count <= 3 then return 30
+        if count <= 8 then return 60
+        if count <= 15 then return 180
+        return 300
+    else
+        if count <= 3 then return -10
+        if count <= 8 then return -30
+        if count <= 15 then return -60
+        return -120
+    end if
+end function
 
 sub onProgressTimer()
     updateChrome()
@@ -3102,7 +3202,10 @@ end sub
 ' ---------------------------------------------------------------------------
 
 function onKeyEvent(key as string, press as boolean) as boolean
-    if not press then return false
+    if not press then
+        if m.playerVisible then stopSeekHold()
+        return false
+    end if
     k = LCase(key)
     ' Colunas do grid de episódios, igual a itemSize/numColumns do XML.
     EPISODE_COLUMNS = 3
@@ -3156,27 +3259,29 @@ function onKeyEvent(key as string, press as boolean) as boolean
 
     if m.playerVisible then
         if k = "back" then
+            stopSeekHold()
             closePlayer()
             return true
         else if k = "ok" then
+            stopSeekHold()
             togglePlayback()
             return true
-        else if k = "play" then
-            if LCase(m.video.state) <> "playing" then togglePlayback()
+        else if k = "play" or k = "pause" or k = "playpause" then
+            stopSeekHold()
+            togglePlayback()
             return true
-        else if k = "pause" then
-            if LCase(m.video.state) = "playing" then togglePlayback()
+        else if k = "left" or k = "rewind" or k = "rev" then
+            startSeekHold(-1)
             return true
-        else if k = "left" then
-            seekBy(-10)
-            return true
-        else if k = "right" then
-            seekBy(30)
+        else if k = "right" or k = "fastforward" or k = "fwd" then
+            startSeekHold(1)
             return true
         else if k = "up" or k = "down" then
+            stopSeekHold()
             showPlayerOverlay()
             return true
         end if
+        stopSeekHold()
         return false
     end if
 
