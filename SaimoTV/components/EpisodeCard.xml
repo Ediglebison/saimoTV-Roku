@@ -24,7 +24,10 @@
                font="dictionary:episodeBadgeFont" color="0x4FE3D0FF" horizAlign="center" text="" />
         <Label id="title" translation="[12, 226]" width="372" height="34"
                font="dictionary:episodeTitleFont" color="0xFFFFFFFF" maxLines="1" text="" />
-        <Label id="meta" translation="[12, 260]" width="372" height="24"
+        <Label id="watchedBadge" translation="[252, 16]" width="116" height="32"
+               font="dictionary:episodeBadgeFont" color="0x4FE3D0FF"
+               horizAlign="center" text="✓ VISTO" visible="false" />
+<Label id="meta" translation="[12, 260]" width="372" height="24"
                font="dictionary:episodeMetaFont" color="0xA8B4C0FF" maxLines="1" text="" />
         <Label id="synopsis" translation="[12, 284]" width="372" height="24"
                font="dictionary:episodeMetaFont" color="0x66FFFFFF" maxLines="1" text="" />

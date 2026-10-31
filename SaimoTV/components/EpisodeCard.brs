@@ -7,6 +7,7 @@ sub init()
     m.title = m.top.findNode("title")
     m.meta = m.top.findNode("meta")
     m.synopsis = m.top.findNode("synopsis")
+    m.watchedBadge = m.top.findNode("watchedBadge")
     m.focusHalo = m.top.findNode("focusHalo")
     m.posterUri = ""
     m.poster.observeField("loadStatus", "onPosterLoadStatus")
@@ -27,6 +28,7 @@ sub showItem()
     m.title.text = strField(item, "episodeTitle")
     m.meta.text = strField(item, "episodeMeta")
     m.synopsis.text = strField(item, "episodeSynopsis")
+    if m.watchedBadge <> invalid then m.watchedBadge.visible = boolField(item, "watched", false)
 end sub
 
 sub updateFocus()

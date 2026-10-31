@@ -114,6 +114,11 @@ sub init()
     m.vodInitPending = false
     m.vodLastSync = Val(readSetting("vodLastSync"))
     m.playlistLastSync = Val(readSetting("playlistLastSync"))
+    watchedRaw = readSetting("watchedEpisodes")
+    if watchedRaw <> "" then
+        parsed = ParseJSON(watchedRaw)
+        if type(parsed) = "roAssociativeArray" then m.watchedEpisodes = parsed else m.watchedEpisodes = {}
+    end if
     m.playlistNotify = false
     m.saimoIndexLetters = []
     m.saimoBases = {}
@@ -165,6 +170,7 @@ sub init()
     m.editKey = ""
 
     m.playerVisible = false
+    m.watchedEpisodes = {}
     m.pausedPosition = 0
     m.resumePending = false
     m.resumeAttempts = 0
@@ -273,6 +279,27 @@ function vodFavoriteKey(item as object) as string
     year = strField(item, "year")
     return itemType + "|" + titleKey + "|" + year
 end function
+
+function watchedKey(item as object) as string
+    if item = invalid then return ""
+    titleKey = saimoArtworkTitleKey(strField(item, "title"))
+    if titleKey = "" then titleKey = LCase(strField(item, "title"))
+    if titleKey = "" then return ""
+    season = strField(item, "season")
+    episode = strField(item, "episode")
+    if season = "" then season = "0"
+    if episode = "" then episode = "0"
+    return titleKey + "|s" + season + "|e" + episode
+end function
+
+sub markWatched(item as object)
+    if item = invalid then return
+    key = watchedKey(item)
+    if key = "" then return
+    if m.watchedEpisodes = invalid then m.watchedEpisodes = {}
+    m.watchedEpisodes[key] = true
+    writeSetting("watchedEpisodes", FormatJSON(m.watchedEpisodes))
+end sub
 
 sub loadVodFavorites()
     raw = readSetting("vodFavorites")
@@ -1758,6 +1785,8 @@ sub buildSeriesSeasonList(episodes as object)
         end for
     end for
     m.seriesSeasonValues = seasons
+    if seasons.Count() > 0 then m.vodSeasonList.numColumns = seasons.Count()
+    m.lastSeasonFocusIndex = 0
     root = CreateObject("roSGNode", "ContentNode")
     for each season in seasons
         node = root.CreateChild("ContentNode")
@@ -1919,7 +1948,7 @@ sub buildEpisodeGrid(items as object)
     root = CreateObject("roSGNode", "ContentNode")
     for each entry in items
         node = root.CreateChild("ContentNode")
-        node.addFields({ episodeCode: "", episodeTitle: "", episodeMeta: "", episodeSynopsis: "", episodeNumber: "", episodeArt: "" })
+        node.addFields({ episodeCode: "", episodeTitle: "", episodeMeta: "", episodeSynopsis: "", episodeNumber: "", episodeArt: "", watched: false })
         node.episodeArt = strField(entry, "cover")
         season = Val(strField(entry, "season"))
         number = Val(strField(entry, "episode"))
@@ -1950,7 +1979,12 @@ sub buildEpisodeGrid(items as object)
         synopsis = strField(entry, "synopsis")
         if synopsis = "" then synopsis = strField(entry, "description")
         node.episodeSynopsis = synopsis
+        if m.watchedEpisodes <> invalid then
+            entryKey = watchedKey(entry)
+            if entryKey <> "" and m.watchedEpisodes.DoesExist(entryKey) then node.watched = true
+        end if
     end for
+    if items.Count() > 0 then m.episodeGrid.numColumns = items.Count()
     m.episodeGrid.content = root
     m.episodeGrid.jumpToItem = 0
 end sub
@@ -2045,6 +2079,7 @@ sub playVodEntry(entry as object)
         sources: sources
         isLive: false
     }
+    markWatched(entry)
     playChannel(channel)
 end sub
 

@@ -1,4 +1,4 @@
-# Saimo TV para Roku — versão 2.5.14
+# Saimo TV para Roku — versão 2.5.15
 
 [![Download build compilado](https://img.shields.io/badge/Download-build%20compilado-7c3aed?style=for-the-badge&logo=github)](https://github.com/Ediglebison/saimoTV-Roku/releases/latest/download/SaimoTV-roku.zip)
 
