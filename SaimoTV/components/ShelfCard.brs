@@ -38,7 +38,5 @@ sub onPosterLoadStatus()
     status = m.poster.loadStatus
     uri = m.poster.uri
     if Left(LCase(uri), 7) <> "http://" and Left(LCase(uri), 8) <> "https://" then return
-    if status = "loading" or status = "ready" or status = "failed" then
-        print "SAIMO_IMAGE shelf " + status + " " + uri
-    end if
+    ' Image loading is intentionally silent; Roku console must not be flooded.
 end sub

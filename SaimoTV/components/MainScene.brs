@@ -1710,6 +1710,8 @@ sub showSeriesDetails(series as object, episodes as object, view as string, retu
     renderVodDetailActions(series, true)
     m.vodDetailGroup.visible = true
     buildSeriesSeasonList(episodes)
+    m.lastSeasonFocusIndex = 0
+    m.suppressSeasonFocus = false
     if m.seriesSeasonValues.Count() > 1 then
         m.vodSeasonHeading.text = "TEMPORADAS"
         m.vodSeasonHeading.visible = true
@@ -1788,6 +1790,32 @@ end function
 sub onSeriesSeasonFocused()
     index = m.vodSeasonList.itemFocused
     if not m.vodDetailGroup.visible or (m.activeView <> "vod_episodes" and m.activeView <> "saimo_episodes") or index < 0 or index >= m.seriesSeasonValues.Count() then return
+    if m.suppressSeasonFocus = invalid then m.suppressSeasonFocus = false
+    if m.lastSeasonFocusIndex = invalid then m.lastSeasonFocusIndex = index
+    if m.suppressSeasonFocus then return
+
+    previousIndex = m.lastSeasonFocusIndex
+    ' Movimento vertical da grelha de temporadas (ex.: baixo da 1a para a 5a)
+    ' nao deve trocar de temporada nem reconstruir a grade. Down vai para
+    ' episodios; up volta para acoes.
+    verticalJump = previousIndex >= 0 and previousIndex <> index and Abs(index - previousIndex) >= 4
+    if verticalJump then
+        if index > previousIndex and m.vodVisibleItems.Count() > 0 then
+            m.suppressSeasonFocus = true
+            m.vodSeasonList.jumpToItem = previousIndex
+            m.suppressSeasonFocus = false
+            m.lastSeasonFocusIndex = previousIndex
+            m.episodeGrid.setFocus(true)
+            return
+        end if
+        m.suppressSeasonFocus = true
+        m.vodSeasonList.jumpToItem = previousIndex
+        m.suppressSeasonFocus = false
+        m.lastSeasonFocusIndex = previousIndex
+        return
+    end if
+
+    m.lastSeasonFocusIndex = index
     season = m.seriesSeasonValues[index]
     if season = m.seriesCurrentSeason then return
     m.seriesCurrentSeason = season
