@@ -255,6 +255,20 @@
         <Label id="toast" visible="false" translation="[500, 946]" width="850" height="32"
                font="dictionary:fontBody" color="0xF7F3FFFF" text="" />
 
+        <Group id="searchOverlay" visible="false" translation="[0, 0]">
+            <Rectangle id="searchOverlayBg" translation="[0, 0]" width="1920" height="1080" color="0x0B0E14E8" />
+            <Label id="searchOverlayTitle" translation="[80, 48]" width="500" height="58"
+                   font="dictionary:fontTitle" color="0xFFFFFFFF" text="Buscar" />
+            <Label id="searchOverlayHint" translation="[80, 108]" width="720" height="30"
+                   font="dictionary:fontBodySmall" color="0xA8B4C0FF"
+                   text="Teclado compacto • resultados ao lado em tempo real • Back fecha" />
+            <Keyboard id="searchKeyboard" translation="[72, 160]" width="820" maxTextLength="80"
+                      showTextEditBox="true" />
+            <Label id="searchResultsTitle" translation="[936, 112]" width="888" height="34"
+                   font="dictionary:fontSection" color="0xA8B4C0FF" text="RESULTADOS" />
+            <Label id="searchResultsEmpty" translation="[936, 430]" width="888" height="60"
+                   font="dictionary:fontBody" color="0xA8B4C0FF" text="" visible="false" />
+        </Group>
         <Timer id="toastTimer" duration="3" repeat="false" />
         <Timer id="failoverTimer" duration="20" repeat="false" />
         <Timer id="progressTimer" duration="2" repeat="true" />

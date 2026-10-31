@@ -63,6 +63,8 @@ sub init()
     m.playerAutoHideTimer = m.top.findNode("playerAutoHideTimer")
     m.seekHoldTimer = m.top.findNode("seekHoldTimer")
     m.vodRefreshTimer = m.top.findNode("vodRefreshTimer")
+    m.searchOverlay = m.top.findNode("searchOverlay")
+    m.searchKeyboard = m.top.findNode("searchKeyboard")
 
     m.registry = CreateObject("roRegistrySection", "SaimoTV")
     m.defaultUA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15"
@@ -172,6 +174,7 @@ sub init()
     m.playerVisible = false
     m.watchedEpisodes = {}
     m.pausedPosition = 0
+    m.searchOverlayActive = false
     m.resumePending = false
     m.resumeAttempts = 0
     m.resumeTarget = 0
@@ -214,6 +217,7 @@ sub init()
     m.progressTimer.observeField("fire", "onProgressTimer")
     m.playerAutoHideTimer.observeField("fire", "hidePlayerOverlay")
     if m.seekHoldTimer <> invalid then m.seekHoldTimer.observeField("fire", "onSeekHoldTimer")
+    if m.searchKeyboard <> invalid then m.searchKeyboard.observeField("text", "onSearchKeyboardTextChanged")
     m.progressTimer.control = "start"
     m.vodRefreshTimer.observeField("fire", "onVodRefreshTimer")
 
@@ -1045,6 +1049,7 @@ sub renderEntries(resetPosition as boolean)
 end sub
 
 sub onItemSelected()
+    if m.searchOverlayActive then closeSearchOverlay(false)
     index = m.itemList.itemSelected
     if index < 0 or index >= m.listEntries.Count() then return
     entry = m.listEntries[index]
@@ -2025,6 +2030,7 @@ sub onVodItemFocused()
 end sub
 
 sub onVodItemSelected()
+    if m.searchOverlayActive then closeSearchOverlay(false)
     index = m.vodGrid.itemSelected
     if m.activeView = "vod_episodes" or m.activeView = "saimo_episodes" then index = m.episodeGrid.itemSelected
     if index < 0 or index >= m.vodVisibleItems.Count() then return
@@ -2090,16 +2096,45 @@ end sub
 sub openSearchDialog()
     if m.playerVisible or m.settingsVisible or m.guideVisible or m.aboutVisible then return
     m.searchReturnView = m.activeView
+    m.searchOverlayActive = true
+    m.searchOverlay.visible = true
+    if m.searchResultsTitle <> invalid then m.searchResultsTitle.text = "RESULTADOS"
+    if m.searchResultsEmpty <> invalid then m.searchResultsEmpty.visible = false
+    if m.itemList <> invalid then
+        m.itemList.translation = [920, 214]
+        m.itemList.width = 888
+    end if
+    if m.searchKeyboard <> invalid then
+        m.searchKeyboard.text = ""
+        m.searchKeyboard.setFocus(true)
+    end if
+    runSearch("")
+end sub
 
-    dialog = CreateObject("roSGNode", "KeyboardDialog")
-    dialog.title = "Buscar canal, filme ou série"
-    dialog.buttons = ["Buscar", "Cancelar"]
-    dialog.text = ""
-    dialog.observeField("buttonSelected", "onSearchButtonSelected")
-    m.dialog = dialog
-    m.editKey = "search"
-    m.top.appendChild(dialog)
-    dialog.setFocus(true)
+sub closeSearchOverlay(restoreView as boolean)
+    if not m.searchOverlayActive then return
+    m.searchOverlayActive = false
+    if m.searchOverlay <> invalid then m.searchOverlay.visible = false
+    if m.itemList <> invalid then
+        m.itemList.translation = [432, 214]
+        m.itemList.width = 730
+    end if
+    if restoreView then
+        m.activeView = m.searchReturnView
+        restoreAfterSearch()
+    end if
+end sub
+
+sub onSearchKeyboardTextChanged()
+    if not m.searchOverlayActive then return
+    if m.searchKeyboard = invalid then return
+    query = m.searchKeyboard.text
+    if query = invalid then query = ""
+    runSearch(query.Trim())
+    if m.searchKeyboard <> invalid and m.searchOverlayActive then
+        ' Mantem foco no teclado enquanto o usuario digita.
+        if not m.itemList.hasFocus() then m.searchKeyboard.setFocus(true)
+    end if
 end sub
 
 sub onSearchButtonSelected()
@@ -2148,7 +2183,13 @@ sub runSearch(query as string)
     setViewHeader("BUSCA", "Busca: " + query, Str(entries.Count()).Trim() + " resultados  •  OK abre")
     m.emptyLabel.text = "Nenhum resultado para \"" + query + "\"."
     renderEntries(true)
-    if entries.Count() > 0 then
+    if m.searchOverlayActive then
+        if m.searchKeyboard <> invalid then m.searchKeyboard.setFocus(true)
+        if m.searchResultsEmpty <> invalid then
+            m.searchResultsEmpty.visible = (entries.Count() = 0)
+            if entries.Count() = 0 then m.searchResultsEmpty.text = "Nenhum resultado para \""+query+"\"."
+        end if
+    else if entries.Count() > 0 then
         m.itemList.setFocus(true)
     else
         m.navList.setFocus(true)
@@ -3267,7 +3308,12 @@ end sub
 function onKeyEvent(key as string, press as boolean) as boolean
     if not press then
         if m.playerVisible then stopSeekHold()
+        if m.searchOverlayActive then return false
         return false
+    end if
+    if m.searchOverlayActive and key = "back" then
+        closeSearchOverlay(true)
+        return true
     end if
     k = LCase(key)
     ' Colunas do grid de episódios, igual a itemSize/numColumns do XML.
