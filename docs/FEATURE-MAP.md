@@ -110,7 +110,8 @@ Films and episodes play from the selected source. Series selections open episode
 2. `SaimoTV/components/MainScene.brs` — `playVodEntry` converts the catalog item into a player channel with `isLive` false.
 3. `SaimoTV/components/MainScene.brs` — `playChannel` and `startSource` load the first source into the `Video` node.
 4. `SaimoTV/source/bslib.brs` — `streamFormatFor` and `buildVideoHeaders` prepare format and HTTP headers.
-5. `SaimoTV/components/MainScene.brs` — `onVideoState` handles pause, resume, progress, completion, and source failover.
+5. `SaimoTV/components/MainScene.brs` — `onVideoState` handles pause, resume with position preservation, seek, progress, completion, and source failover.
+6. `SaimoTV/components/MainScene.brs` — `onKeyEvent` handles `play`, `pause`, and `playpause` through `togglePlayback`, plus accelerated seek while holding `left`, `right`, `rev`, or `fwd`.
 
 ---
 
