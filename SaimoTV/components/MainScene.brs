@@ -196,35 +196,41 @@ sub init()
     loadFavorites()
     loadVodFavorites()
 
-    m.navList.observeField("itemSelected", "onNavSelected")
-    m.itemList.observeField("itemSelected", "onItemSelected")
-    m.vodGrid.observeField("itemSelected", "onVodItemSelected")
-    m.vodGrid.observeField("itemFocused", "onVodItemFocused")
-    m.episodeGrid.observeField("itemSelected", "onVodItemSelected")
-    m.episodeGrid.observeField("itemFocused", "onVodItemFocused")
-    m.vodDetailActions.observeField("itemSelected", "onVodDetailActionSelected")
-    m.vodSeasonList.observeField("itemFocused", "onSeriesSeasonFocused")
-    m.shelfList.observeField("rowItemSelected", "onShelfItemSelected")
-    m.shelfList.observeField("rowItemFocused", "onShelfItemFocused")
-    m.settingsList.observeField("itemSelected", "onSettingsSelected")
-    m.settingsList.observeField("itemFocused", "onSettingsFocused")
-    m.guideList.observeField("itemSelected", "onGuideSelected")
+    if m.navList <> invalid then m.navList.observeField("itemSelected", "onNavSelected")
+    if m.itemList <> invalid then m.itemList.observeField("itemSelected", "onItemSelected")
+    if m.vodGrid <> invalid then m.vodGrid.observeField("itemSelected", "onVodItemSelected")
+    if m.vodGrid <> invalid then m.vodGrid.observeField("itemFocused", "onVodItemFocused")
+    if m.episodeGrid <> invalid then m.episodeGrid.observeField("itemSelected", "onVodItemSelected")
+    if m.episodeGrid <> invalid then m.episodeGrid.observeField("itemFocused", "onVodItemFocused")
+    if m.vodDetailActions <> invalid then m.vodDetailActions.observeField("itemSelected", "onVodDetailActionSelected")
+    if m.vodSeasonList <> invalid then m.vodSeasonList.observeField("itemFocused", "onSeriesSeasonFocused")
+    if m.shelfList <> invalid then m.shelfList.observeField("rowItemSelected", "onShelfItemSelected")
+    if m.shelfList <> invalid then m.shelfList.observeField("rowItemFocused", "onShelfItemFocused")
+    if m.settingsList <> invalid then m.settingsList.observeField("itemSelected", "onSettingsSelected")
+    if m.settingsList <> invalid then m.settingsList.observeField("itemFocused", "onSettingsFocused")
+    if m.guideList <> invalid then m.guideList.observeField("itemSelected", "onGuideSelected")
+    if m.navList <> invalid then m.navList.itemSpacing = [48, 32]
+    if m.vodGrid <> invalid then m.vodGrid.itemSpacing = [48, 32]
+    if m.episodeGrid <> invalid then m.episodeGrid.itemSpacing = [48, 32]
+    if m.shelfList <> invalid then m.shelfList.itemSpacing = [48, 32]
+    if m.searchResultsList <> invalid then m.searchResultsList.itemSpacing = [48, 32]
 
-    m.video.observeField("state", "onVideoState")
+    if m.video <> invalid then m.video.observeField("state", "onVideoState")
 
-    m.toastTimer.observeField("fire", "hideToast")
-    m.failoverTimer.observeField("fire", "onFailoverTimer")
-    m.progressTimer.observeField("fire", "onProgressTimer")
-    m.playerAutoHideTimer.observeField("fire", "hidePlayerOverlay")
+    if m.toastTimer <> invalid then m.toastTimer.observeField("fire", "hideToast")
+    if m.failoverTimer <> invalid then m.failoverTimer.observeField("fire", "onFailoverTimer")
+    if m.progressTimer <> invalid then m.progressTimer.observeField("fire", "onProgressTimer")
+    if m.playerAutoHideTimer <> invalid then m.playerAutoHideTimer.observeField("fire", "hidePlayerOverlay")
     if m.seekHoldTimer <> invalid then m.seekHoldTimer.observeField("fire", "onSeekHoldTimer")
     if m.searchKeyboard <> invalid then m.searchKeyboard.observeField("text", "onSearchKeyboardTextChanged")
-    m.progressTimer.control = "start"
-    m.vodRefreshTimer.observeField("fire", "onVodRefreshTimer")
+    if m.vodRefreshTimer <> invalid then m.vodRefreshTimer.observeField("fire", "onVodRefreshTimer")
+    if m.progressTimer <> invalid then m.progressTimer.control = "start"
+
 
     buildNav(false)
     updateChrome()
-    m.top.setFocus(true)
-    m.navList.setFocus(true)
+    if m.top <> invalid then m.top.setFocus(true)
+    if m.navList <> invalid then m.navList.setFocus(true)
 
     ' Primeira execucao: abre o catalogo publico por padrao. URLs customizadas
     ' continuam preservadas; somente os hosts antigos conhecidos sao migrados.

@@ -205,6 +205,17 @@ sub testSearchParser()
     eqInt(parseSaimoSearchItems(text, "xxx", 160).Count(), 0, "busca filtra adulto")
     eqInt(parseSaimoSearchItems(text, "serie", 160).Count(), 1, "busca com acento na consulta")
     eqInt(parseSaimoSearchItems(text, "a", 2).Count(), 2, "busca respeita o limite")
+
+    index = buildSaimoSearchIndex(text)
+    eqInt(index.folded.Count(), index.payload.Count(), "indice mantem arrays paralelos")
+    eqInt(index.folded.Count(), 7, "indice remove comentarios e duplicatas")
+    eqInt(searchSaimoIndex(index, "academia", 160).Count(), 1, "indice encontra serie")
+    eqInt(searchSaimoIndex(index, "agencia", 160).Count(), 1, "indice ignora acento")
+    eqInt(searchSaimoIndex(index, "xxx", 160).Count(), 0, "indice nao indexa adulto")
+    eqInt(searchSaimoIndex(index, "a", 2).Count(), 2, "indice respeita o limite")
+    eqInt(searchSaimoIndex(index, "", 160).Count(), 0, "indice ignora consulta vazia")
+    eqInt(searchSaimoIndex(invalid, "a", 160).Count(), 0, "indice invalido nao quebra")
+    eqInt(buildSaimoSearchIndex("").folded.Count(), 0, "indice vazio e valido")
 end sub
 
 sub testHighlightsParser()

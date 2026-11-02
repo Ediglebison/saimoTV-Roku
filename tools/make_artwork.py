@@ -15,7 +15,7 @@ BG = (8, 7, 13)
 BG2 = (15, 12, 25)
 VIOLET = (139, 92, 246)
 LILAC = (167, 139, 250)
-TEAL = (79, 227, 208)
+TEAL = (91, 240, 200)
 PINK = (236, 72, 153)
 TEXT = (245, 241, 255)
 MUTED = (154, 147, 174)
@@ -335,38 +335,46 @@ BLUE = (51, 77, 255)  # faixa azul do aurora (meio)
 
 def make_bg_app():
     """Aurora 1920x1080: base quase preto azulado (#0b0e14),
-    brilho teal (#4fe3d0) no canto superior direito, faixa azul
-    no meio, faixa roxa/violeta no quadrante inferior esquerdo.
-    Alvo: android-ref/apk-art/fundo_app.jpg"""
+    brilho teal no canto superior direito, faixa azul no meio,
+    faixa roxa/violeta no quadrante inferior esquerdo.
+    Gera tambem a variante escura usada atras de overlays."""
     width, height = 1920, 1080
-    pixels = canvas(width, height, (11, 14, 20, 255))  # base #0b0e14
+    pixels = canvas(width, height, (6, 6, 15, 255))  # base #06060f
     # Brilho teal no canto superior direito (gradiente radial)
-    cx, cy = width * 0.85, height * 0.15
-    max_r = math.hypot(width * 0.45, height * 0.45)
+    cx, cy = width * 0.86, height * 0.12
+    max_r = math.hypot(width * 0.46, height * 0.46)
     for y in range(height):
         for x in range(width):
             r = math.hypot(x - cx, y - cy)
-            strength = max(0.0, 1.0 - r / max_r) ** 1.5
-            blend(pixels, width, x, y, TEAL + (255,), strength * 0.35)
+            strength = max(0.0, 1.0 - r / max_r) ** 1.4
+            blend(pixels, width, x, y, TEAL + (255,), strength * 0.42)
     # Faixa azul na altura do meio (brilho horizontal suave)
-    band_y = height * 0.52
-    band_h = height * 0.11
+    band_y = height * 0.50
+    band_h = height * 0.14
     for y in range(height):
         band = max(0.0, 1.0 - abs(y - band_y) / band_h) ** 2
         if band <= 0:
             continue
         for x in range(width):
             horizontal = 0.55 + 0.45 * math.sin(math.pi * x / (width - 1))
-            blend(pixels, width, x, y, BLUE + (255,), band * horizontal * 0.14)
+            blend(pixels, width, x, y, BLUE + (255,), band * horizontal * 0.19)
     # Faixa roxa no quadrante inferior esquerdo (gradiente radial)
-    cx, cy = width * 0.18, height * 0.82
-    max_r = math.hypot(width * 0.30, height * 0.34)
+    cx, cy = width * 0.16, height * 0.84
+    max_r = math.hypot(width * 0.34, height * 0.36)
     for y in range(height):
         for x in range(width):
             r = math.hypot(x - cx, y - cy)
             strength = max(0.0, 1.0 - r / max_r) ** 1.6
-            blend(pixels, width, x, y, VIOLET + (255,), strength * 0.30)
+            blend(pixels, width, x, y, VIOLET + (255,), strength * 0.34)
     save_png(IMAGES / "bg_app.png", width, height, pixels)
+
+    dim = bytearray(len(pixels))
+    for i in range(0, len(pixels), 4):
+        dim[i] = pixels[i] * 62 // 100
+        dim[i + 1] = pixels[i + 1] * 62 // 100
+        dim[i + 2] = pixels[i + 2] * 62 // 100
+        dim[i + 3] = 255
+    save_png(IMAGES / "bg_app_dim.png", width, height, dim)
 
 
 def make_bg_sidebar():
@@ -479,11 +487,19 @@ def make_placeholder(path, width, height):
 
 
 def make_nav_focus(path, width, height, active):
-    color = VIOLET + ((58 if active else 24),)
-    border = LILAC + ((150 if active else 58),)
+    """Pílula da navegação: branca quando ativa, invisível quando inativa."""
     pixels = canvas(width, height)
-    rounded_fill(pixels, width, height, 1, 1, width - 2, height - 2, 10, color)
-    rounded_outline(pixels, width, height, 1, 1, width - 2, height - 2, 10, border, 2)
+    if active:
+        rounded_fill(pixels, width, height, 0, 0, width - 1, height - 1, 10,
+                     (255, 255, 255, 255))
+    save_png(path, width, height, pixels)
+
+
+def make_white_pill(path, width, height, radius):
+    """Pílula branca usada pela barra superior e por linhas selecionadas."""
+    pixels = canvas(width, height)
+    rounded_fill(pixels, width, height, 0, 0, width - 1, height - 1, radius,
+                 (255, 255, 255, 255))
     save_png(path, width, height, pixels)
 
 
@@ -492,8 +508,6 @@ def make_grid_focus(path, width, height, active):
     pixels = canvas(width, height)
     rounded_outline(pixels, width, height, 4, 4, width - 5, height - 5, 16,
                     TEAL + (alpha,), 5)
-    rounded_outline(pixels, width, height, 1, 1, width - 2, height - 2, 18,
-                    VIOLET + ((80 if active else 34),), 2)
     save_png(path, width, height, pixels)
 
 
@@ -583,6 +597,9 @@ def main():
     make_player_veils()
     make_ficha_veils()
     make_spinner()
+    make_white_pill(IMAGES / "tab_focus.png", 200, 48, 24)
+    make_white_pill(IMAGES / "settings_focus.png", 1220, 54, 12)
+    make_white_pill(IMAGES / "toast_bg.png", 900, 64, 16)
     make_icon(IMAGES / "icon_focus_fhd.png", 540, 405)
     make_icon(IMAGES / "icon_focus_hd.png", 290, 218)
     make_icon(IMAGES / "icon_focus_sd.png", 214, 144)

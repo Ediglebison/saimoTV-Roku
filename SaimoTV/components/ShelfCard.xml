@@ -11,15 +11,15 @@
 
     <children>
         <Label visible="false">
-            <Font id="shelfCardFont" role="font" uri="pkg:/fonts/Roboto-Medium.ttf" size="18" />
+            <Font id="shelfCardFont" role="font" uri="pkg:/fonts/Roboto-Medium.ttf" size="22" />
         </Label>
-        <Poster id="poster" translation="[4, 4]" width="160" height="240"
-                loadDisplayMode="scaleToFit"
+        <Poster id="poster" translation="[4, 4]" width="186" height="279"
+                loadDisplayMode="scaleToFill"
                 loadingBitmapUri="pkg:/images/placeholder.png"
                 failedBitmapUri="pkg:/images/placeholder.png" />
-        <Poster id="focusHalo" translation="[0, 0]" width="168" height="248"
+        <Poster id="focusHalo" translation="[0, 0]" width="186" height="279"
                 uri="pkg:/images/focus_shelf.png" opacity="0" loadSync="true" />
-        <Label id="cardTitle" translation="[4, 252]" width="160" height="40"
+        <Label id="cardTitle" translation="[4, 288]" width="180" height="40"
                font="dictionary:shelfCardFont" color="0xF7F3FFFF" wrap="true" />
     </children>
 </component>

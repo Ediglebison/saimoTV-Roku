@@ -1101,13 +1101,17 @@ function isSaimoSeriesKind(kind as string) as boolean
     return false
 end function
 
-function parseSaimoSearchItems(text as string, query as string, limit as integer) as object
-    results = []
-    if query.Trim() = "" then return results
-    if limit <= 0 then limit = 160
-    q = foldText(query)
-    seen = {}
+' ---------------------------------------------------------------------------
+' Indice local de busca do catalogo Saimo
+' ---------------------------------------------------------------------------
+' O busca.txt tem dezenas de milhares de linhas. Normalizar o titulo a cada
+' tecla (foldText encadeia ~30 Replace) custa segundos no Roku, entao o indice
+' guarda o titulo ja normalizado e a busca vira um Instr em memoria.
 
+function buildSaimoSearchIndex(text as string) as object
+    folded = []
+    payload = []
+    seen = {}
     for each raw in text.Split(Chr(10))
         line = raw.Trim()
         if line <> "" and not isSaimoComment(line) then
@@ -1115,34 +1119,65 @@ function parseSaimoSearchItems(text as string, query as string, limit as integer
             if fields.Count() >= 3 then
                 title = fields[0].Trim()
                 kind = fields[1].Trim()
-                letter = fields[2].Trim()
-                year = ""
-                if fields.Count() > 3 then year = fields[3].Trim()
                 itemType = "movie"
                 group = "Filmes"
                 if isSaimoSeriesKind(kind) then
                     itemType = "series"
                     group = "Series"
                 end if
-                if title <> "" and Instr(1, foldText(title), q) > 0 and not isRestrictedVod(title, group) then
-                    key = itemType + ":" + LCase(stripYear(title))
-                    if seen[key] = invalid then
-                        seen[key] = true
-                        results.Push({
-                            title: title
-                            type: itemType
-                            group: group
-                            year: year
-                            letter: letter
-                            sourceType: "saimo"
-                        })
-                        if results.Count() >= limit then exit for
-                    end if
+                key = itemType + ":" + LCase(stripYear(title))
+                if title <> "" and not isRestrictedVod(title, group) and seen[key] = invalid then
+                    seen[key] = true
+                    letter = fields[2].Trim()
+                    year = ""
+                    if fields.Count() > 3 then year = fields[3].Trim()
+                    folded.Push(foldText(title))
+                    payload.Push(title + Chr(9) + itemType + Chr(9) + letter + Chr(9) + year)
                 end if
             end if
         end if
     end for
+    return { folded: folded, payload: payload }
+end function
+
+function searchSaimoIndex(index as object, query as string, limit as integer) as object
+    results = []
+    if type(index) <> "roAssociativeArray" then return results
+    folded = index.folded
+    payload = index.payload
+    if type(folded) <> "roArray" or type(payload) <> "roArray" then return results
+    q = foldText(query)
+    if q = "" then return results
+    if limit <= 0 then limit = 160
+    count = folded.Count()
+    if payload.Count() < count then count = payload.Count()
+    for i = 0 to count - 1
+        if Instr(1, folded[i], q) > 0 then
+            fields = payload[i].Split(Chr(9))
+            if fields.Count() >= 3 then
+                itemType = fields[1]
+                group = "Filmes"
+                if itemType = "series" then group = "Series"
+                year = ""
+                if fields.Count() > 3 then year = fields[3]
+                results.Push({
+                    title: fields[0]
+                    type: itemType
+                    group: group
+                    year: year
+                    letter: fields[2]
+                    sourceType: "saimo"
+                })
+                if results.Count() >= limit then exit for
+            end if
+        end if
+    end for
     return results
+end function
+
+' Mantido para os testes e para chamadas pontuais; internamente usa o indice.
+function parseSaimoSearchItems(text as string, query as string, limit as integer) as object
+    return searchSaimoIndex(buildSaimoSearchIndex(text), query, limit)
 end function
 
 function sortSaimoItems(items as object) as object

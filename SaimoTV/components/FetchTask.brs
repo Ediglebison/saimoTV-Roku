@@ -14,8 +14,8 @@ sub runTask()
         loadSaimoLetter()
     else if mode = "saimo_episodes" then
         loadSaimoEpisodes()
-    else if mode = "saimo_search" then
-        loadSaimoSearch()
+    else if mode = "saimo_search_index" then
+        loadSaimoSearchIndex()
     else
         m.top.error = "Modo de tarefa desconhecido."
     end if
@@ -271,31 +271,68 @@ sub loadSaimoEpisodes()
     m.top.success = true
 end sub
 
-sub loadSaimoSearch()
+' Prepara o indice local de busca: baixa o busca.txt quando necessario e
+' grava os titulos ja normalizados para a linha principal so fazer Instr.
+sub loadSaimoSearchIndex()
     base = normalizeSaimoBase(m.top.baseUrl)
-    query = m.top.title.Trim()
-    if query = "" then
-        m.top.error = "Digite um termo para pesquisar."
+    if base = "" then
+        m.top.error = "Fonte do catalogo invalida."
         return
     end if
 
     raw = readCacheAscii("cachefs:/saimo_vod_search.txt")
     cachedBase = readCacheAscii("cachefs:/saimo_vod_search.url")
-    if not isStringValue(cachedBase) or cachedBase.Trim() <> base or not isStringValue(raw) or raw = "" then
-        response = httpGet(base + "busca.txt", m.top.userAgent, "")
-        if not response.ok or looksLikeHtml(response.body) then
-            m.top.error = "Nao foi possivel pesquisar o catalogo completo. Tente novamente quando a conexao estiver disponivel."
-            return
-        end if
-        raw = response.body
-        WriteAsciiFile("cachefs:/saimo_vod_search.txt", raw)
-        WriteAsciiFile("cachefs:/saimo_vod_search.url", base)
+    indexBase = readCacheAscii("cachefs:/saimo_search_index.url")
+    indexTime = readCacheAscii("cachefs:/saimo_search_index.time")
+
+    hasRaw = isStringValue(raw) and raw <> "" and isStringValue(cachedBase) and cachedBase.Trim() = base
+    hasIndex = isStringValue(indexBase) and indexBase.Trim() = base and isStringValue(indexTime)
+    fresh = false
+    if hasIndex then
+        clock = CreateObject("roDateTime")
+        age = clock.AsSeconds() - Val(indexTime.Trim())
+        fresh = age >= 0 and age < 86400
+    end if
+    if hasRaw and hasIndex and fresh then
+        m.top.success = true
+        m.top.count = 0
+        return
     end if
 
-    results = parseSaimoSearchItems(raw, query, 160)
-    m.top.resultJson = FormatJson(results)
-    m.top.count = results.Count()
+    downloaded = false
+    if not hasRaw or not fresh then
+        response = httpGet(base + "busca.txt", m.top.userAgent, "")
+        if response.ok and not looksLikeHtml(response.body) then
+            raw = response.body
+            downloaded = true
+            WriteAsciiFile("cachefs:/saimo_vod_search.txt", raw)
+            WriteAsciiFile("cachefs:/saimo_vod_search.url", base)
+        else if not hasRaw then
+            m.top.error = "Nao foi possivel preparar a busca. Tente novamente quando a conexao estiver disponivel."
+            return
+        end if
+    end if
+
+    index = buildSaimoSearchIndex(raw)
+    if index.folded.Count() = 0 then
+        m.top.error = "O catalogo de busca chegou vazio."
+        return
+    end if
+
+    WriteAsciiFile("cachefs:/saimo_search_index.json", FormatJson({
+        version: 1
+        base: base
+        folded: index.folded
+        payload: index.payload
+    }))
+    clock = CreateObject("roDateTime")
+    stamp = clock.AsSeconds()
+    ' Sem download novo o indice continua valido, mas tentamos de novo em 1h.
+    if not downloaded then stamp = stamp - 82800
+    WriteAsciiFile("cachefs:/saimo_search_index.time", Str(stamp).Trim())
+    WriteAsciiFile("cachefs:/saimo_search_index.url", base)
     m.top.success = true
+    m.top.count = index.folded.Count()
 end sub
 
 sub loadVodCatalog()

@@ -1,40 +1,24 @@
 sub init()
+    m.focusBorder = m.top.findNode("focusBorder")
     m.poster = m.top.findNode("poster")
     m.title = m.top.findNode("title")
     m.meta = m.top.findNode("meta")
-    m.focusHalo = m.top.findNode("focusHalo")
-    m.posterUri = ""
-    m.poster.observeField("loadStatus", "onPosterLoadStatus")
 end sub
 
-sub showItem()
-    item = m.top.itemContent
-    if item = invalid then return
-    m.posterUri = strField(item, "hdGridPosterUrl")
-    if m.posterUri = "" then m.posterUri = strField(item, "hdPosterUrl")
-    m.title.text = strField(item, "shortDescriptionLine1")
-    if m.title.text = "" then m.title.text = strField(item, "title")
-    m.meta.text = strField(item, "shortDescriptionLine2")
-    m.poster.uri = "pkg:/images/placeholder.png"
-    loadPoster()
-end sub
-
-sub updateFocus()
-    if m.top.itemHasFocus then
-        m.focusHalo.opacity = 0.2 + (m.top.focusPercent * 0.8)
-        loadPoster()
+sub onFocusChange()
+    if m.hasFocus() then
+        m.focusBorder.visible = true
     else
-        m.focusHalo.opacity = 0
+        m.focusBorder.visible = false
     end if
 end sub
 
-sub loadPoster()
-    if m.posterUri <> "" and m.poster.uri <> m.posterUri then m.poster.uri = m.posterUri
-end sub
-
-sub onPosterLoadStatus()
-    status = m.poster.loadStatus
-    uri = m.poster.uri
-    if Left(LCase(uri), 7) <> "http://" and Left(LCase(uri), 8) <> "https://" then return
-    ' Image loading is intentionally silent; Roku console must not be flooded.
-end sub
+function onContentChange()
+    if m.itemContent <> invalid then
+        m.title.text = m.itemContent.title
+        m.poster.uri = m.itemContent.hdPosterUrl
+        if m.itemContent.shortDescriptionLine2 <> invalid then
+            m.meta.text = m.itemContent.shortDescriptionLine2
+        end if
+    end if
+end function

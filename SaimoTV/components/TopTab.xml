@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="TopTab" extends="Group">
+    <interface>
+        <field id="itemContent" type="node" onChange="showItem" />
+        <field id="focusPercent" type="float" onChange="updateFocus" />
+        <field id="itemHasFocus" type="boolean" onChange="updateFocus" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/TopTab.brs" />
+    <children>
+        <Label visible="false"><Font id="tabFont" role="font" uri="pkg:/fonts/Roboto-Medium.ttf" size="20" /></Label>
+        <Poster id="pill" width="200" height="48" uri="pkg:/images/tab_focus.png"
+                opacity="0" loadSync="true" />
+        <Poster id="icon" translation="[14, 12]" width="24" height="24"
+                loadSync="true" />
+        <Label id="label" translation="[46, 0]" width="140" height="48"
+               font="dictionary:tabFont" color="0xA8B4C0FF"
+               vertAlign="center" maxLines="1" />
+    </children>
+</component>

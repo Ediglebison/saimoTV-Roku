@@ -121,12 +121,12 @@ Search covers live channels and the VOD catalog. The public catalog path uses an
 
 **Flow:**
 
-1. `SaimoTV/components/MainScene.brs` — `openSearchDialog` opens a Roku `KeyboardDialog`.
-2. `SaimoTV/components/MainScene.brs` — `onSearchButtonSelected` and `runSearch` scan loaded channels and cached VOD entries first.
-3. `SaimoTV/components/MainScene.brs` — `startSaimoSearch` starts the catalog search task when the VOD source is Saimo.
-4. `SaimoTV/components/FetchTask.brs` — `loadSaimoSearch` downloads and caches `busca.txt`.
-5. `SaimoTV/source/bslib.brs` — `foldText` and `parseSaimoSearchItems` ignore accents, filter restricted titles, and limit results to 160.
-6. `SaimoTV/components/MainScene.brs` — `handleSaimoSearchResult` and `renderEntries` combine local and catalog results.
+1. `SaimoTV/components/MainScene.brs` — `openSearchDialog` opens the compact `MiniKeyboard` overlay with the results list beside it.
+2. `SaimoTV/components/MainScene.brs` — `onSearchKeyboardTextChanged` debounces typing (0.3 s) before calling `runSearch`, which scans loaded channels and cached VOD entries first.
+3. `SaimoTV/components/MainScene.brs` — `startSaimoSearch` consults the in-memory index; `ensureSaimoSearchIndex` loads it from `cachefs:/saimo_search_index.json` or prepares it in the background.
+4. `SaimoTV/components/FetchTask.brs` — `loadSaimoSearchIndex` downloads `busca.txt` when needed, rebuilds the normalized index, and keeps it fresh for 24 h.
+5. `SaimoTV/source/bslib.brs` — `buildSaimoSearchIndex` folds accents once; `searchSaimoIndex` is a plain `Instr` over pre-normalized titles (limit 160) and filters restricted titles.
+6. `SaimoTV/components/MainScene.brs` — `handleSaimoSearchIndexResult`, `renderEntries` and the results panel combine local and catalog results.
 7. `SaimoTV/components/MainScene.brs` — `onItemSelected` opens the result's catalog letter and `focusSaimoTitle` restores focus.
 
 ---

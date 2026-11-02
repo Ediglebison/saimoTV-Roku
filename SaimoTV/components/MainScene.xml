@@ -5,275 +5,186 @@
     <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
 
     <children>
+        <!-- TOP BAR: Moved to top for maximum visibility, Gray color for debug -->
+        
+        <!-- FONT DEFINITIONS -->
         <Group visible="false">
             <Label visible="false"><Font id="fontMeta" role="font" uri="pkg:/fonts/Roboto-Regular.ttf" size="18" /></Label>
             <Label visible="false"><Font id="fontBody" role="font" uri="pkg:/fonts/Roboto-Regular.ttf" size="24" /></Label>
             <Label visible="false"><Font id="fontLabel" role="font" uri="pkg:/fonts/Roboto-Medium.ttf" size="22" /></Label>
             <Label visible="false"><Font id="fontHeading" role="font" uri="pkg:/fonts/Roboto-Medium.ttf" size="30" /></Label>
             <Label visible="false"><Font id="fontDisplay" role="font" uri="pkg:/fonts/Roboto-Bold.ttf" size="36" /></Label>
+            <Label visible="false"><Font id="fontTitle" role="font" uri="pkg:/fonts/Roboto-Bold.ttf" size="48" /></Label>
+            <Label visible="false"><Font id="fontSection" role="font" uri="pkg:/fonts/Roboto-Medium.ttf" size="22" /></Label>
             <Label visible="false"><Font id="fontFichaTipo" role="font" uri="pkg:/fonts/Roboto-Medium.ttf" size="24" /></Label>
             <Label visible="false"><Font id="fontFichaTitle" role="font" uri="pkg:/fonts/Roboto-Medium.ttf" size="64" /></Label>
             <Label visible="false"><Font id="fontFichaFrase" role="font" uri="pkg:/fonts/Roboto-Italic.ttf" size="30" /></Label>
             <Label visible="false"><Font id="fontFichaSynopsis" role="font" uri="pkg:/fonts/Roboto-Regular.ttf" size="34" /></Label>
             <Label visible="false"><Font id="fontSeasonHeading" role="font" uri="pkg:/fonts/Roboto-Black.ttf" size="44" /></Label>
         </Group>
-        <Poster id="appBg" translation="[0, 0]" width="1920" height="1080"
-                uri="pkg:/images/bg_app.png" loadSync="true" />
 
+        <Poster id="appBg" translation="[0, 0]" width="1920" height="1080" uri="pkg:/images/bg_app.png" loadSync="true" />
         <Video id="video" visible="false" width="1920" height="1080" />
 
-        <Group id="homeGroup">
-            <Poster id="sidebarBg" translation="[0, 0]" width="400" height="1080"
-                    uri="pkg:/images/bg_sidebar.png" loadSync="true" />
+        <Group id="homeGroup" visible="true">
+            <Label id="status" visible="false" text="" />
+            <Label id="listEyebrow" translation="[96, 210]" width="660" height="28" font="dictionary:fontMeta" color="0x5BF0C8FF" text="" />
+            <Label id="listTitle" translation="[96, 240]" width="1100" height="62" font="dictionary:fontTitle" color="0xFFFFFFFF" text="" />
+            <Label id="listSub" translation="[100, 358]" width="1400" height="28" font="dictionary:fontMeta" color="0xA8B4C0FF" text="" />
+            <Label id="syncHint" translation="[1612, 212]" width="220" height="24" font="dictionary:fontMeta" color="0x8F87A3FF" horizAlign="right" text="" />
+            <Rectangle translation="[96, 296]" width="1728" height="1" color="0xFFFFFF14" />
 
-            <Rectangle translation="[400, 0]" width="1520" height="1080" color="0x0B0F2A99" />
+            <Group id="infoPanel" translation="[1300, 264]" width="520" height="600" visible="false">
+                <Rectangle translation="[0, 0]" width="520" height="600" color="0x111827BB" />
+                <Label id="infoTitle" translation="[20, 40]" width="480" height="60" font="dictionary:fontDisplay" color="0xFFFFFFFF" text="" />
+                <Label id="infoMeta" translation="[20, 110]" width="480" height="40" font="dictionary:fontLabel" color="0x5BF0C8FF" text="" />
+                <Label id="infoDesc" translation="[20, 160]" width="480" height="400" font="dictionary:fontBody" color="0xA8B4C0FF" wrap="true" text="" />
+            </Group>
 
-            <Poster id="logo" translation="[96, 53]" width="58" height="58"
-                    uri="pkg:/images/logo.png" loadSync="true" />
-            <Label id="brand" translation="[168, 54]" width="200" height="50"
-                   font="dictionary:fontDisplay" color="0xF7F3FFFF" text="Saimo TV" />
-            <Label id="brandSub" translation="[168, 104]" width="200" height="28"
-                   font="dictionary:fontLabel" color="0x4FE3D0FF"
-                   text="FILMES  •  SÉRIES  •  AO VIVO" />
-            <Rectangle translation="[96, 142]" width="276" height="1" color="0xFFFFFF1A" />
+            <LabelList id="itemList" translation="[96, 250]" width="730" height="740" itemSize="[730, 58]" numRows="10"
+                       font="dictionary:fontBody" focusedFont="dictionary://fontLabel" color="0xD2CBDDFF" focusedColor="0xFFFFFFFF"
+                       textHorizAlign="left" vertFocusAnimationStyle="floatingFocus" focusBitmapUri="pkg:/images/item_focus.png"
+                       focusFootprintBitmapUri="pkg:/images/item_focus_idle.png" drawFocusFeedback="true" drawFocusFeedbackOnTop="false" />
 
-            <Label translation="[96, 158]" width="276" height="24"
-                   font="dictionary:fontLabel" color="0x8F87A3FF" text="NAVEGAÇÃO" />
+            <Group id="vodHeroGroup" translation="[0, 152]" width="1920" height="300" visible="true">
+                <Poster id="heroBackdrop" translation="[0, 0]" width="1920" height="300" loadDisplayMode="scaleToZoom" />
+                <Rectangle id="heroVeil" translation="[0, 0]" width="1920" height="300" color="0x00000080" />
+                <Label id="heroTitle" translation="[96, 40]" width="1728" height="60" font="dictionary:fontTitle" color="0xFFFFFFFF" maxLines="1" text="" />
+                <Label id="heroMeta" translation="[96, 110]" width="1728" height="30" font="dictionary:fontMeta" color="0x5BF0C8FF" maxLines="1" text="" />
+                <Label id="heroSynopsis" translation="[96, 150]" width="800" height="100" font="dictionary:fontBody" color="0xA8B4C0FF" wrap="true" maxLines="3" text="" />
+            </Group>
 
-            <LabelList id="navList" translation="[96, 190]" width="276" height="610"
-                       itemSize="[276, 48]" itemSpacing="[0, 4]" numRows="12"
-                       font="dictionary:fontBody" focusedFont="dictionary:fontLabel"
-                       color="0xB8B0CCFF" focusedColor="0xF7F3FFFF"
-                       textHorizAlign="left" vertFocusAnimationStyle="floatingFocus"
-                       focusBitmapUri="pkg:/images/nav_focus.png"
-                       focusFootprintBitmapUri="pkg:/images/nav_focus_idle.png"
-                       drawFocusFeedback="true" drawFocusFeedbackOnTop="false" />
+            <RowList id="vodFilterChips" translation="[96, 460]" width="1728" height="48" itemComponentName="CategoryChip" itemSize="[200, 48]" numRows="1"
+                     rowFocusAnimationStyle="floatingFocus" vertFocusAnimationStyle="floatingFocus" drawFocusFeedback="false" visible="true" />
 
-            <Rectangle translation="[96, 836]" width="276" height="132" color="0x8B5CF60F" />
-            <Rectangle translation="[96, 836]" width="3" height="132" color="0x4FE3D0FF" />
-            <Label id="status" translation="[118, 850]" width="238" height="72"
-                   font="dictionary:fontMeta" color="0xA79FBAFF" wrap="true" text="" />
-            <Label translation="[118, 930]" width="238" height="24"
-                   font="dictionary:fontLabel" color="0xA79FBAFF"
-                   text="SAIMO TV  •  ROKU" />
-
-            <Label id="listEyebrow" translation="[452, 53]" width="660" height="28"
-                   font="dictionary:fontLabel" color="0x4FE3D0FF" text="AO VIVO" />
-            <Label id="listTitle" translation="[450, 79]" width="1100" height="62"
-                   font="dictionary:fontDisplay" color="0xF7F3FFFF" text="Canais ao vivo" />
-            <Rectangle id="headerAccent" translation="[454, 147]" width="64" height="3"
-                       color="0x8B5CF6FF" />
-            <Label id="listSub" translation="[454, 157]" width="1050" height="34"
-                   font="dictionary:fontMeta" color="0xA79FBAFF" text="" />
-
-            <Label id="syncHint" translation="[1190, 53]" width="340" height="28"
-                   font="dictionary:fontMeta" color="0x8F87A3FF" horizAlign="right" text="" />
-            <Label id="clock" translation="[1564, 53]" width="260" height="34"
-                   font="dictionary:fontLabel" color="0xE8E2F5FF" horizAlign="right" text="" />
-            <Rectangle translation="[430, 199]" width="1394" height="1" color="0xFFFFFF14" />
-
-            <LabelList id="itemList" translation="[432, 214]" width="730" height="760"
-                       itemSize="[730, 58]" itemSpacing="[0, 4]" numRows="10"
-                       font="dictionary:fontBody" focusedFont="dictionary:fontLabel"
-                       color="0xD2CBDDFF" focusedColor="0xFFFFFFFF"
-                       textHorizAlign="left" vertFocusAnimationStyle="floatingFocus"
-                       focusBitmapUri="pkg:/images/item_focus.png"
-                       focusFootprintBitmapUri="pkg:/images/item_focus_idle.png"
-                       drawFocusFeedback="true" drawFocusFeedbackOnTop="false" />
-
-            <MarkupGrid id="vodGrid" translation="[438, 214]" width="1380" height="760"
-                        itemComponentName="VodCard" itemSize="[210, 362]"
-                        itemSpacing="[24, 16]" numColumns="6" numRows="2"
-                        horizFocusAnimationStyle="floatingFocus" vertFocusAnimationStyle="floatingFocus"
+            <MarkupGrid id="vodGrid" translation="[96, 520]" width="1728" height="740" itemComponentName="VodCard" itemSize="[186, 279]"
+                        numColumns="8" numRows="2" horizFocusAnimationStyle="floatingFocus" vertFocusAnimationStyle="floatingFocus"
                         drawFocusFeedback="false" visible="false" />
 
-            <RowList id="shelfList" translation="[438, 208]" width="1380" height="760"
-                     itemComponentName="ShelfCard" itemSize="[1380, 300]" numRows="2"
-                     itemSpacing="[0, 10]" rowItemSize="[[168, 300]]"
-                     rowItemSpacing="[[14, 0]]" rowLabelOffset="[[0, 30]]"
-                     rowFocusAnimationStyle="floatingFocus" vertFocusAnimationStyle="floatingFocus"
-                     showRowLabel="[true]" showRowCounter="[false]"
-                     rowLabelFont="dictionary:fontLabel" rowLabelColor="0xE8E2F5FF"
-                     focusBitmapUri="pkg:/images/focus_grid.png"
-                     focusFootprintBitmapUri="pkg:/images/focus_grid_idle.png"
-                     drawFocusFeedback="false" visible="false" />
+            <RowList id="shelfList" translation="[96, 250]" width="1728" height="740" itemComponentName="ShelfCard" itemSize="[1380, 300]" numRows="2"
+                     rowItemSize="[[168, 300]]" rowItemSpacing="[[14, 0]]" rowLabelOffset="[[0, 30]]"
+                     rowFocusAnimationStyle="floatingFocus" vertFocusAnimationStyle="floatingFocus" showRowLabel="[true]" showRowCounter="[false]"
+                     rowLabelFont="dictionary:fontLabel" rowLabelColor="0xE8E2F5FF" focusBitmapUri="pkg:/images/focus_grid.png"
+                     focusFootprintBitmapUri="pkg:/images/focus_grid_idle.png" drawFocusFeedback="false" visible="false" />
 
-            <Poster id="emptyIcon" translation="[1124, 272]" width="72" height="72"
-                    uri="pkg:/images/nav_settings.png" visible="false" loadSync="true" />
-            <Label id="emptyLabel" translation="[452, 360]" width="1420" height="240"
-                   font="dictionary:fontBody" color="0xA79FBAFF" wrap="true"
-                   horizAlign="center" text="" />
-            <Label id="emptyAction" translation="[720, 628]" width="880" height="34"
-                   font="dictionary:fontLabel" color="0x4FE3D0FF" horizAlign="center"
-                   text="Use a navegação para abrir Ajustes" visible="false" />
-
-            <Label id="hint" translation="[432, 988]" width="1392" height="30"
-                   font="dictionary:fontMeta" color="0xA79FBAFF"
+            <Poster id="emptyIcon" translation="[960, 450]" width="72" height="72" uri="pkg:/images/nav_settings.png" visible="false" loadSync="true" />
+            <Label id="emptyLabel" translation="[96, 530]" width="1728" height="240" font="dictionary:fontBody" color="0xA79FBAFF" wrap="true" horizAlign="center" text="" />
+            <Label id="emptyAction" translation="[96, 800]" width="1728" height="34" font="dictionary:fontLabel" color="0x5BF0C8FF" horizAlign="center" text="Use a navegação para abrir Ajustes" visible="false" />
+            <Label id="hint" translation="[96, 1014]" width="1728" height="30" font="dictionary:fontMeta" color="0xA79FBAFF"
                    text="↑ ↓ ← → navegar   •   OK selecionar   •   Replay buscar   •   * favorito   •   Back voltar" />
 
-            <Group id="vodDetailGroup" translation="[400, 0]" visible="false">
-                <Poster id="fichaBackdrop" translation="[0, 0]" width="1520" height="1080"
-                        loadSync="false" loadDisplayMode="scaleToZoom" visible="false" />
-                <Poster id="fichaVeilSide" translation="[0, 0]" width="1520" height="1080"
-                        uri="pkg:/images/ficha_veil_side.png" loadSync="true" />
-                <Poster id="fichaVeilBottom" translation="[0, 560]" width="1520" height="520"
-                        uri="pkg:/images/ficha_veil_bottom.png" loadSync="true" />
-                <Poster id="vodDetailPoster" translation="[112, 80]" width="304" height="456"
-                        loadSync="false" loadDisplayMode="scaleToFit"
-                        loadingBitmapUri="pkg:/images/placeholder.png"
-                        failedBitmapUri="pkg:/images/placeholder.png" />
-                <Label id="vodDetailTipo" translation="[484, 80]" width="940" height="30"
-                       font="dictionary:fontFichaTipo" color="0x4FE3D0FF" maxLines="1" text="" />
-                <Label id="vodDetailTitle" translation="[484, 116]" width="940" height="76"
-                       font="dictionary:fontFichaTitle" color="0xFFFFFFFF" maxLines="1" text="" />
-                <Label id="vodDetailFrase" translation="[484, 192]" width="940" height="40"
-                       font="dictionary:fontFichaFrase" color="0xA8B4C0FF" maxLines="1" text="" />
-                <Label id="vodDetailMeta" translation="[484, 236]" width="940" height="44"
-                       font="dictionary:fontHeading" color="0x4FE3D0FF" maxLines="1" text="" />
-                <MarkupGrid id="vodDetailActions" translation="[484, 288]" width="936" height="104"
-                            itemComponentName="ActionPill" itemSize="[296, 104]"
-                            itemSpacing="[24, 0]" numColumns="3" numRows="1"
-                            horizFocusAnimationStyle="floatingFocus" vertFocusAnimationStyle="floatingFocus"
+            <Group id="vodDetailGroup" translation="[0, 0]" visible="false">
+                <Poster id="fichaBackdrop" translation="[0, 0]" width="1920" height="1080" loadSync="false" loadDisplayMode="scaleToZoom" visible="false" />
+                <Poster id="fichaVeilSide" translation="[0, 0]" width="1920" height="1080" uri="pkg:/images/ficha_veil_side.png" loadSync="true" />
+                <Poster id="fichaVeilBottom" translation="[0, 560]" width="1920" height="520" uri="pkg:/images/ficha_veil_bottom.png" loadSync="true" />
+                <Poster id="vodDetailPoster" translation="[96, 80]" width="304" height="456" loadSync="false" loadDisplayMode="scaleToFit"
+                        loadingBitmapUri="pkg:/images/placeholder.png" failedBitmapUri="pkg:/images/placeholder.png" />
+                <Label id="vodDetailTipo" translation="[484, 80]" width="940" height="30" font="dictionary:fontFichaTipo" color="0x5BF0C8FF" maxLines="1" text="" />
+                <Label id="vodDetailTitle" translation="[484, 116]" width="1340" height="76" font="dictionary:fontFichaTitle" color="0xFFFFFFFF" maxLines="1" text="" />
+                <Label id="vodDetailFrase" translation="[484, 192]" width="940" height="40" font="dictionary:fontFichaFrase" color="0xA8B4C0FF" maxLines="1" text="" />
+                <Label id="vodDetailMeta" translation="[484, 236]" width="1340" height="44" font="dictionary://fontHeading" color="0x5BF0C8FF" maxLines="1" text="" />
+                <MarkupGrid id="vodDetailActions" translation="[484, 288]" width="936" height="104" itemComponentName="ActionPill" itemSize="[296, 104]"
+                            numColumns="3" numRows="1" horizFocusAnimationStyle="floatingFocus" vertFocusAnimationStyle="floatingFocus"
                             drawFocusFeedback="false" />
-                <Label id="vodDetailSynopsis" translation="[484, 412]" width="940" height="170"
-                       font="dictionary:fontFichaSynopsis" color="0xE6FFFFFF" wrap="true"
-                       maxLines="4" text="" />
-                <Label id="vodSeasonHeading" translation="[112, 560]" width="1312" height="52"
-                       font="dictionary:fontSeasonHeading" color="0xFFFFFFFF" text="TEMPORADAS" visible="false" />
-                <MarkupGrid id="vodSeasonList" translation="[112, 616]" width="1312" height="80"
-                            itemComponentName="SeasonChip" itemSize="[280, 80]"
-                            itemSpacing="[16, 0]" numColumns="4" numRows="1"
-                            horizFocusAnimationStyle="floatingFocus" vertFocusAnimationStyle="floatingFocus"
+                <Label id="vodDetailSynopsis" translation="[484, 412]" width="1340" height="170" font="dictionary:fontFichaSynopsis" color="0xE6FFFFFF" wrap="true" maxLines="4" text="" />
+                <Label id="vodSeasonHeading" translation="[112, 560]" width="1312" height="52" font="dictionary:fontSeasonHeading" color="0xFFFFFFFF" text="TEMPORADAS" visible="false" />
+                <MarkupGrid id="vodSeasonList" translation="[112, 616]" width="1312" height="80" itemComponentName="SeasonChip" itemSize="[280, 80]" numColumns="4" numRows="1" horizFocusAnimationStyle="floatingFocus" vertFocusAnimationStyle="floatingFocus"
                             drawFocusFeedback="false" visible="false" />
-                <MarkupGrid id="episodeGrid" translation="[112, 706]" width="1236" height="310"
-                            itemComponentName="EpisodeCard" itemSize="[396, 310]"
-                            itemSpacing="[24, 14]" numColumns="3" numRows="1"
-                            horizFocusAnimationStyle="floatingFocus" vertFocusAnimationStyle="floatingFocus"
+                <MarkupGrid id="episodeGrid" translation="[112, 706]" width="1236" height="310" itemComponentName="EpisodeCard" itemSize="[396, 310]"
+                            numColumns="3" numRows="1" horizFocusAnimationStyle="floatingFocus" vertFocusAnimationStyle="floatingFocus"
                             drawFocusFeedback="false" visible="false" />
-                <Label id="vodEpisodeEmpty" translation="[112, 706]" width="1236" height="310"
-                       font="dictionary:fontBody" color="0xA8B4C0FF" wrap="true"
+                <Label id="vodEpisodeEmpty" translation="[112, 706]" width="1236" height="310" font="dictionary:fontBody" color="0xA8B4C0FF" wrap="true"
                        horizAlign="center" vertAlign="center" text="" visible="false" />
             </Group>
         </Group>
 
         <Group id="settingsGroup" visible="false">
-            <Rectangle translation="[96, 53]" width="1728" height="974" color="0x0D0A15F2" />
-            <Rectangle translation="[96, 53]" width="1728" height="2" color="0x8B5CF6FF" />
-            <Label id="settingsTitle" translation="[136, 78]" width="1000" height="60"
-                   font="dictionary:fontDisplay" color="0xF7F3FFFF" text="Ajustes" />
-            <Label id="settingsSub" translation="[138, 140]" width="1200" height="34"
-                   font="dictionary:fontBody" color="0x4FE3D0FF"
-                   text="Lista, EPG, agente HTTP e diagnóstico" />
-            <Rectangle translation="[138, 184]" width="64" height="3" color="0x8B5CF6FF" />
-            <LabelList id="settingsList" translation="[100, 178]" width="1220" height="760"
-                       itemSize="[1220, 54]" itemSpacing="[0, 4]" numRows="12"
-                       font="dictionary:fontBody" focusedFont="dictionary:fontLabel"
-                       color="0xD2CBDDFF" focusedColor="0xFFFFFFFF"
-                       textHorizAlign="left" vertFocusAnimationStyle="floatingFocus"
-                       focusBitmapUri="pkg:/images/list_focus.png"
-                       focusFootprintBitmapUri="pkg:/images/list_focus_idle.png"
-                       drawFocusFeedback="true" drawFocusFeedbackOnTop="false" />
+            <Rectangle translation="[96, 300]" width="1728" height="828" color="0x0D0A15F2" />
+            <Rectangle translation="[96, 300]" width="1728" height="2" color="0x5BF0C8FF" />
+            <Label id="settingsTitle" translation="[136, 186]" width="1000" height="60" font="dictionary:fontDisplay" color="0xF7F3FFFF" text="Ajustes" />
+            <Label id="settingsSub" translation="[138, 244]" width="1200" height="34" font="dictionary:fontBody" color="0x5BF0C8FF" text="Lista, EPG, agente HTTP e diagnóstico" />
+            <Rectangle translation="[138, 292]" width="64" height="3" color="0x5BF0C8FF" />
+            <LabelList id="settingsList" translation="[96, 250]" width="1220" height="640" itemSize="[1220, 54]" numRows="12"
+                       font="dictionary:fontBody" focusedFont="dictionary:fontLabel" color="0xD2CBDDFF" focusedColor="0xFFFFFFFF"
+                       textHorizAlign="left" vertFocusAnimationStyle="floatingFocus" focusBitmapUri="pkg:/images/list_focus.png"
+                       focusFootprintBitmapUri="pkg:/images/list_focus_idle.png" drawFocusFeedback="true" drawFocusFeedbackOnTop="false" />
             <Rectangle translation="[1350, 178]" width="1" height="760" color="0xFFFFFF14" />
-            <Label id="settingsHelp" translation="[1378, 186]" width="450" height="700"
-                   font="dictionary:fontMeta" color="0xA79FBAFF" wrap="true" text="" />
-            <Label id="settingsHint" translation="[136, 988]" width="1600" height="30"
-                   font="dictionary:fontMeta" color="0xA79FBAFF"
-                   text="OK edita ou executa   •   Back volta" />
+            <Label id="settingsHelp" translation="[1378, 240]" width="450" height="700" font="dictionary:fontMeta" color="0x9A9FBAFf" wrap="true" text="" />
+            <Label id="settingsHint" translation="[136, 988]" width="1600" height="30" font="dictionary:fontMeta" color="0xA79FBAFF" text="OK edita ou executa   •   Back volta" />
         </Group>
 
         <Group id="guideGroup" visible="false">
-            <Rectangle translation="[96, 53]" width="1728" height="974" color="0x0D0A15F2" />
-            <Rectangle translation="[96, 53]" width="1728" height="2" color="0x8B5CF6FF" />
-            <Label id="guideTitle" translation="[136, 78]" width="1200" height="60"
-                   font="dictionary:fontDisplay" color="0xF7F3FFFF" text="Guia de canais" />
-            <Label id="guideSub" translation="[138, 140]" width="1500" height="34"
-                   font="dictionary:fontBody" color="0x4FE3D0FF" text="" />
-            <Rectangle translation="[138, 184]" width="64" height="3" color="0x8B5CF6FF" />
-            <LabelList id="guideList" translation="[100, 178]" width="1720" height="760"
-                       itemSize="[1720, 54]" itemSpacing="[0, 4]" numRows="12"
-                       font="dictionary:fontBody" focusedFont="dictionary:fontLabel"
-                       color="0xD2CBDDFF" focusedColor="0xFFFFFFFF"
-                       textHorizAlign="left" vertFocusAnimationStyle="floatingFocus"
-                       focusBitmapUri="pkg:/images/guide_focus.png"
-                       focusFootprintBitmapUri="pkg:/images/guide_focus_idle.png"
-                       drawFocusFeedback="true" drawFocusFeedbackOnTop="false" />
-            <Label id="guideHint" translation="[136, 988]" width="1600" height="30"
-                   font="dictionary:fontMeta" color="0xA79FBAFF"
-                   text="OK abre o canal   •   Back volta" />
+            <Rectangle translation="[96, 300]" width="1728" height="828" color="0x0D0A15F2" />
+            <Rectangle translation="[96, 300]" width="1728" height="2" color="0x5BF0C8FF" />
+            <Label id="guideTitle" translation="[136, 132]" width="1200" height="60" font="dictionary:fontDisplay" color="0xF7F3FFFF" text="Guia de canais" />
+            <Label id="guideSub" translation="[138, 194]" width="1500" height="34" font="dictionary://fontBody" color="0x5BF0C8FF" text="" />
+            <LabelList id="guideList" translation="[96, 250]" width="1720" height="640" itemSize="[1720, 54]" numRows="12"
+                       font="dictionary:fontBody" focusedFont="dictionary:fontLabel" color="0xD2CBDDFF" focusedColor="0xFFFFFFFF"
+                       textHorizAlign="left" vertFocusAnimationStyle="floatingFocus" focusBitmapUri="pkg:/images/guide_focus.png"
+                       focusFootprintBitmapUri="pkg:/images/guide_focus_idle.png" drawFocusFeedback="true" drawFocusFeedbackOnTop="false" />
+            <Label id="guideHint" translation="[136, 988]" width="1600" height="30" font="dictionary:fontMeta" color="0xA79FBAFF" text="OK abre o canal   •   Back volta" />
         </Group>
 
         <Group id="aboutGroup" visible="false">
-            <Rectangle translation="[96, 53]" width="1728" height="974" color="0x0D0A15F2" />
-            <Rectangle translation="[96, 53]" width="1728" height="2" color="0x8B5CF6FF" />
-            <Label id="aboutTitle" translation="[136, 78]" width="1000" height="60"
-                   font="dictionary:fontDisplay" color="0xF7F3FFFF" text="Sobre" />
-            <Label id="aboutText" translation="[136, 176]" width="1648" height="780"
-                   font="dictionary:fontBody" color="0xC9C1DAFF" wrap="true" text="" />
-            <Label id="aboutHint" translation="[136, 988]" width="1600" height="30"
-                   font="dictionary:fontMeta" color="0xA79FBAFF" text="Back volta" />
+            <Rectangle translation="[96, 300]" width="1728" height="828" color="0x0D0A15F2" />
+            <Rectangle translation="[96, 300]" width="1728" height="2" color="0x5BF0C8FF" />
+            <Label id="aboutTitle" translation="[136, 186]" width="1000" height="60" font="dictionary:fontDisplay" color="0xF7F3FFFF" text="Sobre" />
+            <Label id="aboutText" translation="[136, 230]" width="1648" height="726" font="dictionary:fontBody" color="0xC9C1DAFF" wrap="true" text="" />
+            <Label id="aboutHint" translation="[136, 988]" width="1600" height="30" font="dictionary:fontMeta" color="0xA79FBAFF" text="Back volta" />
         </Group>
 
         <Group id="playerOverlay" visible="false">
-            <Poster translation="[0, 0]" width="1920" height="260"
-                    uri="pkg:/images/player_veil_top.png" loadSync="true" />
-            <Poster translation="[0, 820]" width="1920" height="260"
-                    uri="pkg:/images/player_veil_bottom.png" loadSync="true" />
-            <Rectangle translation="[0, 0]" width="1920" height="2" color="0x8B5CF6FF" />
-            <Label id="playerTitle" translation="[96, 58]" width="1440" height="58"
-                   font="dictionary:fontDisplay" color="0xF7F3FFFF" text="" />
-            <Label id="playerSubtitle" translation="[96, 118]" width="1440" height="34"
-                   font="dictionary:fontBody" color="0x4FE3D0FF" text="" />
-            <Label id="playerState" translation="[96, 162]" width="1440" height="34"
-                   font="dictionary:fontMeta" color="0xA79FBAFF" text="" />
-            <Label id="playerLive" translation="[1574, 58]" width="250" height="34"
-                   font="dictionary:fontLabel" color="0xE5484DFF" horizAlign="right"
-                   text="● AO VIVO" visible="false" />
-            <BusySpinner id="playerSpinner" translation="[920, 460]" width="80" height="80"
-                         uri="pkg:/images/player_spinner.png" spinInterval="1.2" control="stop"
-                         visible="false" />
-            <Label id="playerCenterState" translation="[820, 450]" width="280" height="100"
-                   font="dictionary:fontDisplay" color="0xF7F3FFFF" horizAlign="center"
-                   vertAlign="center" text="▶" visible="false" />
-            <Rectangle id="progressTrack" translation="[96, 986]" width="1728" height="6"
-                       color="0x2A2338FF" />
-            <Rectangle id="progressFill" translation="[96, 986]" width="0" height="6"
-                       color="0x4FE3D0FF" />
-            <Label id="playerHint" translation="[96, 1000]" width="1400" height="30"
-                   font="dictionary:fontMeta" color="0x8F87A3FF"
-                   text="OK pausa   •   ← -10s   •   → +30s   •   Back sai" />
-            <Label id="playerTime" translation="[1574, 1000]" width="250" height="30"
-                   font="dictionary:fontMeta" color="0x8F87A3FF" horizAlign="right" text="" />
+            <Poster translation="[0, 0]" width="1920" height="260" uri="pkg:/images/player_veil_top.png" loadSync="true" />
+            <Poster translation="[0, 820]" width="1920" height="260" uri="pkg:/images/player_veil_bottom.png" loadSync="true" />
+            <Rectangle translation="[0, 0]" width="1920" height="2" color="0x5BF0C8FF" />
+            <Label id="playerTitle" translation="[96, 58]" width="1440" height="58" font="dictionary:fontDisplay" color="0xF7F3FFFF" text="" />
+            <Label id="playerSubtitle" translation="[96, 118]" width="1440" height="34" font="dictionary:fontBody" color="0x5BF0C8FF" text="" />
+            <Label id="playerState" translation="[96, 162]" width="1440" height="34" font="dictionary:fontMeta" color="0xA79FBAFF" text="" />
+            <Label id="playerLive" translation="[1574, 58]" width="250" height="34" font="dictionary:fontLabel" color="0xE548DFF" horizAlign="right" text="● AO VIVO" visible="false" />
+            <BusySpinner id="playerSpinner" translation="[920, 460]" width="80" height="80" uri="pkg:/images/player_spinner.png" spinInterval="1.2" control="stop" visible="false" />
+            <Label id="playerCenterState" translation="[820, 450]" width="280" height="100" font="dictionary:fontDisplay" color="0xFFFFFFFF" horizAlign="center" vertAlign="center" text="▶" visible="false" />
+            <Rectangle id="progressTrack" translation="[96, 986]" width="1728" height="6" color="0x2A2338FF" />
+            <Rectangle id="progressFill" translation="[96, 986]" width="0" height="6" color="0x5BF0C8FF" />
+            <Label id="playerHint" translation="[96, 1000]" width="1400" height="30" font="dictionary://fontMeta" color="0x8F87A3FF" text="OK pausa   •   ← -10s   •   → +30s   •   Back sai" />
+            <Label id="playerTime" translation="[1574, 1000]" width="250" height="30" font="dictionary:fontMeta" color="0x8F87A3FF" horizAlign="right" text="" />
         </Group>
 
-        <Rectangle id="toastAccent" visible="false" translation="[430, 934]" width="4" height="56"
-                   color="0x4FE3D0FF" />
-        <Rectangle id="toastBg" visible="false" translation="[434, 934]" width="936" height="56"
-                   color="0xD90B0E14" />
-        <Label id="toastIcon" visible="false" translation="[452, 943]" width="40" height="36"
-               font="dictionary:fontLabel" color="0x4FE3D0FF" horizAlign="center"
-               text="i" />
-        <Label id="toast" visible="false" translation="[500, 946]" width="850" height="32"
-               font="dictionary:fontBody" color="0xF7F3FFFF" text="" />
+        <Rectangle id="toastAccent" visible="false" translation="[430, 934]" width="4" height="56" color="0x5BF0C8FF" />
+        <Rectangle id="toastBg" visible="false" translation="[434, 934]" width="936" height="56" color="0x0D0B0E14" />
+        <Label id="toastIcon" visible="false" translation="[452, 943]" width="40" height="36" font="dictionary:fontLabel" color="0x5BF0C8FF" horizAlign="center" text="i" />
+        <Label id="toast" visible="false" translation="[500, 946]" width="850" height="32" font="dictionary:fontBody" color="0xF7F3FFFF" text="" />
 
         <Group id="searchOverlay" visible="false" translation="[0, 0]">
-            <Rectangle id="searchOverlayBg" translation="[0, 0]" width="1920" height="1080" color="0x0B0E14E8" />
-            <Label id="searchOverlayTitle" translation="[80, 48]" width="500" height="58"
-                   font="dictionary:fontTitle" color="0xFFFFFFFF" text="Buscar" />
-            <Label id="searchOverlayHint" translation="[80, 108]" width="720" height="30"
-                   font="dictionary:fontBodySmall" color="0xA8B4C0FF"
-                   text="Teclado compacto • resultados ao lado em tempo real • Back fecha" />
-            <Keyboard id="searchKeyboard" translation="[72, 160]" width="820" maxTextLength="80"
-                      showTextEditBox="true" />
-            <Label id="searchResultsTitle" translation="[936, 112]" width="888" height="34"
-                   font="dictionary:fontSection" color="0xA8B4C0FF" text="RESULTADOS" />
-            <Label id="searchResultsEmpty" translation="[936, 430]" width="888" height="60"
-                   font="dictionary:fontBody" color="0xA8B4C0FF" text="" visible="false" />
+            <Rectangle id="searchOverlayBg" translation="[0, 152]" width="1920" height="928" color="0x06060FDD" />
+            <Rectangle id="searchResultsPanelBg" translation="[720, 200]" width="1120" height="828" color="0x111827FF" />
+            <Rectangle id="searchResultsPanelAccent" translation="[720, 104]" width="1120" height="3" color="0x5BF0C8FF" />
+            <Label id="searchOverlayTitle" translation="[80, 180]" width="500" height="58" font="dictionary:fontTitle" color="0xFFFFFFFF" text="Buscar" />
+            <Group translation="[80, 230]">
+                <Label text="DIGITE PARA BUSCAR" font="dictionary:fontSection" color="0x5BF0C8FF" />
+                <MiniKeyboard id="searchKeyboard" translation="[0, 36]" />
+            </Group>
+            <Label id="searchResultsTitle" translation="[760, 222]" width="1040" height="34" font="dictionary:fontSection" color="0x5BF0C8FF" text="RESULTADOS" />
+            <Label id="searchResultsEmpty" translation="[760, 472]" width="1040" height="60" font="dictionary:fontBody" color="0xA8B4C0FF" text="" visible="false" />
+            <LabelList id="searchResultsList" translation="[740, 270]" width="1080" height="750" itemSize="[1080, 56]" numRows="12"
+                       font="dictionary:fontBody" focusedFont="dictionary:fontLabel" color="0xD2CBDDFF" focusedColor="0xFFFFFFFF"
+                       focusBitmapUri="pkg:/images/item_focus.png" focusFootprintBitmapUri="pkg:/images/item_focus_idle.png"
+                       drawFocusFeedback="true" drawFocusFeedbackOnTop="false" />
+            <Label id="searchOverlayHint" translation="[80, 1016]" width="1200" height="30" font="dictionary:fontMeta" color="0x8F87A3FF"
+                   text="← → navegar entre teclado e resultados   •   OK selecionar   •   Back fecha" />
         </Group>
-        <Timer id="toastTimer" duration="3" repeat="false" />
+            <Timer id="toastTimer" duration="3" repeat="false" />
         <Timer id="failoverTimer" duration="20" repeat="false" />
         <Timer id="progressTimer" duration="2" repeat="true" />
         <Timer id="playerAutoHideTimer" duration="3" repeat="false" />
         <Timer id="seekHoldTimer" duration="0.35" repeat="true" />
         <Timer id="vodRefreshTimer" duration="900" repeat="true" />
-    </children>
+<Group id="topBar" visible="true">
+            <Rectangle translation="[0, 0]" width="1920" height="152" color="0x121722FF" />
+            <Rectangle translation="[0, 150]" width="1920" height="2" color="0x5BF0C8FF" />
+            <Poster id="logoTile" translation="[96, 52]" width="48" height="48" uri="pkg:/images/logo.png" loadSync="true" loadDisplayMode="scaleToFit" />
+            <MarkupGrid id="navList" translation="[156, 52]" width="1440" height="48" itemComponentName="TopTab" itemSize="[200, 48]" numColumns="7" numRows="1" horizFocusAnimationStyle="floatingFocus" vertFocusAnimationStyle="None" drawFocusFeedback="false" />
+            <Label id="clock" translation="[1612, 56]" width="220" height="40" font="dictionary:fontLabel" color="0xE8E2F5FF" horizAlign="right" text="" />
+        </Group>
+
+</children>
 </component>

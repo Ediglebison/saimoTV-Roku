@@ -144,11 +144,12 @@ def main() -> int:
           and 'sub showItem()' in vod_card_brs and 'loadPoster()' in vod_card_brs
           and 'sub loadPoster()' in vod_card_brs and 'pkg:/images/placeholder.png' in vod_card_brs,
           "Pôsteres do catálogo devem começar a carregar ao renderizar cada card")
-    check('id="appBg"' in main_xml_text and 'uri="pkg:/images/bg_app.png"' in main_xml_text
-          and 'id="sidebarBg"' in main_xml_text and 'uri="pkg:/images/bg_sidebar.png"' in main_xml_text,
-          "Fundos da identidade visual 2.5.2 ausentes")
-    check('id="logo"' in main_xml_text and 'uri="pkg:/images/logo.png"' in main_xml_text,
-          "Logotipo oficial Saimo ausente na barra lateral")
+    check('id="appBg"' in main_xml_text and 'uri="pkg:/images/bg_app.png"' in main_xml_text,
+          "Fundo principal da identidade ausente")
+    check('id="topBar"' in main_xml_text and 'id="logoTile"' in main_xml_text
+          and 'id="clock"' in main_xml_text
+          and 'uri="pkg:/images/logo.png"' in main_xml_text,
+          "Barra superior com logo e relógio ausente")
     check('id="clock"' in main_xml_text and 'id="syncHint"' in main_xml_text
           and "sub updateClock()" in main_brs and "sub updateSyncHint()" in main_brs,
           "Relógio/indicador de sincronização ausentes")
@@ -164,7 +165,7 @@ def main() -> int:
     check('id="playerLive"' in main_xml_text and 'id="toastAccent"' in main_xml_text
           and "m.playerLive.visible = m.currentIsLive" in main_brs,
           "Sobreposição do player/toast 2.5.2 incompleta")
-    check('focusBitmapUri="pkg:/images/nav_focus.png"' in main_xml_text
+    check(('nav_focus.png' in main_xml_text or 'itemComponentName="TopTab"' in main_xml_text)
           and 'HDListItemIconUrl' in main_brs, "Navegação com pílula de foco/ícones ausente")
     check('numColumns="6"' in main_xml_text and "m.vodGrid.numColumns = 6" in main_brs,
           "Catálogo completo deve usar seis colunas")
@@ -291,11 +292,24 @@ def main() -> int:
     check("function pickSaimoHighlights" in bslib and "function saimoItemSubtitle" in bslib
           and "function saimoGridSubtitle" in bslib,
           "Seleção de destaques/legendas dos cartões ausente")
-    check("function foldText" in bslib and "Instr(1, foldText(title), q) > 0" in bslib,
-          "Busca sem acento ausente")
+    check("function foldText" in bslib and "function buildSaimoSearchIndex" in bslib
+          and "function searchSaimoIndex" in bslib and "Instr(1, folded[i], q) > 0" in bslib,
+          "Busca sem acento/índice local ausente")
 
     check('mode = "saimo_letter"' in fetch_brs and "loadSaimoLetter" in fetch_brs,
           "Carregamento de uma letra por vez ausente")
+    check('mode = "saimo_search_index"' in fetch_brs and "loadSaimoSearchIndex" in fetch_brs
+          and 'cachefs:/saimo_search_index.json' in fetch_brs
+          and 'cachefs:/saimo_search_index.json' in main_brs
+          and "searchSaimoIndex(m.searchIndex, query, 160)" in main_brs,
+          "Índice local de busca deve ser preparado na tarefa e consultado em memória")
+
+    main_xml_text = read(APP / "components" / "MainScene.xml")
+    declared_fonts = set(re.findall(r'<Font\s+id="([^"]+)"', main_xml_text))
+    referenced_fonts = set(re.findall(r'font="dictionary:([^"]+)"', main_xml_text))
+    missing_fonts = sorted(referenced_fonts - declared_fonts)
+    check(not missing_fonts,
+          "Fontes sem declaração em MainScene.xml: " + ", ".join(missing_fonts))
     check('saimoLetterCachePath(filter, letter)' in fetch_brs
           and 'saimoLetterCacheMarker(base, m.top.signature)' in fetch_brs,
           "Cache por letra/assinatura ausente na tarefa")
