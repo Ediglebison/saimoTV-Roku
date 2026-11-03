@@ -1,7 +1,33 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <component name="FichaScreen" extends="Group">
+  <interface>
+    <field id="item" type="assocarray" onChange="onItemChange" />
+    <field id="playRequested" type="assocarray" alwaysNotify="true" />
+    <field id="focusUpRequested" type="boolean" alwaysNotify="true" />
+    <function name="cleanUp" />
+  </interface>
+
   <children>
-    <Label id="title" translation="[96, 40]" width="1728" height="60" text="Em breve" color="#FFFFFF" />
+    <Poster id="backdropPoster" width="1920" height="1080" loadDisplayMode="scaleToZoom" />
+    <Rectangle width="1920" height="1080" color="#0B0E14D8" />
+    <Group translation="[112, 130]">
+      <Poster id="posterNode" width="300" height="450" loadWidth="300" loadHeight="450" loadDisplayMode="scaleToZoom" />
+      <Group translation="[370, 0]">
+        <Label id="titleLabel" width="1300" height="70" maxLines="1" text="" color="#F7F7FA"><Font role="font" uri="pkg:/fonts/Roboto-Medium.ttf" size="54" /></Label>
+        <Label id="metaLabel" translation="[0, 76]" width="1200" text="" color="#A8B4C0"><Font role="font" uri="pkg:/fonts/Roboto-Regular.ttf" size="22" /></Label>
+        <Label id="genresLabel" translation="[0, 116]" width="1200" text="" color="#A8B4C0"><Font role="font" uri="pkg:/fonts/Roboto-Regular.ttf" size="22" /></Label>
+        <Group id="actionsRow" translation="[0, 164]">
+          <Group id="playBtnGroup" translation="[0, 0]">
+            <Rectangle id="playBtnBg" width="280" height="64" color="#5BF0C8" opacity="0.95" />
+            <Label id="playBtnLabel" translation="[16, 8]" width="248" height="48" text="Assistir" horizAlign="center" vertAlign="center" color="#0B0E14"><Font role="font" uri="pkg:/fonts/Roboto-Medium.ttf" size="26" /></Label>
+          </Group>
+        </Group>
+        <Label id="hintLabel" translation="[0, 260]" width="1200" text="Pressione OK para iniciar" color="#A8B4C0"><Font role="font" uri="pkg:/fonts/Roboto-Regular.ttf" size="20" /></Label>
+      </Group>
+    </Group>
   </children>
+
+  <script type="text/brightscript" uri="pkg:/source/bslib.brs" />
+  <script type="text/brightscript" uri="pkg:/source/utils/Storage.brs" />
   <script type="text/brightscript" uri="pkg:/components/screens/FichaScreen.brs" />
 </component>

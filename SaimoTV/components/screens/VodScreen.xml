@@ -1,7 +1,39 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <component name="VodScreen" extends="Group">
+  <interface>
+    <field id="vodItems" type="array" onChange="onItemsChange" />
+    <field id="selectedCategory" type="string" value="Filmes" onChange="onCategoryChange" />
+    <field id="itemSelected" type="assocarray" alwaysNotify="true" />
+    <field id="playRequested" type="assocarray" alwaysNotify="true" />
+    <field id="focusUpRequested" type="boolean" alwaysNotify="true" />
+    <function name="cleanUp" />
+  </interface>
+
   <children>
-    <Label id="title" translation="[96, 40]" width="1728" height="60" text="Em breve" color="#FFFFFF" />
+    <HeroBanner id="heroBanner" />
+    <RowList
+      id="vodRowList"
+      itemComponentName="PosterItem"
+      translation="[100, 430]"
+      itemSize="[1820, 480]"
+      rowHeights="[480]"
+      rowItemSize="[[272, 460]]"
+      rowItemSpacing="[[32, 0]]"
+      itemSpacing="[0, 28]"
+      showRowLabel="[true]"
+      rowLabelOffset="[[12, 18]]"
+      rowLabelColor="#F7F7FA"
+      rowFocusAnimationStyle="floatingFocus"
+      vertFocusAnimationStyle="fixedFocus"
+      drawFocusFeedback="false"
+      numRows="2"
+      wrap="false"
+    ><Font role="rowLabelFont" uri="pkg:/fonts/Roboto-Medium.ttf" size="36" /></RowList>
+    <Timer id="heroTimer" duration="0.3" repeat="false" />
   </children>
+
+  <script type="text/brightscript" uri="pkg:/source/bslib.brs" />
+  <script type="text/brightscript" uri="pkg:/source/utils/Storage.brs" />
+  <script type="text/brightscript" uri="pkg:/source/utils/Rows.brs" />
   <script type="text/brightscript" uri="pkg:/components/screens/VodScreen.brs" />
 </component>

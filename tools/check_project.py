@@ -50,6 +50,8 @@ def main() -> int:
         APP / "components/items/PosterItem.xml",
         APP / "components/items/PosterItem.brs",
         APP / "components/items/LetraItem.xml",
+        APP / "components/views/HeroBanner.xml",
+        APP / "components/views/HeroBanner.brs",
         APP / "components/screens/HomeScreen.xml",
         APP / "components/screens/HomeScreen.brs",
         APP / "components/screens/LiveScreen.xml",
@@ -262,6 +264,13 @@ def main() -> int:
 
     search_screen_brs = read(APP / "components/screens/SearchScreen.brs")
     search_screen_xml = read(APP / "components/screens/SearchScreen.xml")
+
+    home_screen_brs = read(APP / "components/screens/HomeScreen.brs")
+    home_screen_xml = read(APP / "components/screens/HomeScreen.xml")
+    vod_screen_brs = read(APP / "components/screens/VodScreen.brs")
+    vod_screen_xml = read(APP / "components/screens/VodScreen.xml")
+    hero_banner_brs = read(APP / "components/views/HeroBanner.brs")
+    hero_banner_xml = read(APP / "components/views/HeroBanner.xml")
     check('carregarIndice' in search_screen_brs, "SearchScreen deve carregar o indice local via carregarIndice")
     check('agendarBusca' in search_screen_brs, "SearchScreen deve agendar busca remota via agendarBusca")
     check('buscaTimer' in search_screen_xml and 'duration="0.3"' in search_screen_xml,
@@ -272,6 +281,21 @@ def main() -> int:
     check('cachefs:/saimo_search_index.json' in search_screen_brs
           and 'searchSaimoIndex(m.searchIndex, query, 160)' in search_screen_brs,
           "Indice local de busca deve ser preparado na tarefa e consultado em memoria")
+
+    check('GetInProgressList()' in home_screen_brs, "HomeScreen deve carregar progresso via GetInProgressList")
+    check('LoadFavoriteVOD()' in home_screen_brs, "HomeScreen deve carregar favoritos VOD")
+    check('epgMap' in home_screen_brs and 'railsData' in home_screen_brs, "HomeScreen deve consumir epgMap e railsData")
+    check('montarTimer' in home_screen_xml and 'duration="0.15"' in home_screen_xml, "HomeScreen deve ter montarTimer")
+    check('itemType = "vod"' in home_screen_brs and 'itemType = "channel"' in home_screen_brs, "HomeScreen deve distinguir vod e channel")
+    check('HeroBanner' in home_screen_xml and 'PosterItem' in home_screen_xml, "HomeScreen deve usar HeroBanner e PosterItem")
+
+    check('separar' in vod_screen_brs, "VodScreen deve separar itens por categoria")
+    check('mostrarCategoria' in vod_screen_brs, "VodScreen deve mostrar categoria")
+    check('pkg:/images/icons/' in vod_screen_brs, "VodScreen deve usar icones de categoria")
+    check('HeroBanner' in vod_screen_xml, "VodScreen deve usar HeroBanner")
+
+    check('semFundo' in hero_banner_brs, "HeroBanner deve suportar semFundo")
+    check('backdropPoster' in hero_banner_xml and 'overviewLabel' in hero_banner_xml, "HeroBanner deve ter backdrop e overview")
 
     parsed_xml: dict[Path, ET.Element] = {}
     for xml_file in sorted(APP.rglob("*.xml")):

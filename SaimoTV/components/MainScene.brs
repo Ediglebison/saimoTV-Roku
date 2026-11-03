@@ -178,6 +178,26 @@ sub switchScreen(screenName as String, params = invalid as Dynamic)
         if params.item <> invalid then node.item = params.item
     end if
 
+    if screenName = "home" and node <> invalid then
+        if m.cachedChannels <> invalid then node.channels = m.cachedChannels
+        if m.cachedEpg <> invalid then node.epgMap = m.cachedEpg
+        if m.cachedVod <> invalid then node.railsData = m.cachedVod
+        node.observeField("itemSelected", "onHomeItemSelected")
+        node.observeField("tuneRequested", "onHomeTune")
+        node.observeField("focusUpRequested", "onScreenFocusUp")
+    end if
+
+    if screenName = "vod" and node <> invalid then
+        if m.cachedVodItems <> invalid then node.vodItems = m.cachedVodItems
+        node.observeField("itemSelected", "onVodItemSelected")
+        node.observeField("focusUpRequested", "onScreenFocusUp")
+    end if
+
+    if screenName = "ficha" and node <> invalid then
+        node.observeField("playRequested", "onFichaPlayRequested")
+        node.observeField("focusUpRequested", "onScreenFocusUp")
+    end if
+
     if screenName = "favorites" and node <> invalid then
         if m.cachedChannels <> invalid then node.channels = m.cachedChannels
         if m.cachedVod <> invalid then node.vodItems = m.cachedVod
@@ -265,15 +285,29 @@ sub onDataLoaded(e as Object)
         if m.currentScreenName = "search" and m.currentScreenNode <> invalid then
             m.currentScreenNode.channels = m.cachedChannels
         end if
+        if m.currentScreenName = "home" and m.currentScreenNode <> invalid then
+            m.currentScreenNode.channels = m.cachedChannels
+        end if
     end if
-    if task.responseEpg <> invalid then m.cachedEpg = task.responseEpg
+    if task.responseEpg <> invalid then
+        m.cachedEpg = task.responseEpg
+        if m.currentScreenName = "home" and m.currentScreenNode <> invalid then
+            m.currentScreenNode.epgMap = m.cachedEpg
+        end if
+    end if
     if task.responseDestaques <> invalid then
         m.cachedVod = task.responseDestaques
         WriteSaimoKey("vodLastSync", CreateObject("roDateTime").AsSeconds().ToStr())
+        if m.currentScreenName = "home" and m.currentScreenNode <> invalid then
+            m.currentScreenNode.railsData = m.cachedVod
+        end if
     end if
     if task.responseVodItems <> invalid then
         m.cachedVodItems = task.responseVodItems
         if m.currentScreenName = "search" and m.currentScreenNode <> invalid then
+            m.currentScreenNode.vodItems = m.cachedVodItems
+        end if
+        if m.currentScreenName = "vod" and m.currentScreenNode <> invalid then
             m.currentScreenNode.vodItems = m.cachedVodItems
         end if
     end if
@@ -309,6 +343,31 @@ sub onSearchItemSelected(evt as Object)
     data = invalid
     if evt <> invalid then data = evt.getData()
     openFicha(data)
+end sub
+
+sub onHomeItemSelected(evt as Object)
+    data = invalid
+    if evt <> invalid then data = evt.getData()
+    openFicha(data)
+end sub
+
+sub onHomeTune(evt as Object)
+    data = invalid
+    if evt <> invalid then data = evt.getData()
+    tuneChannel(data)
+end sub
+
+sub onVodItemSelected(evt as Object)
+    data = invalid
+    if evt <> invalid then data = evt.getData()
+    openFicha(data)
+end sub
+
+sub onFichaPlayRequested(evt as Object)
+    data = invalid
+    if evt <> invalid then data = evt.getData()
+    m.lastPlayRequested = data
+    switchScreen("player")
 end sub
 
 sub tuneChannel(channel as Dynamic)
