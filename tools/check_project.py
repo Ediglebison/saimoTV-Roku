@@ -49,6 +49,7 @@ def main() -> int:
         APP / "components/views/TopNavBar.brs",
         APP / "components/items/PosterItem.xml",
         APP / "components/items/PosterItem.brs",
+        APP / "components/items/LetraItem.xml",
         APP / "components/screens/HomeScreen.xml",
         APP / "components/screens/HomeScreen.brs",
         APP / "components/screens/LiveScreen.xml",
@@ -258,6 +259,19 @@ def main() -> int:
     check('id="emptyState"' in favorites_xml and 'id="countLabel"' in favorites_xml,
           "Favoritos deve ter estado vazio e contagem")
     check('" títulos"' in favorites_brs, "Favoritos deve exibir contagem de títulos")
+
+    search_screen_brs = read(APP / "components/screens/SearchScreen.brs")
+    search_screen_xml = read(APP / "components/screens/SearchScreen.xml")
+    check('carregarIndice' in search_screen_brs, "SearchScreen deve carregar o indice local via carregarIndice")
+    check('agendarBusca' in search_screen_brs, "SearchScreen deve agendar busca remota via agendarBusca")
+    check('buscaTimer' in search_screen_xml and 'duration="0.3"' in search_screen_xml,
+          "SearchScreen deve ter Timer buscaTimer com debounce remoto de 0.3s")
+    check('foldText(' in search_screen_brs, "SearchScreen deve normalizar texto dos canais com foldText")
+    check('busca.txt' in read(APP / "components/tasks/DataLoaderTask.brs"),
+          "Busca remota deve usar o fragmento busca.txt")
+    check('cachefs:/saimo_search_index.json' in search_screen_brs
+          and 'searchSaimoIndex(m.searchIndex, query, 160)' in search_screen_brs,
+          "Indice local de busca deve ser preparado na tarefa e consultado em memoria")
 
     parsed_xml: dict[Path, ET.Element] = {}
     for xml_file in sorted(APP.rglob("*.xml")):

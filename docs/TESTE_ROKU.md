@@ -20,7 +20,14 @@ Canais carregam; ops de guia, rádios e eventos retornam dados ou vazio gracioso
 Pré-popule favorites/vodFavorites; abra Favoritos; verifique contagem "N títulos", linhas Canais e Filmes e séries; selecione canal (roteia ao Ao Vivo) e VOD (roteia à Ficha); estado vazio quando sem favoritos; hop de foco para cima.
 
 ### §4 E4 - Tela de busca
-Buscar filme conhecido e canal; índice e busca remota com debounce.
+Rotina manual:
+1. Abra a busca do menu; confirme o teclado à esquerda e campo vazio com dica "Digite o nome...".
+2. Digite algumas letras de um filme conhecido; resultados aparecem enquanto digita nos canais e em "Filmes e séries".
+3. Teste acentos: buscar "cidade" deve encontrar "Cidade de Deus".
+4. Abra antes do cache existir (limpar cachefs) e repita: deve disparar a busca remota uma vez após 0,3 s de pausa, sem travar.
+5. Selecione canal -> roteia ao Ao Vivo; selecione VOD -> roteia à Ficha.
+6. Teclas up foco para o menu superior; left/back retorna ao teclado.
+7. Sem índice, o lado VOD mostra "Nada encontrado." sem queda do app.
 
 ### §5 E5 - Home + VOD + ficha mínima
 Quatro fileiras visíveis; troca de categoria em On Demand; VOD -> ficha -> Assistir.

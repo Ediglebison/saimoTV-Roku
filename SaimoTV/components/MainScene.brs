@@ -58,6 +58,7 @@ sub init()
     m.cachedChannels = invalid
     m.cachedEpg = invalid
     m.cachedVod = invalid
+    m.cachedVodItems = invalid
     m.cachedEvents = invalid
     m.cachedRadios = invalid
     m.currentScreenNode = invalid
@@ -185,6 +186,15 @@ sub switchScreen(screenName as String, params = invalid as Dynamic)
         node.observeField("focusUpRequested", "onScreenFocusUp")
     end if
 
+    if screenName = "search" and node <> invalid then
+        if m.cachedChannels <> invalid then node.channels = m.cachedChannels
+        if m.cachedVodItems <> invalid then node.vodItems = m.cachedVodItems
+        node.callFunc("carregarIndice")
+        node.observeField("tuneRequested", "onSearchTune")
+        node.observeField("itemSelected", "onSearchItemSelected")
+        node.observeField("focusUpRequested", "onScreenFocusUp")
+    end if
+
     m.currentScreenNode = node
     if node <> invalid then
         if m.screensContainer <> invalid then m.screensContainer.appendChild(node)
@@ -234,6 +244,7 @@ sub startLoader(requestType as String)
     task.observeField("responseChannels", "onDataLoaded")
     task.observeField("responseEpg", "onDataLoaded")
     task.observeField("responseDestaques", "onDataLoaded")
+    task.observeField("responseVodItems", "onDataLoaded")
     task.observeField("responseEvents", "onDataLoaded")
     task.observeField("responseRadios", "onDataLoaded")
     m.lastLoader = task
@@ -251,11 +262,20 @@ sub onDataLoaded(e as Object)
         if m.currentScreenName = "favorites" and m.currentScreenNode <> invalid then
             m.currentScreenNode.channels = m.cachedChannels
         end if
+        if m.currentScreenName = "search" and m.currentScreenNode <> invalid then
+            m.currentScreenNode.channels = m.cachedChannels
+        end if
     end if
     if task.responseEpg <> invalid then m.cachedEpg = task.responseEpg
     if task.responseDestaques <> invalid then
         m.cachedVod = task.responseDestaques
         WriteSaimoKey("vodLastSync", CreateObject("roDateTime").AsSeconds().ToStr())
+    end if
+    if task.responseVodItems <> invalid then
+        m.cachedVodItems = task.responseVodItems
+        if m.currentScreenName = "search" and m.currentScreenNode <> invalid then
+            m.currentScreenNode.vodItems = m.cachedVodItems
+        end if
     end if
     if task.responseEvents <> invalid then m.cachedEvents = task.responseEvents
     if task.responseRadios <> invalid then m.cachedRadios = task.responseRadios
@@ -274,6 +294,18 @@ sub onFavTune(evt as Object)
 end sub
 
 sub onFavItemSelected(evt as Object)
+    data = invalid
+    if evt <> invalid then data = evt.getData()
+    openFicha(data)
+end sub
+
+sub onSearchTune(evt as Object)
+    data = invalid
+    if evt <> invalid then data = evt.getData()
+    tuneChannel(data)
+end sub
+
+sub onSearchItemSelected(evt as Object)
     data = invalid
     if evt <> invalid then data = evt.getData()
     openFicha(data)
