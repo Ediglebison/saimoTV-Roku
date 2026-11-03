@@ -104,6 +104,14 @@ function makeSource(url as string, referer as string, userAgent as string, name 
     }
 end function
 
+function headerValueSafe(value as String) as String
+    s = value
+    s = s.Replace(Chr(13), "")
+    s = s.Replace(Chr(10), "")
+    s = s.Replace(Chr(0), "")
+    return s
+end function
+
 function buildVideoHeaders(source as object, defaultUA as string) as object
     headers = []
     headers.Push("Accept:*/*")
@@ -113,8 +121,8 @@ function buildVideoHeaders(source as object, defaultUA as string) as object
 
     ' Use somente os cabecalhos declarados na propria fonte autorizada.
     ' Nao injeta referers de terceiros nem tenta contornar hotlinking por dominio.
-    if referer <> "" then headers.Push("Referer:" + referer)
-    if ua <> "" then headers.Push("User-Agent:" + ua)
+    if referer <> "" then headers.Push("Referer:" + headerValueSafe(referer))
+    if ua <> "" then headers.Push("User-Agent:" + headerValueSafe(ua))
     return headers
 end function
 
@@ -133,9 +141,9 @@ function httpGet(url as string, userAgent as string, referer as string) as objec
         transfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
         transfer.InitClientCertificates()
     end if
-    if userAgent <> "" then transfer.AddHeader("User-Agent", userAgent)
+    if userAgent <> "" then transfer.AddHeader("User-Agent", headerValueSafe(userAgent))
     transfer.AddHeader("Accept", "*/*")
-    if referer <> "" then transfer.AddHeader("Referer", referer)
+    if referer <> "" then transfer.AddHeader("Referer", headerValueSafe(referer))
 
     if not transfer.AsyncGetToString() then
         result.error = "Nao foi possivel iniciar a requisicao HTTP."
