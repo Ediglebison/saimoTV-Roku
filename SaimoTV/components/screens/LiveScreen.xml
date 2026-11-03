@@ -49,5 +49,6 @@
 
   <script type="text/brightscript" uri="pkg:/source/bslib.brs" />
   <script type="text/brightscript" uri="pkg:/source/utils/Storage.brs" />
+  <script type="text/brightscript" uri="pkg:/source/utils/LeitorM3u.brs" />
   <script type="text/brightscript" uri="pkg:/components/screens/LiveScreen.brs" />
 </component>

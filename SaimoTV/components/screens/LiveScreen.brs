@@ -22,6 +22,7 @@ sub init()
     m.indiceAtual = -1
     m.pedemProxy = {}
     m.ancora = m.top.findNode("ancora")
+    m.isParentalUnlocked = false
     m.vigiaTimer = m.top.findNode("vigiaTimer")
     m.vigiaTimer.observeField("fire", "onVigia")
     m.zapTimer = m.top.findNode("zapTimer")
@@ -347,8 +348,13 @@ sub playChannel(index as Integer)
 
     ch = channels[index]
 
-    ' Verifica se é canal adulto / protegido
-    if ch.category <> invalid and (ch.category = "Adultos" or ch.category = "Adulto") then
+    ' Verifica se é canal restrito (conteúdo adulto)
+    restricted = false
+    if ch.category <> invalid then
+        canalTeste = { nome: ch.name, grupo: ch.category }
+        restricted = EhRestrito(canalTeste)
+    end if
+    if restricted then
         if not m.isParentalUnlocked then
             m.pinModal.isOpen = true
             m.liveVideo.control = "stop"

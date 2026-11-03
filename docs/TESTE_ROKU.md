@@ -44,7 +44,10 @@ Side-load build, abra Ao vivo em uma aba e valide:
 8. Canal adulto/protegido bloqueia a reprodução até o PIN "1010" (implementação final em E7).
 
 ### §7 E7 - ZapHUD + PIN
-Zap HUD em 3 canais; canal restrito bloqueia e desbloqueia; PIN persiste.
+1. Sintonize 3 canais diferentes com cima/baixo: ZapHUD mostra número, nome, logotipo, título/progresso do programa e se auto-oculta após ~4 s; OK curto alterna a barra.
+2. Sintonize canal adulto/protegido: reprodução bloqueia, PinModal abre com 4 pontos; dígitos preenchem os pontos, PIN errado exibe "PIN incorreto!" e limpa, PIN correto (padrão 1010) libera e reproduz o canal.
+3. Pressione back no PinModal: fecha sem liberar; canal permanece bloqueado. PIN correto mantém liberação na sessão (troca de canal/aba).
+4. Falha total de fontes: ZapHUD exibe "(Sem sinal)" no nome do canal.
 
 ### §8 E8 - Rádios
 Tocar 2 estações, troca rápida, back para áudio.
