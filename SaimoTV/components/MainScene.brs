@@ -177,6 +177,14 @@ sub switchScreen(screenName as String, params = invalid as Dynamic)
         if params.item <> invalid then node.item = params.item
     end if
 
+    if screenName = "favorites" and node <> invalid then
+        if m.cachedChannels <> invalid then node.channels = m.cachedChannels
+        if m.cachedVod <> invalid then node.vodItems = m.cachedVod
+        node.observeField("tuneRequested", "onFavTune")
+        node.observeField("itemSelected", "onFavItemSelected")
+        node.observeField("focusUpRequested", "onScreenFocusUp")
+    end if
+
     m.currentScreenNode = node
     if node <> invalid then
         if m.screensContainer <> invalid then m.screensContainer.appendChild(node)
@@ -240,6 +248,9 @@ sub onDataLoaded(e as Object)
     if task.responseChannels <> invalid then
         m.cachedChannels = task.responseChannels
         WriteSaimoKey("playlistLastSync", CreateObject("roDateTime").AsSeconds().ToStr())
+        if m.currentScreenName = "favorites" and m.currentScreenNode <> invalid then
+            m.currentScreenNode.channels = m.cachedChannels
+        end if
     end if
     if task.responseEpg <> invalid then m.cachedEpg = task.responseEpg
     if task.responseDestaques <> invalid then
@@ -254,6 +265,45 @@ sub startConnect()
 end sub
 
 sub onScreenFocusUp()
+end sub
+
+sub onFavTune(evt as Object)
+    data = invalid
+    if evt <> invalid then data = evt.getData()
+    tuneChannel(data)
+end sub
+
+sub onFavItemSelected(evt as Object)
+    data = invalid
+    if evt <> invalid then data = evt.getData()
+    openFicha(data)
+end sub
+
+sub tuneChannel(channel as Dynamic)
+    targetName = ""
+    if channel <> invalid then
+        if channel.name <> invalid then targetName = channel.name
+    end if
+
+    found = false
+    if targetName <> "" and m.cachedChannels <> invalid then
+        for each ch in m.cachedChannels
+            if ch <> invalid and ch.name = targetName then
+                found = true
+                exit for
+            end if
+        end for
+    end if
+
+    if found then
+        switchScreen("live")
+    end if
+end sub
+
+sub openFicha(item as Dynamic)
+    if item <> invalid then
+        switchScreen("ficha", { item: item })
+    end if
 end sub
 
 sub onDeepLinkChange()

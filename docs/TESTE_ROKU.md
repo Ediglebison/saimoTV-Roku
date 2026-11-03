@@ -17,7 +17,7 @@ Parte B: cada aba roteia para seu placeholder; relógio, foco e back funcionam n
 Canais carregam; ops de guia, rádios e eventos retornam dados ou vazio gracioso.
 
 ### §3 E3 - Tela de favoritos
-Favoritos pré-criados aparecem; contagem correta; seleção roteia.
+Pré-popule favorites/vodFavorites; abra Favoritos; verifique contagem "N títulos", linhas Canais e Filmes e séries; selecione canal (roteia ao Ao Vivo) e VOD (roteia à Ficha); estado vazio quando sem favoritos; hop de foco para cima.
 
 ### §4 E4 - Tela de busca
 Buscar filme conhecido e canal; índice e busca remota com debounce.

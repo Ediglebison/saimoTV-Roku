@@ -249,6 +249,16 @@ def main() -> int:
           "Comandos de build/teste ausentes no README")
     check("/tmp/opencode" not in read(ROOT / "package.json"), "package.json ainda depende de caminho local da sessão")
 
+    favorites_brs = read(APP / "components/screens/FavoritesScreen.brs")
+    favorites_xml = read(APP / "components/screens/FavoritesScreen.xml")
+    check('LoadFavoriteChannels()' in favorites_brs and 'LoadFavoriteVOD()' in favorites_brs,
+          "Favoritos deve carregar favoritos persistidos via LoadFavoriteChannels/LoadFavoriteVOD")
+    check('itemType = "channel"' in favorites_brs and 'itemType = "vod"' in favorites_brs,
+          "Favoritos deve distinguir canal e VOD nos itens")
+    check('id="emptyState"' in favorites_xml and 'id="countLabel"' in favorites_xml,
+          "Favoritos deve ter estado vazio e contagem")
+    check('" títulos"' in favorites_brs, "Favoritos deve exibir contagem de títulos")
+
     parsed_xml: dict[Path, ET.Element] = {}
     for xml_file in sorted(APP.rglob("*.xml")):
         try:
