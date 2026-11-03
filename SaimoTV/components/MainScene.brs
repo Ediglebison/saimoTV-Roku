@@ -56,17 +56,28 @@ sub init()
     WriteSaimoKey("userAgent", m.userAgent)
 
     m.cachedChannels = invalid
+    m.cachedCatalogChannels = invalid
+    m.cachedMinhasChannels = []
     m.cachedEpg = invalid
     m.cachedVod = invalid
     m.cachedVodItems = invalid
     m.cachedEvents = invalid
     m.cachedRadios = invalid
+    m.nomesCanais = invalid
+    m.eventosCrus = invalid
     m.currentScreenNode = invalid
     m.currentScreenName = ""
     m.previousScreenName = ""
     m.previousScreenParams = invalid
     m.vodInitPending = true
 
+
+    m.minhasLoader = CreateObject("roSGNode", "MinhasListasTask")
+    if m.minhasLoader <> invalid then
+        m.minhasLoader.acao = "carregar"
+        m.minhasLoader.observeField("pronto", "onMinhasBootPronto")
+        m.minhasLoader.control = "RUN"
+    end if
 
     switchScreen("home")
 end sub
@@ -252,6 +263,17 @@ sub switchScreen(screenName as String, params = invalid as Dynamic)
         node.observeField("focusUpRequested", "onScreenFocusUp")
     end if
 
+    if screenName = "events" and node <> invalid then
+        if m.cachedEvents <> invalid then node.events = m.cachedEvents
+        node.observeField("tuneRequested", "onEventsTune")
+        node.observeField("focusUpRequested", "onScreenFocusUp")
+    end if
+
+    if screenName = "minhas" and node <> invalid then
+        node.observeField("listasMudaram", "onListasMudaram")
+        node.observeField("focusUpRequested", "onScreenFocusUp")
+    end if
+
     m.currentScreenNode = node
     if node <> invalid then
         if m.screensContainer <> invalid then m.screensContainer.appendChild(node)
@@ -314,8 +336,9 @@ sub onDataLoaded(e as Object)
     if task = invalid then task = m.lastLoader
     if task = invalid then return
     if task.responseChannels <> invalid then
-        m.cachedChannels = task.responseChannels
+        m.cachedCatalogChannels = task.responseChannels
         WriteSaimoKey("playlistLastSync", CreateObject("roDateTime").AsSeconds().ToStr())
+        rebuildChannelCache()
         if m.currentScreenName = "favorites" and m.currentScreenNode <> invalid then
             m.currentScreenNode.channels = m.cachedChannels
         end if
@@ -360,7 +383,12 @@ sub onDataLoaded(e as Object)
             m.currentScreenNode.vodItems = m.cachedVodItems
         end if
     end if
-    if task.responseEvents <> invalid then m.cachedEvents = task.responseEvents
+    if task.responseEvents <> invalid then
+        m.eventosCrus = task.responseEvents
+        if m.nomesCanais <> invalid then
+            juntarEventos()
+        end if
+    end if
     if task.responseRadios <> invalid then
         m.cachedRadios = task.responseRadios
         if m.currentScreenName = "radios" and m.currentScreenNode <> invalid then
@@ -372,8 +400,116 @@ end sub
 sub startConnect()
 end sub
 
+sub onMinhasBootPronto()
+    task = m.minhasLoader
+    if task = invalid then return
+    if task.canais <> invalid then
+        m.cachedMinhasChannels = task.canais
+        rebuildChannelCache()
+        if m.currentScreenName = "home" and m.currentScreenNode <> invalid then m.currentScreenNode.channels = m.cachedChannels
+        if m.currentScreenName = "live" and m.currentScreenNode <> invalid then m.currentScreenNode.channels = m.cachedChannels
+        if m.currentScreenName = "favorites" and m.currentScreenNode <> invalid then m.currentScreenNode.channels = m.cachedChannels
+        if m.currentScreenName = "search" and m.currentScreenNode <> invalid then m.currentScreenNode.channels = m.cachedChannels
+        if m.currentScreenName = "guide" and m.currentScreenNode <> invalid then m.currentScreenNode.channels = m.cachedChannels
+        if m.currentScreenName = "events" and m.currentScreenNode <> invalid and m.cachedEvents <> invalid then m.currentScreenNode.events = m.cachedEvents
+    end if
+end sub
+
+sub rebuildChannelCache()
+    merged = []
+    catalog = m.cachedCatalogChannels
+    if catalog <> invalid then
+        for each c in catalog
+            if c <> invalid then merged.Push(c)
+        next
+    end if
+    minhas = invalid
+    if m.cachedMinhasChannels <> invalid then
+        minhas = []
+        minhas.Append(m.cachedMinhasChannels)
+        if minhas.Count() > 0 then
+            minhas.SortBy("name", "i")
+            n = merged.Count()
+            for each c in minhas
+                if c = invalid then continue for
+                n = n + 1
+                c.number = n
+                merged.Push(c)
+            next
+        end if
+    end if
+    m.cachedChannels = merged
+    m.nomesCanais = {}
+    if merged <> invalid then
+        for each c in merged
+            if c <> invalid and c.name <> invalid then
+                m.nomesCanais[LCase(c.name).Replace(" ", "")] = c.name
+            end if
+        next
+    end if
+    if m.eventosCrus <> invalid then juntarEventos()
+end sub
+
+sub juntarEventos()
+    if m.eventosCrus = invalid then return
+    saida = []
+    for each ev in m.eventosCrus
+        if ev = invalid then continue for
+        ev.channelName = canalDoJogo(ev.slugs)
+        if ev.channelName <> "" then saida.Push(ev)
+    next
+    m.cachedEvents = saida
+    if m.currentScreenName = "events" and m.currentScreenNode <> invalid then
+        m.currentScreenNode.events = m.cachedEvents
+    end if
+    if m.currentScreenName = "events" and m.currentScreenNode <> invalid then
+        m.currentScreenNode.events = m.cachedEvents
+    end if
+end sub
+
+sub onEventsTune(evt as Object)
+    data = invalid
+    if evt <> invalid then data = evt.GetData()
+    tuneChannel(data)
+end sub
+
+sub onListasMudaram(evt as Object)
+    data = invalid
+    if evt <> invalid then data = evt.GetData()
+    canais = invalid
+    if data <> invalid and data.canais <> invalid then canais = data.canais
+    m.cachedMinhasChannels = canais
+    rebuildChannelCache()
+    if m.currentScreenName = "home" and m.currentScreenNode <> invalid then m.currentScreenNode.channels = m.cachedChannels
+    if m.currentScreenName = "live" and m.currentScreenNode <> invalid then m.currentScreenNode.channels = m.cachedChannels
+    if m.currentScreenName = "favorites" and m.currentScreenNode <> invalid then m.currentScreenNode.channels = m.cachedChannels
+    if m.currentScreenName = "search" and m.currentScreenNode <> invalid then m.currentScreenNode.channels = m.cachedChannels
+    if m.currentScreenName = "guide" and m.currentScreenNode <> invalid then m.currentScreenNode.channels = m.cachedChannels
+end sub
+
 sub onScreenFocusUp()
 end sub
+
+function canalDoJogo(players as Object) as String
+    if m.nomesCanais = invalid then return ""
+    if players = invalid then return ""
+    if Type(players) <> "roArray" then return ""
+    if players.Count() = 0 then return ""
+    partes = players[0].Split("/")
+    apelido = LCase(partes[partes.Count() - 1]).Replace("-", "").Replace(" ", "")
+    if apelido = "" then return ""
+    if m.nomesCanais.DoesExist(apelido) then return m.nomesCanais[apelido]
+    candidate = ""
+    count = 0
+    for each n in m.nomesCanais
+        if Instr(1, n, apelido) > 0 then
+            count = count + 1
+            candidate = m.nomesCanais[n]
+        end if
+    next
+    if count = 1 then return candidate
+    return ""
+end function
 
 sub onRadioTelaCheia(evt as Object)
     data = false
@@ -451,7 +587,11 @@ end sub
 sub tuneChannel(channel as Dynamic)
     targetName = ""
     if channel <> invalid then
-        if channel.name <> invalid then targetName = channel.name
+        if Type(channel) = "String" or Type(channel) = "roString" then
+            targetName = channel
+        else if channel.name <> invalid then
+            targetName = channel.name
+        end if
     end if
 
     found = false

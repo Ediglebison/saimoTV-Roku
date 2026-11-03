@@ -59,7 +59,12 @@ Side-load build, abra Ao vivo em uma aba e valide:
 - Teclas de volume do controle ajustam o áudio da rádio sem interromper a reprodução.
 
 ### §9 E9 - Eventos + Minhas listas
-Eventos renderizam; CRUD de lista ponta a ponta; canais mesclados reproduzem.
+1. Abra Eventos: jogos ao vivo aparecem em "Ao vivo agora" e os futuros em "Começa em breve"; foco atualiza o hero; estado "Nenhum jogo agora." quando vazio.
+2. Selecione um jogo: o app deve sintonizar o canal resolvido pelo jogo.
+3. Minhas listas: adicione uma lista .m3u válida; ela aparece com total de canais e tempo; Ativar/Desativar e Atualizar funcionam; Remover apaga a lista e seus canais.
+4. Após adicionar, as abas Ao vivo/Busca/Guia/Home (início) exibem os canais da lista com categoria "Minhas listas" e números seguintes aos do catálogo.
+5. Edição pelo Saimo Connect: texto recebido preenche o campo de link.
+6. Canais mistos reproduzem no ao vivo; a seleção de um canal minhas reproduz.
 
 ### §10 E10 - Player
 OSD, seek, auto-next, erro e foco de saída.

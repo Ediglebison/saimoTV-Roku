@@ -48,6 +48,7 @@ def main() -> int:
         APP / "components/items/PosterItem.xml",
         APP / "components/items/PosterItem.brs",
         APP / "components/items/LetraItem.xml",
+        APP / "components/items/AjusteItem.xml",
         APP / "components/views/HeroBanner.xml",
         APP / "components/views/HeroBanner.brs",
         APP / "components/screens/HomeScreen.xml",
@@ -326,6 +327,35 @@ def main() -> int:
     check('sub onRadioTelaCheia(evt as Object)' in main_brs, "MainScene deve implementar onRadioTelaCheia")
     check('task.responseRadios <> invalid' in main_brs and 'm.currentScreenNode.radios = m.cachedRadios' in main_brs,
           "MainScene deve atualizar Radios montado na entrega tardia de radios")
+
+    events_screen_brs = read(APP / "components/screens/EventsScreen.brs")
+    events_screen_xml = read(APP / "components/screens/EventsScreen.xml")
+    minhas_screen_brs = read(APP / "components/screens/MinhasListasScreen.brs")
+    minhas_screen_xml = read(APP / "components/screens/MinhasListasScreen.xml")
+    check('onEventsChange' in events_screen_brs, "EventsScreen deve reagir a mudanca via onEventsChange")
+    check('onEventSelected' in events_screen_brs, "EventsScreen deve selecionar evento via onEventSelected")
+    check('visible = events.Count() = 0' in events_screen_brs, "EventsScreen deve exibir vazio quando nao ha eventos resolvidos")
+    check('m.top.tuneRequested = no.rawEvent.channelName' in events_screen_brs,
+          "EventsScreen deve sintonizar pelo canal resolvido do jogo")
+    check('HeroBanner' in events_screen_xml and 'PosterItem' in events_screen_xml,
+          "EventsScreen deve usar HeroBanner e PosterItem")
+    check('mostrarListas' in minhas_screen_brs, "MinhasListasScreen deve listar listas via mostrarListas")
+    check('onPronto' in minhas_screen_brs, "MinhasListasScreen deve concluir tarefa via onPronto")
+    check('m.top.listasMudaram = { canais: t.canais }' in minhas_screen_brs,
+          "MinhasListasScreen deve emitir listasMudaram com canais")
+    check('AjusteItem' in minhas_screen_xml, "MinhasListasScreen deve usar AjusteItem")
+    check('observeField("listasMudaram", "onListasMudaram")' in main_brs,
+          "MainScene deve observar listasMudaram de Minhas via onListasMudaram")
+    check('observeField("tuneRequested", "onEventsTune")' in main_brs,
+          "MainScene deve observar tuneRequested de Events via onEventsTune")
+    check('function canalDoJogo(players as Object) as String' in main_brs,
+          "MainScene deve implementar canalDoJogo")
+    check('sub juntarEventos()' in main_brs, "MainScene deve implementar juntarEventos")
+    check('task.responseEvents <> invalid' in main_brs and 'm.eventosCrus = task.responseEvents' in main_brs,
+          "MainScene deve guardar eventos crus na entrega de events")
+    check('m.cachedCatalogChannels = task.responseChannels' in main_brs,
+          "MainScene deve manter canais do catalogo em faixa separada")
+    check('m.cachedMinhasChannels' in main_brs, "MainScene deve manter canais de Minhas em faixa separada")
 
     parsed_xml: dict[Path, ET.Element] = {}
     for xml_file in sorted(APP.rglob("*.xml")):
