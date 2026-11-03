@@ -40,6 +40,11 @@ def main() -> int:
         APP / "components/tasks/DataLoaderTask.brs",
         APP / "components/tasks/MinhasListasTask.xml",
         APP / "components/tasks/MinhasListasTask.brs",
+        APP / "components/tasks/StreamResolverTask.xml",
+        APP / "components/tasks/StreamResolverTask.brs",
+        APP / "components/views/PlayerOSD.xml",
+        APP / "components/views/PlayerOSD.brs",
+        APP / "source/utils/Format.brs",
         APP / "source/utils/LeitorM3u.brs",
         APP / "source/utils/Storage.brs",
         APP / "source/utils/Rows.brs",
@@ -357,6 +362,51 @@ def main() -> int:
           "MainScene deve manter canais do catalogo em faixa separada")
     check('m.cachedMinhasChannels' in main_brs, "MainScene deve manter canais de Minhas em faixa separada")
 
+    stream_resolver_brs = read(APP / "components/tasks/StreamResolverTask.brs")
+    stream_resolver_xml = read(APP / "components/tasks/StreamResolverTask.xml")
+    player_screen_brs = read(APP / "components/screens/PlayerScreen.brs")
+    player_screen_xml = read(APP / "components/screens/PlayerScreen.xml")
+    player_osd_brs = read(APP / "components/views/PlayerOSD.brs")
+    player_osd_xml = read(APP / "components/views/PlayerOSD.xml")
+
+    check('field id="requestItem"' in stream_resolver_xml and 'field id="resolvedItem"' in stream_resolver_xml,
+          "StreamResolverTask deve expor requestItem/resolvedItem")
+    check('sub resolveStream()' in stream_resolver_brs and 'function getLetterGaveta' in stream_resolver_brs
+          and 'function getIndiceBases' in stream_resolver_brs and 'function buildCandidateUrl' in stream_resolver_brs,
+          "StreamResolverTask deve implementar resolução de streams")
+    check('SaimoTV/2.6.4 (RokuOS)' in stream_resolver_brs,
+          "StreamResolverTask deve manter constante UA 2.6.4")
+    check('Instr(1, cand, "desativado.invalid")' in stream_resolver_brs,
+          "StreamResolverTask deve descartar urls desativado.invalid")
+    check('buildCandidateUrl' in stream_resolver_brs, "buildCandidateUrl ausente no resolver")
+    check('field id="playItem" type="assocarray"' in player_screen_xml and 'field id="exitRequested"' in player_screen_xml,
+          "PlayerScreen deve expor playItem/exitRequested")
+    check('onPlayItemChange' in player_screen_brs and 'onStreamResolved' in player_screen_brs
+          and 'playCandidate' in player_screen_brs and 'tryNextCandidate' in player_screen_brs
+          and 'saveCurrentProgress' in player_screen_brs, "PlayerScreen deve implementar pipeline de candidatos")
+    check('SaveVODProgress(' in player_screen_brs, "PlayerScreen deve salvar progresso via SaveVODProgress")
+    check('nextEp = item.episode + 1' in player_screen_brs, "PlayerScreen deve avançar episódio automaticamente")
+    check('ReadSaimoKey("userAgent")' in player_screen_brs, "PlayerScreen deve usar userAgent do storage")
+
+    check('seekRequested' in player_osd_xml and 'FormatSecondsToTime' in player_osd_brs,
+          "PlayerOSD deve buscar e formatar tempo via Format.brs")
+    check('field id="exitRequested" type="boolean"' in player_screen_xml,
+          "PlayerScreen deve expor exitRequested")
+    check('node.playItem = params' in main_brs, "MainScene deve repassar playItem ao PlayerScreen")
+    check('node.observeField("exitRequested", "onPlayerExitRequested")' in main_brs,
+          "MainScene deve observar exitRequested")
+    check('switchScreen("player", data)' in main_brs,
+          "MainScene deve encaminhar playRequested direto ao player")
+    check('sub onPlayerExitRequested()' in main_brs, "MainScene deve implementar onPlayerExitRequested")
+    check('previousScreenName' in main_brs and 'previousScreenParams' in main_brs,
+          "MainScene deve manter tela anterior para retorno do player")
+    check('screenName = "guide" or screenName = "player"' in main_brs,
+          "MainScene deve ocultar TopNav no player")
+
+    retired = ["seekHoldTimer", "failoverTimer", "onFailoverTimer", "playerLive", "seekHold", "failover", "progressFill"]
+    combined_player = main_brs + player_screen_brs + player_screen_xml + player_osd_brs + player_osd_xml + stream_resolver_brs + stream_resolver_xml
+    for token in retired:
+        check(token not in combined_player, "Comportamento aposentado reintroduzido: " + token)
     parsed_xml: dict[Path, ET.Element] = {}
     for xml_file in sorted(APP.rglob("*.xml")):
         try:

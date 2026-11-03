@@ -67,6 +67,7 @@ sub init()
     m.eventosCrus = invalid
     m.currentScreenNode = invalid
     m.currentScreenName = ""
+    m.currentScreenParams = invalid
     m.previousScreenName = ""
     m.previousScreenParams = invalid
     m.vodInitPending = true
@@ -148,6 +149,13 @@ function vodIsStale() as Boolean
 end function
 
 sub switchScreen(screenName as String, params = invalid as Dynamic)
+    ' Guarda tela anterior para retorno ao sair do player
+    if m.currentScreenName <> "" and m.currentScreenName <> "player" then
+        m.previousScreenName = m.currentScreenName
+        m.previousScreenParams = m.currentScreenParams
+    end if
+    m.currentScreenParams = params
+
     if m.currentScreenNode <> invalid then
         cleanupNode = m.currentScreenNode
         if cleanupNode <> invalid then cleanupNode.callFunc("cleanUp")
@@ -207,6 +215,11 @@ sub switchScreen(screenName as String, params = invalid as Dynamic)
     if screenName = "ficha" and node <> invalid then
         node.observeField("playRequested", "onFichaPlayRequested")
         node.observeField("focusUpRequested", "onScreenFocusUp")
+    end if
+
+    if screenName = "player" and node <> invalid then
+        if params <> invalid then node.playItem = params
+        node.observeField("exitRequested", "onPlayerExitRequested")
     end if
 
     if screenName = "favorites" and node <> invalid then
@@ -281,7 +294,7 @@ sub switchScreen(screenName as String, params = invalid as Dynamic)
     end if
 
     if m.topNavBar <> invalid then
-        if screenName = "guide" then
+        if screenName = "guide" or screenName = "player" then
             m.topNavBar.visible = false
         else
             m.topNavBar.visible = true
@@ -562,8 +575,7 @@ end sub
 sub onFichaPlayRequested(evt as Object)
     data = invalid
     if evt <> invalid then data = evt.getData()
-    m.lastPlayRequested = data
-    switchScreen("player")
+    switchScreen("player", data)
 end sub
 
 sub onGuideTune(evt as Object)
@@ -582,6 +594,14 @@ end sub
 
 sub onLiveSairRequested(evt as Object)
     ' no-op placeholder for Live sairRequested; Roku handles app exit
+end sub
+
+sub onPlayerExitRequested()
+    if m.previousScreenName <> invalid and m.previousScreenName <> "" and m.previousScreenName <> "player" then
+        switchScreen(m.previousScreenName, m.previousScreenParams)
+    else
+        switchScreen("home")
+    end if
 end sub
 
 sub tuneChannel(channel as Dynamic)
