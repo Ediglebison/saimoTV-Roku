@@ -76,4 +76,15 @@ Regressão completa §1–§10 em dispositivo/sideload.
 
 
 ### §12 E12 - Saimo Connect
-Parear telefone, navegar por cada aba, sincronia de estado.
+1. Discovery: com o app aberto e o telefone na mesma Wi-Fi, acesse `http://IP-ROKU:8999/info`; confirme `app`, `id`, `name`, `version` = 2.6.0, `port` = 8999 e `multi: false`. Nenhum outro campo. Conferir origem CORS `*` apenas nesse documento.
+2. WebSocket: abra o cliente Saimo Connect e pareie; confirme contagem de clientes em Settings/estado e decremento após fechar o cliente.
+3. Navegação/estado: troque de aba no app e confirme que o telefone recebe `state` com `screen` atualizado e `playing` true apenas em Ao vivo/Player. Verifique ausência de URLs/User-Agent no payload.
+4. Tune: envie comando para sintonizar canal conhecido; app sintoniza. Envie nome inexistente; nenhum efeito/queda.
+5. VOD: envie `playVod` com título+URL válidos; Player abre. Envie com título ou URL vazios; ignorado. Sem headers/UA do telefone.
+6. Play/pause/seek: comandos não derrubam o app e não alteram candidatos; placeholders apenas.
+7. Teclas: testar os 8 códigos mapeados (`UP/DOWN/LEFT/RIGHT/OK/BACK/HOME/MENU`); códigos fora do mapa não agem; verificar ECP em `127.0.0.1:8060/keypress/`.
+8. Texto: envie `text` estando em Minhas listas; campo de link preenche. Em outras telas, nenhum efeito.
+9. Fonte/sync: envie `fonte`/`sync`; app reenvia estado (sem confiar no cliente).
+10. Segmentação de rede: testar aparelho em sub-rede/VPN/firewall diferente; esperado falha de conexão/sem controle. Com firewall bloqueando 8999, discovery falha.
+11. Regressão completa §1-§11 e gates `npm run build`, `npm run check`, `npm run test`, `npm run package`.
+12. Observação: trusted-LAN, sem TLS/pairing; qualquer dispositivo da rede pode enviar `hello`; documentado como recurso doméstico.

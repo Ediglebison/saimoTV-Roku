@@ -18,6 +18,8 @@
       <Label visible="false"><Font id="fontDisplay" role="font" uri="pkg:/fonts/Roboto-Bold.ttf" size="36" /></Label>
       <Label visible="false"><Font id="fontTitle" role="font" uri="pkg:/fonts/Roboto-Bold.ttf" size="48" /></Label>
     </Group>
+    <!-- Servidor Saimo Connect (Porta 8999) -->
+    <ConnectTask id="connectServer" />
   </children>
 
   <script type="text/brightscript" uri="pkg:/source/bslib.brs" />

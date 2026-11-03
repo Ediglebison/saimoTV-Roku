@@ -161,6 +161,11 @@ O ZIP gerado é um pacote de sideload para modo desenvolvedor, não um pacote co
 - Este cliente é uma derivação não oficial do projeto **Saimo TV**, agora mantido em https://github.com/saimotv. Créditos ao criador original e à equipe/projeto Saimo TV.
 - Use somente com listas e fontes de mídia que você tenha autorização para acessar.
 
+
+## Saimo Connect (controle pelo celular)
+
+O app expõe uma porta local controlável (`8999`) acessível apenas na **mesma Wi-Fi**, via `GET /info` para descoberta (`app`, `id`, `name`, `version`=`2.6.0`, `port`, `multi: false`) e WebSocket `/ws` para comandos e sincronização de estado. Não há TLS nem segredo de pareamento; controle é recurso da LAN confiável. Os comandos permitidos são `hello`, `ping`, `key` (8 teclas ECP: UP/T/P etc, via `keypress/` interno), `fonte`/` sync`, `tune` (apenas canais cacheados), `texto` (apenas Minhas Listas) e `playVod` com título/URL (resumePos 0, sem headers/UA). O broadcasting de estado não inclui URLs, User-Agent ou valores do registro. Backlog 4 e timeout de interface padrão do runtime (all-interface, 8999). Documentar no firewall se houver bloqueio.
+
 ## Referências técnicas
 
 - Documentação Roku SceneGraph PosterGrid: https://developer.roku.com/dev/docs/postergrid

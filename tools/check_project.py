@@ -79,10 +79,6 @@ def main() -> int:
         APP / "components/views/PinModal.xml",
         APP / "components/views/PinModal.brs",
         APP / "components/views/PainelLateral.xml",
-        APP / "components/views/ZapHUD.xml",
-        APP / "components/views/ZapHUD.brs",
-        APP / "components/views/PinModal.xml",
-        APP / "components/views/PinModal.brs",
         APP / "components/items/CanalItem.xml",
         APP / "components/items/ProgramaItem.xml",
         APP / "components/items/FonteItem.xml",
@@ -97,6 +93,8 @@ def main() -> int:
         APP / "components/screens/MinhasListasScreen.xml",
         APP / "components/screens/MinhasListasScreen.brs",
         ROOT / "docs/TESTE_ROKU.md",
+        APP / "components/tasks/ConnectTask.xml",
+        APP / "components/tasks/ConnectTask.brs",
         APP / "images/icon_focus_fhd.png",
         APP / "images/splash_fhd.png",
         APP / "images/bg_app.png",
@@ -439,6 +437,27 @@ def main() -> int:
     check('epgUrl' not in settings_screen_brs and 'epgUrl' not in settings_screen_xml
           and 'epgUrl' not in readme,
           "epgUrl nao deve aparecer nas configuracoes nem no README")
+
+    check('ConnectTask id="connectServer"' in main_xml_text,
+          "MainScene.xml deve instanciar ConnectTask connectServer")
+    check('m.connectServer = m.top.findNode("connectServer")' in main_brs,
+          "MainScene deve resolver connectServer")
+    check('observeField("receivedCommand", "onConnectCommand")' in main_brs,
+          "MainScene deve observar receivedCommand")
+    check('m.connectServer.control = "RUN"' in main_brs, "MainScene deve iniciar ConnectTask")
+    check('sub onConnectCommand(evt as Object)' in main_brs, "MainScene deve implementar onConnectCommand")
+    check('sub avisarCelular()' in main_brs, "MainScene deve implementar avisarCelular")
+    check('avisarCelular()' in main_brs and main_brs.count('avisarCelular()') >= 2,
+          "MainScene deve chamar avisarCelular no final de switchScreen")
+
+    connect_task_brs = read(APP / "components/tasks/ConnectTask.brs")
+    connect_task_xml = read(APP / "components/tasks/ConnectTask.xml")
+
+    check('version: "2.6.0"' in connect_task_brs, "ConnectTask deve retornar version 2.6.0")
+    check('app: "saimo-tv"' in connect_task_brs, "ConnectTask deve expor app saimo-tv")
+    check('port = m.top.port' in connect_task_brs, "ConnectTask deve usar port do campo")
+    check('listen(4)' in connect_task_brs, "ConnectTask deve escutar backlog 4")
+    check('field id="receivedCommand"' in connect_task_xml, "ConnectTask deve expor receivedCommand")
 
     retired = ["seekHoldTimer", "failoverTimer", "onFailoverTimer", "playerLive", "seekHold", "failover", "progressFill"]
     combined_player = main_brs + player_screen_brs + player_screen_xml + player_osd_brs + player_osd_xml + stream_resolver_brs + stream_resolver_xml

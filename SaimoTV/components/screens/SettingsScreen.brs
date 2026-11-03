@@ -225,7 +225,7 @@ sub limparCache()
 end sub
 
 sub abrirSobre()
-    m.statusLabel.text = "Saimo TV 2.6.0. Chaves: playlistUrl, vodUrl, userAgent, prefs, vod_progress, watchedEpisodes, favorites."
+    m.statusLabel.text = "Saimo TV 2.6.0. Chaves: playlistUrl, vodUrl, userAgent, prefs, vod_progress, watchedEpisodes, favorites. Porta 8999, somente Wi-Fi local, sem credenciais em transito (apenas app/version/port discovery). Comandos permitidos: sintonizar canal, reproducao, teclas, texto, estado."
 end sub
 
 sub onKeyEvent(key as String, press as Boolean) as Boolean

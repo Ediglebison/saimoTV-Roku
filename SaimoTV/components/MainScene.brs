@@ -80,6 +80,8 @@ sub init()
         m.minhasLoader.control = "RUN"
     end if
 
+    startConnect()
+
     switchScreen("home")
 end sub
 
@@ -312,6 +314,8 @@ sub switchScreen(screenName as String, params = invalid as Dynamic)
             m.topNavBar.selectedIndex = screenToNavIndex(screenName)
         end if
     end if
+
+    if m.connectServer <> invalid then avisarCelular()
 end sub
 
 function screenToNavIndex(name as String) as Integer
@@ -422,6 +426,11 @@ sub onDataLoaded(e as Object)
 end sub
 
 sub startConnect()
+    m.connectServer = m.top.findNode("connectServer")
+    if m.connectServer <> invalid then
+        m.connectServer.observeField("receivedCommand", "onConnectCommand")
+        m.connectServer.control = "RUN"
+    end if
 end sub
 
 sub onMinhasBootPronto()
@@ -658,6 +667,52 @@ sub onPlayerExitRequested()
         switchScreen(m.previousScreenName, m.previousScreenParams)
     else
         switchScreen("home")
+    end if
+end sub
+
+sub avisarCelular()
+    if m.connectServer = invalid then return
+    tela = m.currentScreenName
+    playing = tela = "live" or tela = "player"
+    m.connectServer.saida = FormatJson({ t: "state", mode: "idle", screen: tela, channel: "", playing: playing, multi: false, active: 0, screens: [], tvAudio: "tv", phoneAudio: [] })
+end sub
+
+sub tuneChannelByName(channelName as Dynamic)
+    if channelName = invalid then return
+    name = channelName.ToStr().Trim()
+    if name = "" then return
+    tuneChannel(name)
+end sub
+
+sub onConnectCommand(evt as Object)
+    cmd = invalid
+    if evt <> invalid then cmd = evt.GetData()
+    if cmd = invalid or cmd.t = invalid then return
+    tipo = cmd.t
+
+    if tipo = "tune" and cmd.channel <> invalid then
+        tuneChannelByName(cmd.channel)
+    else if tipo = "playVod" then
+        title = ""
+        url = ""
+        if cmd.title <> invalid then title = cmd.title.ToStr().Trim()
+        if cmd.url <> invalid then url = cmd.url.ToStr().Trim()
+        if title <> "" and url <> "" then
+            switchScreen("player", { title: title, url: url, isSeries: false, resumePos: 0 })
+        end if
+    else if tipo = "playPause" then
+        ' Placeholder: player OSD control not exposed at shell level.
+    else if tipo = "seek" then
+        ' Placeholder: player seek not exposed at shell level.
+        if cmd.delta <> invalid then
+            ' no-op guarded
+        end if
+    else if tipo = "text" and cmd.value <> invalid then
+        if m.currentScreenName = "minhas" and m.currentScreenNode <> invalid then
+            m.currentScreenNode.textoRecebido = cmd.value
+        end if
+    else if tipo = "fonte" or tipo = "sync" then
+        avisarCelular()
     end if
 end sub
 
