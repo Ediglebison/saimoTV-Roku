@@ -50,7 +50,13 @@ Side-load build, abra Ao vivo em uma aba e valide:
 4. Falha total de fontes: ZapHUD exibe "(Sem sinal)" no nome do canal.
 
 ### §8 E8 - Rádios
-Tocar 2 estações, troca rápida, back para áudio.
+- Tocar 2 estações distintas e verificar o áudio reproduzindo em cada uma.
+- Troca rápida (cima/baixo) não deixa duas rádios tocando ao mesmo tempo (wrap-around estável).
+- Botão voltar para a grade para o áudio e o timer das barras; grade volta a focar.
+- Tela cheia esconde a TopNavBar e a restaura ao fechar.
+- Entrega tardia (radios.txt) atualiza a grade sem travar; logo ausente não quebra o Poster.
+- Gêneros agrupados com "Outras" por último.
+- Teclas de volume do controle ajustam o áudio da rádio sem interromper a reprodução.
 
 ### §9 E9 - Eventos + Minhas listas
 Eventos renderizam; CRUD de lista ponta a ponta; canais mesclados reproduzem.

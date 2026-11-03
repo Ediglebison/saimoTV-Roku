@@ -246,6 +246,12 @@ sub switchScreen(screenName as String, params = invalid as Dynamic)
         node.observeField("focusUpRequested", "onScreenFocusUp")
     end if
 
+    if screenName = "radios" and node <> invalid then
+        if m.cachedRadios <> invalid then node.radios = m.cachedRadios
+        node.observeField("telaCheia", "onRadioTelaCheia")
+        node.observeField("focusUpRequested", "onScreenFocusUp")
+    end if
+
     m.currentScreenNode = node
     if node <> invalid then
         if m.screensContainer <> invalid then m.screensContainer.appendChild(node)
@@ -355,13 +361,24 @@ sub onDataLoaded(e as Object)
         end if
     end if
     if task.responseEvents <> invalid then m.cachedEvents = task.responseEvents
-    if task.responseRadios <> invalid then m.cachedRadios = task.responseRadios
+    if task.responseRadios <> invalid then
+        m.cachedRadios = task.responseRadios
+        if m.currentScreenName = "radios" and m.currentScreenNode <> invalid then
+            m.currentScreenNode.radios = m.cachedRadios
+        end if
+    end if
 end sub
 
 sub startConnect()
 end sub
 
 sub onScreenFocusUp()
+end sub
+
+sub onRadioTelaCheia(evt as Object)
+    data = false
+    if evt <> invalid then data = evt.GetData()
+    if m.topNavBar <> invalid then m.topNavBar.visible = not data
 end sub
 
 sub onFavTune(evt as Object)

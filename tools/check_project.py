@@ -309,6 +309,24 @@ def main() -> int:
     check('semFundo' in hero_banner_brs, "HeroBanner deve suportar semFundo")
     check('backdropPoster' in hero_banner_xml and 'overviewLabel' in hero_banner_xml, "HeroBanner deve ter backdrop e overview")
 
+    radios_screen_brs = read(APP / "components/screens/RadiosScreen.brs")
+    radios_screen_xml = read(APP / "components/screens/RadiosScreen.xml")
+    check('onRadiosChange' in radios_screen_brs, "RadiosScreen deve reagir a mudanca via onRadiosChange")
+    check('AjustarFileiras' in radios_screen_brs, "RadiosScreen deve ajustar fileiras via AjustarFileiras")
+    check('grupos[g]' in radios_screen_brs, "RadiosScreen deve agrupar radios por genero")
+    check('"Outras"' in radios_screen_brs, "RadiosScreen deve colocar Outras por ultimo")
+    check('streamFormat = "mp3"' in radios_screen_brs and 'm.radioAudio.control = "stop"' in radios_screen_brs,
+          "RadiosScreen deve parar o audio antes de tocar com streamFormat mp3")
+    check('m.radioAudio.control = "stop"' in radios_screen_brs and 'm.radioAudio.content = invalid' in radios_screen_brs,
+          "RadiosScreen cleanUp deve parar e invalidar o audio")
+    check('m.barrasTimer' in radios_screen_brs, "RadiosScreen deve controlar o barrasTimer")
+    check('m.rows.setFocus(true)' in radios_screen_brs, "RadiosScreen fechar deve restaurar o foco na lista")
+    check('observeField("telaCheia", "onRadioTelaCheia")' in main_brs,
+          "MainScene deve observar telaCheia de Radios via onRadioTelaCheia")
+    check('sub onRadioTelaCheia(evt as Object)' in main_brs, "MainScene deve implementar onRadioTelaCheia")
+    check('task.responseRadios <> invalid' in main_brs and 'm.currentScreenNode.radios = m.cachedRadios' in main_brs,
+          "MainScene deve atualizar Radios montado na entrega tardia de radios")
+
     parsed_xml: dict[Path, ET.Element] = {}
     for xml_file in sorted(APP.rglob("*.xml")):
         try:
