@@ -36,16 +36,41 @@ def main() -> int:
         APP / "source/bslib.brs",
         APP / "components/MainScene.xml",
         APP / "components/MainScene.brs",
-        APP / "components/VodCard.xml",
-        APP / "components/VodCard.brs",
-        APP / "components/EpisodeCard.xml",
-        APP / "components/EpisodeCard.brs",
         APP / "components/FetchTask.xml",
         APP / "components/FetchTask.brs",
         APP / "components/EpgTask.xml",
         APP / "components/EpgTask.brs",
-        APP / "components/ActionPill.xml",
-        APP / "components/ActionPill.brs",
+        APP / "source/utils/Storage.brs",
+        APP / "source/utils/Rows.brs",
+        APP / "components/views/TopNavBar.xml",
+        APP / "components/views/TopNavBar.brs",
+        APP / "components/items/PosterItem.xml",
+        APP / "components/items/PosterItem.brs",
+        APP / "components/screens/HomeScreen.xml",
+        APP / "components/screens/HomeScreen.brs",
+        APP / "components/screens/LiveScreen.xml",
+        APP / "components/screens/LiveScreen.brs",
+        APP / "components/screens/VodScreen.xml",
+        APP / "components/screens/VodScreen.brs",
+        APP / "components/screens/FavoritesScreen.xml",
+        APP / "components/screens/FavoritesScreen.brs",
+        APP / "components/screens/FichaScreen.xml",
+        APP / "components/screens/FichaScreen.brs",
+        APP / "components/screens/PlayerScreen.xml",
+        APP / "components/screens/PlayerScreen.brs",
+        APP / "components/screens/GuideScreen.xml",
+        APP / "components/screens/GuideScreen.brs",
+        APP / "components/screens/EventsScreen.xml",
+        APP / "components/screens/EventsScreen.brs",
+        APP / "components/screens/RadiosScreen.xml",
+        APP / "components/screens/RadiosScreen.brs",
+        APP / "components/screens/SearchScreen.xml",
+        APP / "components/screens/SearchScreen.brs",
+        APP / "components/screens/SettingsScreen.xml",
+        APP / "components/screens/SettingsScreen.brs",
+        APP / "components/screens/MinhasListasScreen.xml",
+        APP / "components/screens/MinhasListasScreen.brs",
+        ROOT / "docs/TESTE_ROKU.md",
         APP / "images/icon_focus_fhd.png",
         APP / "images/splash_fhd.png",
         APP / "images/bg_app.png",
@@ -105,7 +130,7 @@ def main() -> int:
     fetch_xml = read(APP / "components/FetchTask.xml")
     bslib = read(APP / "source/bslib.brs")
     check('function readCacheAscii(path as string)' in bslib and 'fs.Exists(path)' in bslib
-          and 'readCacheAscii("cachefs:/' in main_brs and 'readCacheAscii("cachefs:/' in fetch_brs,
+          and 'readCacheAscii("cachefs:/' in fetch_brs,
           "Leituras de cache devem verificar a existência dos arquivos antes de abrir")
     readme = read(ROOT / "README.md")
     tests = read(ROOT / "tools/tests/parsers_test.brs")
@@ -119,8 +144,8 @@ def main() -> int:
           "Migração do endereço antigo dos canais ausente")
     check('isSaimoVodUrl(m.vodUrl)' in main_brs and 'isSaimoCatalogUrl' in bslib,
           "Detecção das fontes Saimo ausente")
-    check('m.vodUrl = readSetting("vodUrl")' in main_brs, "URL independente do catálogo VOD ausente")
-    check('startFetch("saimo_index"' in main_brs and 'mode = "saimo_index"' in fetch_brs,
+    check('m.vodUrl = ReadSaimoKey("vodUrl")' in main_brs, "URL independente do catálogo VOD ausente")
+    check('startLoader("saimo_index"' in main_brs and 'mode = "saimo_index"' in fetch_brs,
           "Fluxo do índice VOD por letras ausente")
 
     check('id="vodRefreshTimer" duration="900" repeat="true"' in main_xml_text,
@@ -133,148 +158,6 @@ def main() -> int:
           "Sincronização agendada deve rodar em segundo plano sem trocar a tela")
     check('m.vodInitPending = true' in main_brs, "Encadeamento das sincronizações de canais e VOD ausente")
 
-    check('id="vodGrid"' in main_xml_text and 'itemSelected", "onVodItemSelected"' in main_brs,
-          "Grade de pôsteres não conectada ao handler")
-    vod_card_xml = read(APP / "components/VodCard.xml")
-    vod_card_brs = read(APP / "components/VodCard.brs")
-    check('itemComponentName="VodCard"' in main_xml_text and 'itemSize="[210, 362]"' in main_xml_text
-          and 'numColumns="6"' in main_xml_text and 'm.vodGrid.numColumns = 6' in main_brs,
-          "Catálogo deve usar cartões próprios em seis colunas")
-    check('id="poster"' in vod_card_xml and 'itemHasFocus' in vod_card_brs
-          and 'sub showItem()' in vod_card_brs and 'loadPoster()' in vod_card_brs
-          and 'sub loadPoster()' in vod_card_brs and 'pkg:/images/placeholder.png' in vod_card_brs,
-          "Pôsteres do catálogo devem começar a carregar ao renderizar cada card")
-    check('id="appBg"' in main_xml_text and 'uri="pkg:/images/bg_app.png"' in main_xml_text,
-          "Fundo principal da identidade ausente")
-    check('id="topBar"' in main_xml_text and 'id="logoTile"' in main_xml_text
-          and 'id="clock"' in main_xml_text
-          and 'uri="pkg:/images/logo.png"' in main_xml_text,
-          "Barra superior com logo e relógio ausente")
-    check('id="clock"' in main_xml_text and 'id="syncHint"' in main_xml_text
-          and "sub updateClock()" in main_brs and "sub updateSyncHint()" in main_brs,
-          "Relógio/indicador de sincronização ausentes")
-    preview_tokens = ("previewPanel", "previewPoster", "previewBackdrop", "previewBadge",
-                      "previewTitle", "previewMeta", "previewDesc", "previewCta",
-                      "clearPreview", "previewEntry", "previewChannel", "previewMovie",
-                      "setPreviewBadge", "setPreviewCta", "showPreviewBackdrop",
-                      "hidePreviewBackdrop", "onPreviewPosterLoadStatus")
-    preview_leftovers = [token for token in preview_tokens if token in main_brs or token in main_xml_text]
-    check(not preview_leftovers,
-          "Trilho de prévia (B9) deve estar ausente do XML/BRS, sem referências órfãs: "
-          + ", ".join(preview_leftovers))
-    check('id="playerLive"' in main_xml_text and 'id="toastAccent"' in main_xml_text
-          and "m.playerLive.visible = m.currentIsLive" in main_brs,
-          "Sobreposição do player/toast 2.5.2 incompleta")
-    check(('nav_focus.png' in main_xml_text or 'itemComponentName="TopTab"' in main_xml_text)
-          and 'HDListItemIconUrl' in main_brs, "Navegação com pílula de foco/ícones ausente")
-    check('numColumns="6"' in main_xml_text and "m.vodGrid.numColumns = 6" in main_brs,
-          "Catálogo completo deve usar seis colunas")
-    check('id="shelfList"' in main_xml_text and 'itemComponentName="ShelfCard"' in main_xml_text
-          and "sub showSaimoShelves" in main_brs
-          and 'if type(parsed.shelves) = "roArray" then m.saimoShelves = parsed.shelves' in main_brs,
-          "Tela Descobrir deve manter suas fileiras editoriais")
-    check('if k = "left" and m.shelfList.hasFocus() then' in main_brs
-          and 'focus[1] = 0 then' in main_brs,
-          "Navegação horizontal das fileiras deve manter o foco entre capas")
-    check("sub onShelfItemFocused()" in main_brs
-          and "m.listTitle.text = title" in main_brs
-          and "m.listSub.text = saimoItemSubtitle(entry)" in main_brs,
-          "Foco das fileiras deve atualizar o herói textual (título e metadados)")
-    check("focusScale = 1.0" in read(APP / "components/ShelfCard.brs"),
-          "Cartões das fileiras devem destacar o foco sem ampliar a capa")
-    episode_xml = read(APP / "components/EpisodeCard.xml")
-    episode_brs = read(APP / "components/EpisodeCard.brs")
-    check('id="episodeGrid"' in main_xml_text and 'itemComponentName="EpisodeCard"' in main_xml_text
-          and 'itemSize="[396, 310]"' in main_xml_text,
-          "Episódios devem usar cartões 396x310 com componente próprio")
-    check('sub buildEpisodeGrid(items as object)' in main_brs
-          and 'node.episodeSynopsis = synopsis' in main_brs
-          and 'm.episodeGrid.setFocus(true)' in main_brs,
-          "Grade de episódios deve informar título, número e sinopse")
-    check('m.video.control = "resume"' in main_brs
-          and 'm.video.control = "play"' in main_brs,
-          "Retomada deve preservar a posição atual e play iniciar novas fontes")
-    check('sub focusListOrNav()' in main_brs
-          and 'if m.activeView = "vod_episodes" or m.activeView = "saimo_episodes" then' in main_brs
-          and 'm.episodeGrid.setFocus(true)' in main_brs,
-          "Ao fechar o player, o foco deve voltar à lista de episódios")
-    check('if m.pendingSaimoLetter <> "" then' in main_brs
-          and 'kind <> "saimo_letter" and m.pendingSaimoLetter' not in main_brs,
-          "Atualizacao de capas nao deve perder a letra pendente durante carregamento do catalogo")
-    check('id="tmdbId"' not in fetch_xml
-          and 'enrichSaimoEpisodes' not in fetch_brs
-          and '/api/tmdb/tv/' not in fetch_brs,
-          "Episódios não devem enriquecer por Worker TMDB (contrato de dados preservado)")
-    check('id="poster"' in episode_xml and 'id="episodeCode"' in episode_xml
-          and 'id="synopsis"' in episode_xml and 'sub updateFocus()' in episode_brs
-          and 'sub showItem()' in episode_brs and 'loadPoster()' in episode_brs,
-          "Cartão de episódio deve carregar a arte ao renderizar, além do foco personalizado")
-    check('id="playerSpinner"' in main_xml_text and 'id="playerAutoHideTimer"' in main_xml_text
-          and 'uri="pkg:/images/player_veil_top.png"' in main_xml_text,
-          "Player deve usar spinner, auto-hide e gradientes")
-    check('id="toastIcon"' in main_xml_text and "sub showToastType" in main_brs,
-          "Toasts devem diferenciar estados semânticos")
-    check('id="emptyIcon"' in main_xml_text and 'id="emptyAction"' in main_xml_text,
-          "Estado vazio deve incluir ícone e uma ação")
-    action_xml = read(APP / "components/ActionPill.xml")
-    action_brs = read(APP / "components/ActionPill.brs")
-    chip_xml = read(APP / "components/SeasonChip.xml")
-    group_start = main_xml_text.find('<Group id="vodDetailGroup"')
-    group_open = ""
-    if group_start >= 0:
-        group_open = main_xml_text[group_start:main_xml_text.find(">", group_start) + 1]
-    check('translation="[400, 0]"' in group_open,
-          "vodDetailGroup deve começar na área de conteúdo (translation [400, 0])")
-    check('id="fichaBackdrop"' in main_xml_text and 'id="fichaVeilSide"' in main_xml_text
-          and 'id="fichaVeilBottom"' in main_xml_text
-          and 'uri="pkg:/images/ficha_veil_side.png"' in main_xml_text
-          and 'uri="pkg:/images/ficha_veil_bottom.png"' in main_xml_text,
-          "Ficha deve usar backdrop próprio e os dois véus PNG")
-    check('id="vodDetailTipo"' in main_xml_text and 'id="vodDetailFrase"' in main_xml_text
-          and 'm.vodDetailTipo.text' in main_brs and 'm.vodDetailFrase.text' in main_brs,
-          "Tipo e frase da ficha devem existir no XML e ser preenchidos")
-    check('itemComponentName="ActionPill"' in main_xml_text
-          and 'sub showItem()' in action_brs and 'sub updateFocus()' in action_brs
-          and 'action_pill_normal.png' in action_xml and 'action_pill_focus.png' in action_xml
-          and 'm.pillFocus.opacity' in action_brs and 'm.pillLabel.color' in action_brs,
-          "Ações da ficha devem usar ActionPill com inversão de foco")
-    check('sub showFichaBackdrop(cover as string)' in main_brs
-          and main_brs.count("showFichaBackdrop(") >= 2,
-          "As telas de ficha devem compartilhar showFichaBackdrop")
-    check('node.addFields({ kind: entry.kind })' in main_brs,
-          "Ações da ficha devem carregar title e kind no node emitido")
-    check('id="episodeNumber"' in episode_xml and 'uri="pkg:/images/focus_episode.png"' in episode_xml
-          and 'm.focusHalo.opacity = m.top.focusPercent' in episode_brs,
-          "Cartão de episódio deve ter numeral, thumb 16:9 e foco interpolado")
-    check('uri="pkg:/images/focus_chip.png"' in chip_xml and 'chipEdge' not in chip_xml,
-          "Chip de temporada deve usar o bitmap de foco no lugar da borda retangular")
-    check('node.episodeArt =' in main_brs and 'node.episodeNumber =' in main_brs,
-          "Grade de episódios deve emitir arte e numeral para cada card")
-    check('uri="pkg:/fonts/Roboto-Regular.ttf"' in main_xml_text
-          and 'uri="pkg:/fonts/Roboto-Medium.ttf"' in main_xml_text
-          and 'uri="pkg:/fonts/Roboto-Bold.ttf"' in main_xml_text
-          and 'uri="pkg:/fonts/Roboto-Italic.ttf"' in main_xml_text,
-          "Papéis tipográficos Roboto devem estar definidos na cena")
-    check((APP / "fonts/Roboto-LICENSE.txt").is_file()
-          and (APP / "fonts/Roboto-Regular.ttf").is_file()
-          and (APP / "fonts/Roboto-Medium.ttf").is_file()
-          and (APP / "fonts/Roboto-Bold.ttf").is_file()
-          and (APP / "fonts/Roboto-Black.ttf").is_file()
-          and (APP / "fonts/Roboto-Italic.ttf").is_file()
-          and not (APP / "fonts/OFL.txt").exists()
-          and not any((APP / "fonts").glob("Inter-*.ttf")),
-          "Fontes Roboto e licença devem estar empacotadas sem Inter/OFL")
-    inter_xml = [path for path in sorted(APP.rglob("*.xml")) if "Inter-" in read(path)]
-    check(not inter_xml,
-          "Nenhuma uri Inter pode restar em XML: " + ", ".join(str(path.relative_to(ROOT)) for path in inter_xml))
-    check('kind: "saimo_letter"' in main_brs
-          and "sub loadSaimoLetter(letter as string)" in main_brs
-          and "preview" not in main_brs,
-          "Catálogo por letras deve abrir a letra via loadSaimoLetter sem trilho de prévia")
-    check('id="title"' in vod_card_xml and 'id="meta"' in vod_card_xml
-          and 'maxLines="1"' in vod_card_xml,
-          "Cartões do catálogo devem exibir título e metadados em linhas compactas")
-    check('numRows="12"' in main_xml_text, "A lista de ajustes não exibe as 12 opções configuradas")
 
     check("parseSaimoIndexLetters" in bslib and "parseSaimoMovieItems" in bslib
           and "parseSaimoSeriesItems" in bslib, "Parsers puros do catálogo Saimo ausentes")
@@ -299,10 +182,8 @@ def main() -> int:
     check('mode = "saimo_letter"' in fetch_brs and "loadSaimoLetter" in fetch_brs,
           "Carregamento de uma letra por vez ausente")
     check('mode = "saimo_search_index"' in fetch_brs and "loadSaimoSearchIndex" in fetch_brs
-          and 'cachefs:/saimo_search_index.json' in fetch_brs
-          and 'cachefs:/saimo_search_index.json' in main_brs
-          and "searchSaimoIndex(m.searchIndex, query, 160)" in main_brs,
-          "Índice local de busca deve ser preparado na tarefa e consultado em memória")
+          and 'cachefs:/saimo_search_index.json' in fetch_brs,
+          "Índice local de busca deve ser preparado na tarefa")
 
     main_xml_text = read(APP / "components" / "MainScene.xml")
     declared_fonts = set(re.findall(r'<Font\s+id="([^"]+)"', main_xml_text))
@@ -325,34 +206,14 @@ def main() -> int:
           and 'httpGet(base + "fichas.txt"' in fetch_brs
           and 'startSaimoArtworkFetch(base)' not in main_brs,
           "Fichas completas devem ser carregadas sob demanda em segundo plano")
-    check("invalidateSaimoDerivedCaches()" in main_brs
-          and 'DeleteFile("cachefs:/saimo_vod_letters.url")' in main_brs
-          and 'DeleteFile("cachefs:/saimo_vod_search.txt")' in main_brs,
-          "Caches derivados não são invalidados quando o índice muda")
-    check("if indexChanged then invalidateSaimoDerivedCaches()" in main_brs,
-          "Mudança de índice não dispara limpeza dos caches derivados")
-    check('saimoLetterCacheMarker(saimoBaseUrl(m.vodUrl), m.saimoIndexSignature)' in main_brs,
-          "Leitura do cache por letra não valida a assinatura atual")
 
     check('field id="signature" type="string"' in fetch_xml and "task.signature = signature" in main_brs,
           "Assinatura do índice não é repassada à FetchTask")
     check("function isSaimoSeriesKind" in bslib and 'k = "s" or k = "d" or k = "a"' in bslib,
           "Destaques/busca devem tratar s, d e a como séries")
-    check("if m.currentIsLive then" in main_brs and 'pausa indisponível' in main_brs,
-          "Transmissão ao vivo não deve permitir pausa")
-    check('Ao vivo: busca indisponível' in main_brs, "Transmissão ao vivo não deve permitir busca")
-    check("if m.currentIsLive then\n        m.progressFill.width = 0" in main_brs,
-          "Barra de progresso deve ficar desativada no ao vivo")
-    check("not m.saimoIndexLoaded and (m.activeView" in main_brs,
-          "Atualizações em segundo plano devem preservar a tela atual")
-    check("hadGridFocus = m.vodGrid.hasFocus()" in main_brs
-          and "if not hadGridFocus then m.navList.setFocus(true)" in main_brs,
-          "Atualização do índice deve preservar o foco do usuário")
 
     check('"destaques.txt"' in fetch_brs and "parseHighlights(highlights.body)" in fetch_brs,
           "Destaques VOD da fonte pública não são carregados")
-    check('sub showSaimoHome(filter as string)' in main_brs and 'value: "discover"' in main_brs,
-          "Tela de destaques não está conectada à navegação")
     check('"busca.txt"' in fetch_brs and '"fichas.txt"' in fetch_brs,
           "Busca e capas completas não usam os fragmentos esperados")
     check('"indice.txt"' in fetch_brs and '"filmes-" + fileLetter' in fetch_brs

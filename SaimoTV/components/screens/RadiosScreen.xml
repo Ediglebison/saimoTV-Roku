@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="RadiosScreen" extends="Group">
+  <children>
+    <Label id="title" translation="[96, 40]" width="1728" height="60" text="Em breve" color="#FFFFFF" />
+  </children>
+  <script type="text/brightscript" uri="pkg:/components/screens/RadiosScreen.brs" />
+</component>
