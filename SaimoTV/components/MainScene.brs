@@ -215,6 +215,37 @@ sub switchScreen(screenName as String, params = invalid as Dynamic)
         node.observeField("focusUpRequested", "onScreenFocusUp")
     end if
 
+    if screenName = "live" and node <> invalid then
+        if m.cachedChannels <> invalid then node.channels = m.cachedChannels
+        if m.cachedEpg <> invalid then node.epgMap = m.cachedEpg
+        if params <> invalid and params.tune <> invalid then
+            targetName = params.tune
+            idx = 0
+            foundIdx = 0
+            if m.cachedChannels <> invalid then
+                for i = 0 to m.cachedChannels.Count() - 1
+                    ch = m.cachedChannels[i]
+                    if ch <> invalid and ch.name = targetName then
+                        foundIdx = i
+                        exit for
+                    end if
+                end for
+            end if
+            node.currentChannelIndex = foundIdx
+        end if
+        node.observeField("guiaRequested", "onLiveGuiaRequested")
+        node.observeField("sairRequested", "onLiveSairRequested")
+        node.observeField("focusUpRequested", "onScreenFocusUp")
+    end if
+
+    if screenName = "guide" and node <> invalid then
+        if m.cachedChannels <> invalid then node.channels = m.cachedChannels
+        if m.cachedEpg <> invalid then node.epgMap = m.cachedEpg
+        node.observeField("tuneRequested", "onGuideTune")
+        node.observeField("voltarRequested", "onGuideVoltar")
+        node.observeField("focusUpRequested", "onScreenFocusUp")
+    end if
+
     m.currentScreenNode = node
     if node <> invalid then
         if m.screensContainer <> invalid then m.screensContainer.appendChild(node)
@@ -288,10 +319,22 @@ sub onDataLoaded(e as Object)
         if m.currentScreenName = "home" and m.currentScreenNode <> invalid then
             m.currentScreenNode.channels = m.cachedChannels
         end if
+        if m.currentScreenName = "live" and m.currentScreenNode <> invalid then
+            m.currentScreenNode.channels = m.cachedChannels
+        end if
+        if m.currentScreenName = "guide" and m.currentScreenNode <> invalid then
+            m.currentScreenNode.channels = m.cachedChannels
+        end if
     end if
     if task.responseEpg <> invalid then
         m.cachedEpg = task.responseEpg
         if m.currentScreenName = "home" and m.currentScreenNode <> invalid then
+            m.currentScreenNode.epgMap = m.cachedEpg
+        end if
+        if m.currentScreenName = "live" and m.currentScreenNode <> invalid then
+            m.currentScreenNode.epgMap = m.cachedEpg
+        end if
+        if m.currentScreenName = "guide" and m.currentScreenNode <> invalid then
             m.currentScreenNode.epgMap = m.cachedEpg
         end if
     end if
@@ -370,6 +413,24 @@ sub onFichaPlayRequested(evt as Object)
     switchScreen("player")
 end sub
 
+sub onGuideTune(evt as Object)
+    data = invalid
+    if evt <> invalid then data = evt.getData()
+    tuneChannel(data)
+end sub
+
+sub onGuideVoltar(evt as Object)
+    switchScreen("live")
+end sub
+
+sub onLiveGuiaRequested(evt as Object)
+    switchScreen("guide")
+end sub
+
+sub onLiveSairRequested(evt as Object)
+    ' no-op placeholder for Live sairRequested; Roku handles app exit
+end sub
+
 sub tuneChannel(channel as Dynamic)
     targetName = ""
     if channel <> invalid then
@@ -387,7 +448,7 @@ sub tuneChannel(channel as Dynamic)
     end if
 
     if found then
-        switchScreen("live")
+        switchScreen("live", { tune: targetName })
     end if
 end sub
 

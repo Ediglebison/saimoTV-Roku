@@ -33,7 +33,15 @@ Rotina manual:
 Quatro fileiras visíveis; troca de categoria em On Demand; VOD -> ficha -> Assistir.
 
 ### §6 E6 - Live + Guide
-Drawer, reprodução ao vivo, troca de fonte, guia abre de Ao vivo.
+Side-load build, abra Ao vivo em uma aba e valide:
+1. Abra Ao vivo: o vídeo inicia no primeiro canal; drawer de canais aparece com seções em chips e lista; canal focado mostra programa atual e % de progresso quando há EPG.
+2. Troque o canal com cima/baixo: ZapHUD exibe número, nome, logotipo e barra do programa, e a função "Sem sinal" tenta proxy/fontes seguintes quando o canal não abre.
+3. Abra as fontes (direita): PainelLateral lista as fontes por qualidade e o guia; escolha outra fonte e confirme que o vídeo reabre com a fonte selecionada.
+4. Abra o menu contextual (options ou segure OK): favoritar/desfavoritar o canal via replay exibe o toast e persiste em Favoritos; timer de sono e áudio/legenda funcionam.
+5. Abra o guia a partir da fonte/modal; guia mostra lista rolável (50 + 40 canais), programa atual/seguinte e %; selecione um canal e confirme que sintoniza esse canal ao fechar o guia.
+6. Quando EPG não existir para um canal, exiba "Sem programação para este canal" sem queda do app; canais de 2.000+ itens mantêm rolagem responsiva.
+7. Verifique que o guia não aparece nas 8 abas e que, ao sair da guia, a aba "Ao vivo" fica selecionada no menu superior.
+8. Canal adulto/protegido bloqueia a reprodução até o PIN "1010" (implementação final em E7).
 
 ### §7 E7 - ZapHUD + PIN
 Zap HUD em 3 canais; canal restrito bloqueia e desbloqueia; PIN persiste.

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="ZapHUD" extends="Group">
+  <interface>
+    <field id="channelNumber" type="string" />
+    <field id="channelName" type="string" />
+    <field id="channelLogo" type="string" />
+    <field id="programTitle" type="string" />
+    <field id="programProgress" type="float" />
+    <field id="linhaHora" type="string" />
+    <field id="visible" type="boolean" />
+    <function name="alternar" />
+    <function name="showHUD" />
+    <function name="hideHUD" />
+  </interface>
+  <children>
+    <Group id="hud" />
+  </children>
+  <script type="text/brightscript" uri="pkg:/components/views/ZapHUD.brs" />
+</component>

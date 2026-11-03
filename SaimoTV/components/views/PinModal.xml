@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="PinModal" extends="Group">
+  <interface>
+    <field id="isOpen" type="boolean" />
+    <field id="isUnlocked" type="boolean" value="true" />
+    <field id="correctPin" type="string" value="1010" />
+  </interface>
+  <children>
+    <Group id="modal" />
+  </children>
+  <script type="text/brightscript"><![CDATA[
+function init() as void
+    m.top.isUnlocked = true
+end function
+  ]]></script>
+</component>
