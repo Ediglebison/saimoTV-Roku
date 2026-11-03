@@ -1,7 +1,31 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <component name="SettingsScreen" extends="Group">
+  <interface>
+    <field id="minhasListasRequested" type="boolean" alwaysNotify="true" />
+    <field id="reloadRequested" type="boolean" value="false" alwaysNotify="true" />
+    <field id="testUrlsRequested" type="boolean" alwaysNotify="true" />
+    <field id="focusUpRequested" type="boolean" alwaysNotify="true" />
+    <function name="cleanUp" />
+  </interface>
+
   <children>
-    <Label id="title" translation="[96, 40]" width="1728" height="60" text="Em breve" color="#FFFFFF" />
+    <Label id="titleLabel" translation="[124, 240]" text="Ajustes" color="#F7F7FA"><Font role="font" uri="pkg:/fonts/Roboto-Medium.ttf" size="60" /></Label>
+    <Label id="versionLabel" translation="[124, 340]" text="Saimo TV 2.6.0" color="#A8B4C0"><Font role="font" uri="pkg:/fonts/Roboto-Regular.ttf" size="28" /></Label>
+    <Label id="connectLabel" translation="[124, 380]" width="580" text="Saimo Connect: controle pelo celular na mesma rede Wi-Fi." wrap="true" numLines="2" color="#A8B4C0"><Font role="font" uri="pkg:/fonts/Roboto-Regular.ttf" size="28" /></Label>
+    <Label id="sectionLabel" translation="[884, 244]" text="REPRODUÇÃO" color="#5BF0C8"><Font role="font" uri="pkg:/fonts/Roboto-Medium.ttf" size="24" /></Label>
+    <MarkupList id="settingsList" translation="[854, 284]" itemComponentName="AjusteItem" itemSize="[940, 140]" itemSpacing="[0, 12]" numRows="8" drawFocusFeedback="false" vertFocusAnimationStyle="floatingFocus" />
+
+    <Group id="editPanel" translation="[854, 284]" visible="false">
+      <Label id="editTitle" width="940" text="" color="#F7F7FA"><Font role="font" uri="pkg:/fonts/Roboto-Medium.ttf" size="30" /></Label>
+      <Keyboard id="editKeyboard" translation="[0, 60]" />
+      <MarkupList id="editButtons" translation="[0, 520]" itemComponentName="AjusteItem" itemSize="[940, 90]" itemSpacing="[0, 8]" numRows="2" drawFocusFeedback="false" vertFocusAnimationStyle="floatingFocus" />
+    </Group>
+
+    <Label id="statusLabel" translation="[124, 460]" width="580" text="" color="#A8B4C0"><Font role="font" uri="pkg:/fonts/Roboto-Regular.ttf" size="24" /></Label>
   </children>
+
+  <script type="text/brightscript" uri="pkg:/source/bslib.brs" />
+  <script type="text/brightscript" uri="pkg:/source/utils/Storage.brs" />
+  <script type="text/brightscript" uri="pkg:/source/theme.brs" />
   <script type="text/brightscript" uri="pkg:/components/screens/SettingsScreen.brs" />
 </component>

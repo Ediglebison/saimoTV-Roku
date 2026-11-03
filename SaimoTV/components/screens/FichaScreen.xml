@@ -2,32 +2,65 @@
 <component name="FichaScreen" extends="Group">
   <interface>
     <field id="item" type="assocarray" onChange="onItemChange" />
+    <field id="episodes" type="array" onChange="carregarEpisodios" />
     <field id="playRequested" type="assocarray" alwaysNotify="true" />
+    <field id="favoriteToggled" type="boolean" alwaysNotify="true" />
     <field id="focusUpRequested" type="boolean" alwaysNotify="true" />
     <function name="cleanUp" />
   </interface>
 
   <children>
     <Poster id="backdropPoster" width="1920" height="1080" loadDisplayMode="scaleToZoom" />
-    <Rectangle width="1920" height="1080" color="#0B0E14D8" />
+    <Rectangle width="1920" height="1080" color="#0b0e14D8" />
+
     <Group translation="[112, 130]">
       <Poster id="posterNode" width="300" height="450" loadWidth="300" loadHeight="450" loadDisplayMode="scaleToZoom" />
+      <Poster width="300" height="450" uri="pkg:/images/p_canto.9.png" />
+
       <Group translation="[370, 0]">
-        <Label id="titleLabel" width="1300" height="70" maxLines="1" text="" color="#F7F7FA"><Font role="font" uri="pkg:/fonts/Roboto-Medium.ttf" size="54" /></Label>
-        <Label id="metaLabel" translation="[0, 76]" width="1200" text="" color="#A8B4C0"><Font role="font" uri="pkg:/fonts/Roboto-Regular.ttf" size="22" /></Label>
-        <Label id="genresLabel" translation="[0, 116]" width="1200" text="" color="#A8B4C0"><Font role="font" uri="pkg:/fonts/Roboto-Regular.ttf" size="22" /></Label>
+        <Label id="titleLabel" width="1300" height="70" maxLines="1" text="" color="#FFFFFF"><Font role="font" uri="pkg:/fonts/Roboto-Medium.ttf" size="54" /></Label>
+        <Label id="metaLabel" translation="[0, 76]" width="1200" text="" color="#D5DCE5"><Font role="font" uri="pkg:/fonts/Roboto-Regular.ttf" size="22" /></Label>
+        <Label id="genresLabel" translation="[0, 116]" width="1200" text="" color="#94a3b8"><Font role="font" uri="pkg:/fonts/Roboto-Regular.ttf" size="22" /></Label>
+
         <Group id="actionsRow" translation="[0, 164]">
           <Group id="playBtnGroup" translation="[0, 0]">
-            <Rectangle id="playBtnBg" width="280" height="64" color="#5BF0C8" opacity="0.95" />
-            <Label id="playBtnLabel" translation="[16, 8]" width="248" height="48" text="Assistir" horizAlign="center" vertAlign="center" color="#0B0E14"><Font role="font" uri="pkg:/fonts/Roboto-Medium.ttf" size="26" /></Label>
+            <Rectangle id="playBtnBorder" width="0" height="0" visible="false" />
+            <Poster id="playBtnBg" width="300" height="84" uri="pkg:/images/p_btn.9.png" blendColor="#FFFFFF24" />
+            <Label id="playBtnText" width="300" height="84" horizAlign="center" vertAlign="center" text="Assistir" color="#FFFFFF"><Font role="font" uri="pkg:/fonts/Roboto-Medium.ttf" size="30" /></Label>
+          </Group>
+
+          <Group id="resumeBtnGroup" translation="[316, 0]" visible="false">
+            <Rectangle id="resumeBtnBorder" width="0" height="0" visible="false" />
+            <Poster id="resumeBtnBg" width="300" height="84" uri="pkg:/images/p_btn.9.png" blendColor="#FFFFFF24" />
+            <Label id="resumeBtnText" width="300" height="84" horizAlign="center" vertAlign="center" text="Continuar" color="#FFFFFF"><Font role="font" uri="pkg:/fonts/Roboto-Medium.ttf" size="30" /></Label>
+          </Group>
+
+          <Group id="versionBtnGroup" translation="[316, 0]">
+            <Rectangle id="versionBtnBorder" width="0" height="0" visible="false" />
+            <Poster id="versionBtnBg" width="300" height="84" uri="pkg:/images/p_btn.9.png" blendColor="#FFFFFF24" />
+            <Label id="versionBtnText" width="300" height="84" horizAlign="center" vertAlign="center" text="Versão: Dublado" color="#FFFFFF"><Font role="font" uri="pkg:/fonts/Roboto-Medium.ttf" size="30" /></Label>
+          </Group>
+
+          <Group id="favBtnGroup" translation="[632, 0]">
+            <Rectangle id="favBtnBorder" width="0" height="0" visible="false" />
+            <Poster id="favBtnBg" width="250" height="84" uri="pkg:/images/p_btn.9.png" blendColor="#FFFFFF24" />
+            <Label id="favBtnText" width="250" height="84" horizAlign="center" vertAlign="center" text="Favoritar" color="#FFFFFF"><Font role="font" uri="pkg:/fonts/Roboto-Medium.ttf" size="30" /></Label>
           </Group>
         </Group>
-        <Label id="hintLabel" translation="[0, 260]" width="1200" text="Pressione OK para iniciar" color="#A8B4C0"><Font role="font" uri="pkg:/fonts/Roboto-Regular.ttf" size="20" /></Label>
+      </Group>
+
+      <Label id="overviewLabel" translation="[370, 272]" width="1300" height="170" maxLines="4" wrap="true" text="" color="#FFFFFF"><Font role="font" uri="pkg:/fonts/Roboto-Regular.ttf" size="30" /></Label>
+
+      <Group id="seriesPanel" translation="[0, 480]" visible="false">
+        <Group id="seasonsBar" translation="[0, 0]" />
+        <Label id="loadingLabel" translation="[0, 60]" text="Carregando episódios..." color="#94a3b8"><Font role="font" uri="pkg:/fonts/Roboto-Regular.ttf" size="24" /></Label>
+        <RowList id="episodesRowList" itemComponentName="EpisodeItem" translation="[0, 80]" itemSize="[1760, 220]" rowItemSize="[[280, 200]]" rowItemSpacing="[[24, 0]]" rowHeights="[220]" rowLabelOffset="[[0, 0]]" showRowLabel="[false]" numRows="1" />
       </Group>
     </Group>
   </children>
 
   <script type="text/brightscript" uri="pkg:/source/bslib.brs" />
   <script type="text/brightscript" uri="pkg:/source/utils/Storage.brs" />
+  <script type="text/brightscript" uri="pkg:/source/theme.brs" />
   <script type="text/brightscript" uri="pkg:/components/screens/FichaScreen.brs" />
 </component>

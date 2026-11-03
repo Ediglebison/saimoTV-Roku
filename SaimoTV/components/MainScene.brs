@@ -215,6 +215,11 @@ sub switchScreen(screenName as String, params = invalid as Dynamic)
     if screenName = "ficha" and node <> invalid then
         node.observeField("playRequested", "onFichaPlayRequested")
         node.observeField("focusUpRequested", "onScreenFocusUp")
+        if params <> invalid and params.item <> invalid then
+            isSeries = false
+            if params.item.isSeries <> invalid then isSeries = params.item.isSeries
+            if isSeries then spawnFichaEpisodes(node, params.item)
+        end if
     end if
 
     if screenName = "player" and node <> invalid then
@@ -284,6 +289,12 @@ sub switchScreen(screenName as String, params = invalid as Dynamic)
 
     if screenName = "minhas" and node <> invalid then
         node.observeField("listasMudaram", "onListasMudaram")
+        node.observeField("focusUpRequested", "onScreenFocusUp")
+    end if
+
+    if screenName = "settings" and node <> invalid then
+        node.observeField("minhasListasRequested", "onSettingsMinhas")
+        node.observeField("reloadRequested", "onSettingsReload")
         node.observeField("focusUpRequested", "onScreenFocusUp")
     end if
 
@@ -576,6 +587,52 @@ sub onFichaPlayRequested(evt as Object)
     data = invalid
     if evt <> invalid then data = evt.getData()
     switchScreen("player", data)
+end sub
+
+sub onFichaEpisodesLoaded(evt as Object)
+    task = invalid
+    if evt <> invalid then task = evt.GetRoSGNode()
+    if task = invalid then task = m.fichaEpisodesTask
+    if task = invalid then return
+    if m.currentScreenName <> "ficha" or m.currentScreenNode = invalid then return
+    if task.success <> true then return
+    if task.resultJson = invalid or task.resultJson = "" then return
+    parsed = ParseJson(task.resultJson)
+    if type(parsed) = "roArray" then
+        m.currentScreenNode.episodes = parsed
+    end if
+end sub
+
+sub spawnFichaEpisodes(node as Object, item as Object)
+    task = CreateObject("roSGNode", "DataLoaderTask")
+    letter = ""
+    if item.letter <> invalid then letter = item.letter.ToStr()
+    if letter = "#" then letter = "%23"
+    piece = 0
+    if item.piece <> invalid then piece = Val(item.piece.ToStr())
+    base = m.vodUrl
+    task.requestType = "saimo_episodes"
+    task.mode = "saimo_episodes"
+    task.url = base + "series-" + letter + "-" + piece.ToStr() + ".txt"
+    task.baseUrl = base
+    task.title = item.title
+    ua = ReadSaimoKey("userAgent")
+    if ua = "" then ua = m.defaultUA
+    task.userAgent = ua
+    task.observeField("success", "onFichaEpisodesLoaded")
+    m.fichaEpisodesTask = task
+    task.control = "RUN"
+end sub
+
+sub onSettingsMinhas()
+    switchScreen("minhas")
+end sub
+
+sub onSettingsReload()
+    WriteSaimoKey("playlistLastSync", "0")
+    WriteSaimoKey("vodLastSync", "0")
+    refreshPlaylist(true)
+    refreshVodCatalog(true)
 end sub
 
 sub onGuideTune(evt as Object)

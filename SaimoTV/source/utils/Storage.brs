@@ -101,7 +101,8 @@ end function
 
 function watchedStorageKey(item as Object) as String
     if item = invalid then return ""
-    title = vodField(item, "title")
+    title = vodField(item, "seriesTitle")
+    if title = "" then title = vodField(item, "title")
     if title = "" then title = vodField(item, "name")
     if title = "" then return ""
     titleKey = saimoArtworkTitleKey(title)

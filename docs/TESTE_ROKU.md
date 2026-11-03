@@ -70,7 +70,10 @@ Side-load build, abra Ao vivo em uma aba e valide:
 OSD, seek, auto-next, erro e foco de saída.
 
 ### §11 E11 - Ficha + Settings + versão
-Ficha de filme e série com 3+ temporadas; resume de episódio parcial; settings e versão 2.6.0.
+Parte A (Ficha): abrir ficha de filme e verificar capa, metadados e botão Assistir; abrir série com 3+ temporadas, validar seletor de temporadas dinâmico, grade de episódios, badges de assistido, botão Continuar apenas com progresso parcial, erro/retry quando episódios não carregam; confirmar ausência de tela A–Z.
+Parte B (Settings): editar playlistUrl, vodUrl e userAgent; executar Testar URLs; usar Limpar cache e verificar recarga; abrir Sobre e conferir versão 2.6.0; revisar preferências de áudio e minhas listas.
+Regressão completa §1–§10 em dispositivo/sideload.
+
 
 ### §12 E12 - Saimo Connect
 Parear telefone, navegar por cada aba, sincronia de estado.

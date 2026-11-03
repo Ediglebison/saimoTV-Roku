@@ -6,7 +6,7 @@
 
 sub init()
     m.top.functionName = "resolveStream"
-    m.uaConstant = "SaimoTV/2.6.4 (RokuOS)"
+    m.uaConstant = "SaimoTV/2.6.0 (RokuOS)"
 end sub
 
 sub resolveStream()

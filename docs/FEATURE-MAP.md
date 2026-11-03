@@ -8,7 +8,7 @@ Launching the channel creates the SceneGraph scene, restores settings and favori
 
 **Flow:**
 
-1. `SaimoTV/manifest` — supplies the channel title, version 2.5.12, icon, splash, and FHD resolution.
+1. `SaimoTV/manifest` — supplies the channel title, version 2.6.0, icon, splash, and FHD resolution.
 2. `SaimoTV/source/main.brs` — creates `roSGScreen`, opens `MainScene`, and waits for the screen to close.
 3. `SaimoTV/components/MainScene.xml` — defines the layout, video node, and 15-minute refresh timer.
    - The scene defines Roboto Regular, Medium, Italic, Bold, and Black font roles from bundled Apache License 2.0 assets under `SaimoTV/fonts/`.
@@ -117,17 +117,16 @@ Films and episodes play from the selected source. Series selections open episode
 
 ## Search
 
-Search covers live channels and the VOD catalog. The public catalog path uses an accent-insensitive search index.
+Search covers live channels and the VOD catalog. The public catalog path uses an accent-insensitive in-memory search index.
 
 **Flow:**
 
-1. `SaimoTV/components/MainScene.brs` — `openSearchDialog` opens the compact `MiniKeyboard` overlay with the results list beside it.
-2. `SaimoTV/components/MainScene.brs` — `onSearchKeyboardTextChanged` debounces typing (0.3 s) before calling `runSearch`, which scans loaded channels and cached VOD entries first.
-3. `SaimoTV/components/MainScene.brs` — `startSaimoSearch` consults the in-memory index; `ensureSaimoSearchIndex` loads it from `cachefs:/saimo_search_index.json` or prepares it in the background.
-4. `SaimoTV/components/FetchTask.brs` — `loadSaimoSearchIndex` downloads `busca.txt` when needed, rebuilds the normalized index, and keeps it fresh for 24 h.
-5. `SaimoTV/source/bslib.brs` — `buildSaimoSearchIndex` folds accents once; `searchSaimoIndex` is a plain `Instr` over pre-normalized titles (limit 160) and filters restricted titles.
-6. `SaimoTV/components/MainScene.brs` — `handleSaimoSearchIndexResult`, `renderEntries` and the results panel combine local and catalog results.
-7. `SaimoTV/components/MainScene.brs` — `onItemSelected` opens the result's catalog letter and `focusSaimoTitle` restores focus.
+1. `SaimoTV/components/SearchScreen.brs` — opens the SearchScreen and calls `carregarIndice` to load the in-memory index from `cachefs:/saimo_search_index.json`.
+2. `SaimoTV/components/SearchScreen.brs` — local search calls `searchSaimoIndex(m.searchIndex, query, 160)` and shows instant in-memory results; `agendarBusca` schedules remote fetch with a 0.3 s `buscaTimer` debounce only when the index is missing or stale.
+3. `SaimoTV/components/DataLoaderTask.brs` — the `saimo_search_index` mode downloads `busca.txt`, rebuilds the normalized index, and stores it under `cachefs:/saimo_search_index.json`; the freshness gate keeps it fresh for 24 h.
+4. `SaimoTV/source/bslib.brs` — `buildSaimoSearchIndex` folds accents once; `searchSaimoIndex` is a plain `Instr` over pre-normalized titles (limit 160) and filters restricted titles.
+5. `SaimoTV/components/SearchScreen.brs` — selection routes to `openFicha` or `tuneChannel`.
+6. `SaimoTV/components/MainScene.brs` — scheduled sync spawns the `saimo_search_index` task in the background chain every 15 minutes when the cache is older than 6 hours.
 
 ---
 
@@ -152,12 +151,12 @@ Settings edits channel, VOD, EPG, and HTTP settings, and provides refresh, cache
 
 **Flow:**
 
-1. `SaimoTV/components/MainScene.brs` — `openSettings` shows the settings group and `buildSettings` creates the action list.
-2. `SaimoTV/components/MainScene.xml` — defines the settings panel, list, help text, and focus styling.
-3. `SaimoTV/components/MainScene.brs` — `onSettingsSelected` routes URL fields to `editSetting` and action fields to their handlers.
-4. `SaimoTV/components/MainScene.brs` — `onEditSettingButton` saves `playlistUrl`, `vodUrl`, `epgUrl`, and `userAgent` through `writeSetting`.
-5. `SaimoTV/components/MainScene.brs` — changing the VOD source resets its sync time and cache state; changing the EPG starts `loadEpg`; preset and refresh call playlist loading.
-6. `SaimoTV/components/MainScene.brs` — `clearCache` deletes channel, VOD, EPG, letter, search, and artwork caches; `playTest` opens diagnostic streams; `openAbout` shows the About panel.
+1. `SaimoTV/components/screens/SettingsScreen.brs` — displays settings rows for playlist URL, VOD URL, user agent, audio preferences, cache, and About.
+2. `SaimoTV/components/screens/SettingsScreen.xml` — defines the settings title, version 2.6.0 subtitle, MarkupList, and keyboard editing panel.
+3. `SaimoTV/components/screens/SettingsScreen.brs` — `onSettingSelected` routes editable URLs to `abrirCampo`, toggles audio preferences, and triggers tests, cache clearing, and About.
+4. `SaimoTV/components/MainScene.brs` — `onSettingsReload` refreshes channels and VOD catalog after edits or cache clearing.
+5. `SaimoTV/components/screens/SettingsScreen.brs` — uses `ReadSaimoKey`/`WriteSaimoKey` for `playlistUrl`, `vodUrl`, `userAgent`, and `prefs`; the `epgUrl` registry key remains a legacy compatibility read and is not a Settings item.
+6. `SaimoTV/components/screens/SettingsScreen.brs` — `limparCache` deletes derived caches and `vod_progress`, resets sync markers to 0, and sets `reloadRequested`.
 
 ---
 

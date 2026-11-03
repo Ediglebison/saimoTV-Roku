@@ -54,6 +54,8 @@ def main() -> int:
         APP / "components/items/PosterItem.brs",
         APP / "components/items/LetraItem.xml",
         APP / "components/items/AjusteItem.xml",
+        APP / "components/items/EpisodeItem.xml",
+        APP / "components/items/EpisodeItem.brs",
         APP / "components/views/HeroBanner.xml",
         APP / "components/views/HeroBanner.brs",
         APP / "components/screens/HomeScreen.xml",
@@ -129,13 +131,13 @@ def main() -> int:
     except json.JSONDecodeError as exc:
         ERRORS.append(f"JSON inválido: {exc}")
         package, config = {}, {}
-    check(package.get("version") == "2.5.17", "package.json deve apontar para 2.5.17")
+    check(package.get("version") == "2.6.0", "package.json deve apontar para 2.6.0")
     try:
         lock = json.loads(read(ROOT / "package-lock.json"))
     except json.JSONDecodeError:
         lock = {}
-    check(lock.get("version") == "2.5.17" and lock.get("packages", {}).get("", {}).get("version") == "2.5.17",
-          "package-lock.json deve apontar para 2.5.17")
+    check(lock.get("version") == "2.6.0" and lock.get("packages", {}).get("", {}).get("version") == "2.6.0",
+          "package-lock.json deve apontar para 2.6.0")
     check(package.get("scripts", {}).get("test") == "python3 tools/test_parsers.py",
           "package.json deve expor npm test para a suíte de parsers")
     check("brighterscript" in package.get("devDependencies", {}), "Dependência brighterscript ausente")
@@ -144,9 +146,15 @@ def main() -> int:
 
     manifest = read(APP / "manifest")
     version_fields = dict(line.split("=", 1) for line in manifest.splitlines() if "=" in line)
-    check((version_fields.get("major_version"), version_fields.get("minor_version"), version_fields.get("build_version")) == ("2", "5", "17"),
-          "Versão do manifest não corresponde a 2.5.17")
+    check((version_fields.get("major_version"), version_fields.get("minor_version"), version_fields.get("build_version")) == ("2", "6", "0"),
+          "Versão do manifest não corresponde a 2.6.0")
     check("ui_resolutions=fhd" in manifest, "Resolução FHD do manifest deve permanecer definida")
+    check("subtitle=Canais ao Vivo e Acervo" in manifest, "Manifest deve manter subtitle de ref")
+    check("splash_color=#0b0e14" in manifest, "Manifest deve manter splash_color de ref")
+    check("splash_min_time=1200" in manifest, "Manifest deve manter splash_min_time de ref")
+    check("requires_audioperf=5.1" in manifest, "Manifest deve manter requires_audioperf de ref")
+    check("mm_icon_side_hd=pkg:/images/icon_hd.png" in manifest, "Manifest deve manter mm_icon_side_hd")
+    check("mm_icon_side_fhd=pkg:/images/icon_fhd.png" in manifest, "Manifest deve manter mm_icon_side_fhd")
 
     main_brs = read(APP / "components/MainScene.brs")
     main_xml_text = read(APP / "components/MainScene.xml")
@@ -252,7 +260,7 @@ def main() -> int:
     check("TESTS_FAILED" in test_runner and "TESTS_PASS" in test_runner,
           "O runner de testes deve falhar quando TESTS_FAILED for emitido")
 
-    check("2.5.17" in readme and "sob demanda" in readme,
+    check("2.6.0" in readme and "sob demanda" in readme,
           "README precisa documentar a versão 2.5.17 e o carregamento sob demanda")
     check("identidade visual" in readme.lower() or "interface" in readme.lower(),
           "README precisa documentar a renovação visual")
@@ -374,8 +382,8 @@ def main() -> int:
     check('sub resolveStream()' in stream_resolver_brs and 'function getLetterGaveta' in stream_resolver_brs
           and 'function getIndiceBases' in stream_resolver_brs and 'function buildCandidateUrl' in stream_resolver_brs,
           "StreamResolverTask deve implementar resolução de streams")
-    check('SaimoTV/2.6.4 (RokuOS)' in stream_resolver_brs,
-          "StreamResolverTask deve manter constante UA 2.6.4")
+    check('SaimoTV/2.6.0 (RokuOS)' in stream_resolver_brs,
+          "StreamResolverTask deve manter constante UA 2.6.0")
     check('Instr(1, cand, "desativado.invalid")' in stream_resolver_brs,
           "StreamResolverTask deve descartar urls desativado.invalid")
     check('buildCandidateUrl' in stream_resolver_brs, "buildCandidateUrl ausente no resolver")
@@ -402,6 +410,35 @@ def main() -> int:
           "MainScene deve manter tela anterior para retorno do player")
     check('screenName = "guide" or screenName = "player"' in main_brs,
           "MainScene deve ocultar TopNav no player")
+
+    ficha_screen_brs = read(APP / "components/screens/FichaScreen.brs")
+    episode_item_brs = read(APP / "components/items/EpisodeItem.brs")
+    settings_screen_brs = read(APP / "components/screens/SettingsScreen.brs")
+    settings_screen_xml = read(APP / "components/screens/SettingsScreen.xml")
+
+    check('carregarEpisodios' in ficha_screen_brs and 'montarTemporadas' in ficha_screen_brs
+          and 'selecionarTemporada' in ficha_screen_brs,
+          "FichaScreen deve implementar carregarEpisodios, montarTemporadas e selecionarTemporada")
+    check('IsEpisodeWatched' in ficha_screen_brs and 'MarkWatched' in ficha_screen_brs
+          and 'GetVODProgress' in ficha_screen_brs,
+          "FichaScreen deve consultar assistidos e progresso")
+    check('saimo_episodes' in main_brs, "MainScene deve acionar spawn de episodios saimo_episodes")
+    check('onItemContentChange' in episode_item_brs and 'itemContent.hdPosterUrl' in episode_item_brs
+          and 'itemContent.episodeNum' in episode_item_brs and 'focusBorder' in episode_item_brs,
+          "EpisodeItem deve renderizar poster, numero e foco")
+
+    check('populateSettings' in settings_screen_brs and 'addSettingItem' in settings_screen_brs
+          and 'abrirCampo' in settings_screen_brs and 'testarUrls' in settings_screen_brs
+          and 'limparCache' in settings_screen_brs and 'abrirSobre' in settings_screen_brs
+          and 'formatBool' in settings_screen_brs,
+          "SettingsScreen deve implementar metodos de ajustes")
+    check('observeField("minhasListasRequested", "onSettingsMinhas")' in main_brs,
+          "MainScene deve observar minhasListasRequested das configuracoes")
+    check('reloadRequested' in settings_screen_brs and 'm.top.reloadRequested' in settings_screen_brs,
+          "SettingsScreen deve disparar reloadRequested")
+    check('epgUrl' not in settings_screen_brs and 'epgUrl' not in settings_screen_xml
+          and 'epgUrl' not in readme,
+          "epgUrl nao deve aparecer nas configuracoes nem no README")
 
     retired = ["seekHoldTimer", "failoverTimer", "onFailoverTimer", "playerLive", "seekHold", "failover", "progressFill"]
     combined_player = main_brs + player_screen_brs + player_screen_xml + player_osd_brs + player_osd_xml + stream_resolver_brs + stream_resolver_xml
