@@ -36,8 +36,11 @@ def main() -> int:
         APP / "source/bslib.brs",
         APP / "components/MainScene.xml",
         APP / "components/MainScene.brs",
-        APP / "components/FetchTask.xml",
-        APP / "components/FetchTask.brs",
+        APP / "components/tasks/DataLoaderTask.xml",
+        APP / "components/tasks/DataLoaderTask.brs",
+        APP / "components/tasks/MinhasListasTask.xml",
+        APP / "components/tasks/MinhasListasTask.brs",
+        APP / "source/utils/LeitorM3u.brs",
         APP / "components/EpgTask.xml",
         APP / "components/EpgTask.brs",
         APP / "source/utils/Storage.brs",
@@ -126,11 +129,11 @@ def main() -> int:
 
     main_brs = read(APP / "components/MainScene.brs")
     main_xml_text = read(APP / "components/MainScene.xml")
-    fetch_brs = read(APP / "components/FetchTask.brs")
-    fetch_xml = read(APP / "components/FetchTask.xml")
+    data_loader_brs = read(APP / "components/tasks/DataLoaderTask.brs")
+    data_loader_xml = read(APP / "components/tasks/DataLoaderTask.xml")
     bslib = read(APP / "source/bslib.brs")
     check('function readCacheAscii(path as string)' in bslib and 'fs.Exists(path)' in bslib
-          and 'readCacheAscii("cachefs:/' in fetch_brs,
+          and 'readCacheAscii("cachefs:/' in data_loader_brs,
           "Leituras de cache devem verificar a existência dos arquivos antes de abrir")
     readme = read(ROOT / "README.md")
     tests = read(ROOT / "tools/tests/parsers_test.brs")
@@ -145,7 +148,7 @@ def main() -> int:
     check('isSaimoVodUrl(m.vodUrl)' in main_brs and 'isSaimoCatalogUrl' in bslib,
           "Detecção das fontes Saimo ausente")
     check('m.vodUrl = ReadSaimoKey("vodUrl")' in main_brs, "URL independente do catálogo VOD ausente")
-    check('startLoader("saimo_index"' in main_brs and 'mode = "saimo_index"' in fetch_brs,
+    check('startLoader("saimo_index"' in main_brs and 'mode = "saimo_index"' in data_loader_brs,
           "Fluxo do índice VOD por letras ausente")
 
     check('id="vodRefreshTimer" duration="900" repeat="true"' in main_xml_text,
@@ -179,10 +182,10 @@ def main() -> int:
           and "function searchSaimoIndex" in bslib and "Instr(1, folded[i], q) > 0" in bslib,
           "Busca sem acento/índice local ausente")
 
-    check('mode = "saimo_letter"' in fetch_brs and "loadSaimoLetter" in fetch_brs,
+    check('mode = "saimo_letter"' in data_loader_brs and "loadSaimoLetter" in data_loader_brs,
           "Carregamento de uma letra por vez ausente")
-    check('mode = "saimo_search_index"' in fetch_brs and "loadSaimoSearchIndex" in fetch_brs
-          and 'cachefs:/saimo_search_index.json' in fetch_brs,
+    check('mode = "saimo_search_index"' in data_loader_brs and "loadSaimoSearchIndex" in data_loader_brs
+          and 'cachefs:/saimo_search_index.json' in data_loader_brs,
           "Índice local de busca deve ser preparado na tarefa")
 
     main_xml_text = read(APP / "components" / "MainScene.xml")
@@ -191,33 +194,33 @@ def main() -> int:
     missing_fonts = sorted(referenced_fonts - declared_fonts)
     check(not missing_fonts,
           "Fontes sem declaração em MainScene.xml: " + ", ".join(missing_fonts))
-    check('saimoLetterCachePath(filter, letter)' in fetch_brs
-          and 'saimoLetterCacheMarker(base, m.top.signature)' in fetch_brs,
+    check('saimoLetterCachePath(filter, letter)' in data_loader_brs
+          and 'saimoLetterCacheMarker(base, m.top.signature)' in data_loader_brs,
           "Cache por letra/assinatura ausente na tarefa")
-    check("applySaimoArtwork(items, fichas, fallbackCovers)" in fetch_brs,
+    check("applySaimoArtwork(items, fichas, fallbackCovers)" in data_loader_brs,
           "Capas e gêneros devem ser aplicados dentro da FetchTask")
     check("function isStringValue(value as dynamic) as boolean" in bslib
-          and "not isStringValue(fichas)" in fetch_brs,
+          and "not isStringValue(fichas)" in data_loader_brs,
           "A resposta de fichas deve aceitar strings do Roku e do simulador")
     check('readCacheAscii("cachefs:/saimo_vod_fichas.txt")' not in main_brs,
           "fichas.txt não deve ser lido na linha principal")
-    check('WriteAsciiFile("cachefs:/saimo_vod_fichas.ready", "1")' in fetch_brs
-          and 'readCacheAscii("cachefs:/saimo_vod_fichas.ready")' in fetch_brs
-          and 'httpGet(base + "fichas.txt"' in fetch_brs
+    check('WriteAsciiFile("cachefs:/saimo_vod_fichas.ready", "1")' in data_loader_brs
+          and 'readCacheAscii("cachefs:/saimo_vod_fichas.ready")' in data_loader_brs
+          and 'httpGet(base + "fichas.txt"' in data_loader_brs
           and 'startSaimoArtworkFetch(base)' not in main_brs,
           "Fichas completas devem ser carregadas sob demanda em segundo plano")
 
-    check('field id="signature" type="string"' in fetch_xml and "task.signature = signature" in main_brs,
+    check('field id="signature" type="string"' in data_loader_xml and "task.signature = signature" in main_brs,
           "Assinatura do índice não é repassada à FetchTask")
     check("function isSaimoSeriesKind" in bslib and 'k = "s" or k = "d" or k = "a"' in bslib,
           "Destaques/busca devem tratar s, d e a como séries")
 
-    check('"destaques.txt"' in fetch_brs and "parseHighlights(highlights.body)" in fetch_brs,
+    check('"destaques.txt"' in data_loader_brs and "parseHighlights(highlights.body)" in data_loader_brs,
           "Destaques VOD da fonte pública não são carregados")
-    check('"busca.txt"' in fetch_brs and '"fichas.txt"' in fetch_brs,
+    check('"busca.txt"' in data_loader_brs and '"fichas.txt"' in data_loader_brs,
           "Busca e capas completas não usam os fragmentos esperados")
-    check('"indice.txt"' in fetch_brs and '"filmes-" + fileLetter' in fetch_brs
-          and '"series-" + fileLetter' in fetch_brs, "Fragmentos do catálogo não são montados por letra")
+    check('"indice.txt"' in data_loader_brs and '"filmes-" + fileLetter' in data_loader_brs
+          and '"series-" + fileLetter' in data_loader_brs, "Fragmentos do catálogo não são montados por letra")
     check('w7.embedtv.cc' not in bslib and 'dadinhodetapioca.fun' not in bslib and 'embedplayer2.xyz' not in bslib,
           "Há cabeçalhos/referers específicos de serviços de terceiros embutidos")
 

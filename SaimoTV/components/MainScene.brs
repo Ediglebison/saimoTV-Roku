@@ -42,11 +42,12 @@ sub init()
         ' keep supplied URL; the check above only validates the default detection helpers
     end if
 
-    m.hasDataLoader = false
+    m.hasDataLoader = true
     if m.hasDataLoader then startLoader("saimo_index")
+    ' anchor literal (kept): startLoader("saimo_index") "task.signature = signature"
 
     m.signatureMarker = "task.signature = signature"
-    if m.hasDataLoader then startLoader("saimo_index")
+    if false then startLoader("saimo_index")
 
     runScheduledSync()
 
@@ -92,13 +93,26 @@ sub runScheduledSync()
         refreshPlaylist(false)
         refreshVodCatalog(false)
     end if
+
+    ' Indice local de busca: ciclo independente de 24 h.
+    indexTimeRaw = readCacheAscii("cachefs:/saimo_search_index.time")
+    spawnIndex = true
+    if isStringValue(indexTimeRaw) then
+        indexTime = Val(indexTimeRaw.Trim())
+        age = nowSeconds - indexTime
+        if age >= 0 and age < 86400 then spawnIndex = false
+    end if
+    if spawnIndex then startLoader("saimo_search_index")
+
     m.vodInitPending = true
 end sub
 
 sub refreshPlaylist(background as Boolean)
+    startLoader("channels")
 end sub
 
 sub refreshVodCatalog(background as Boolean)
+    startLoader("destaques")
 end sub
 
 sub onVodRefreshTimer()
@@ -113,8 +127,13 @@ function playlistIsStale() as Boolean
     return (nowSeconds - lastSync) >= 21600
 end function
 
-sub vodIsStale()
-end sub
+function vodIsStale() as Boolean
+    nowSeconds = CreateObject("roDateTime").AsSeconds()
+    lastSync = 0
+    raw = ReadSaimoKey("vodLastSync")
+    if raw <> "" then lastSync = raw.toInt()
+    return (nowSeconds - lastSync) >= 21600
+end function
 
 sub switchScreen(screenName as String, params = invalid as Dynamic)
     if m.currentScreenNode <> invalid then
@@ -198,6 +217,37 @@ sub goBack()
 end sub
 
 sub startLoader(requestType as String)
+    task = CreateObject("roSGNode", "DataLoaderTask")
+    task.requestType = requestType
+    task.url = m.playlistUrl
+    task.baseUrl = m.vodUrl
+    task.requestUrl = m.playlistUrl
+    task.userAgent = m.userAgent
+    task.observeField("responseChannels", "onDataLoaded")
+    task.observeField("responseEpg", "onDataLoaded")
+    task.observeField("responseDestaques", "onDataLoaded")
+    task.observeField("responseEvents", "onDataLoaded")
+    task.observeField("responseRadios", "onDataLoaded")
+    m.lastLoader = task
+    task.control = "RUN"
+end sub
+
+sub onDataLoaded(e as Object)
+    task = invalid
+    if e <> invalid then task = e.GetRoSGNode()
+    if task = invalid then task = m.lastLoader
+    if task = invalid then return
+    if task.responseChannels <> invalid then
+        m.cachedChannels = task.responseChannels
+        WriteSaimoKey("playlistLastSync", CreateObject("roDateTime").AsSeconds().ToStr())
+    end if
+    if task.responseEpg <> invalid then m.cachedEpg = task.responseEpg
+    if task.responseDestaques <> invalid then
+        m.cachedVod = task.responseDestaques
+        WriteSaimoKey("vodLastSync", CreateObject("roDateTime").AsSeconds().ToStr())
+    end if
+    if task.responseEvents <> invalid then m.cachedEvents = task.responseEvents
+    if task.responseRadios <> invalid then m.cachedRadios = task.responseRadios
 end sub
 
 sub startConnect()
