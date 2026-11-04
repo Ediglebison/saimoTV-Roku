@@ -13,6 +13,16 @@ sub init()
 
     m.focusedIndex = 1
     m.top.observeField("focusedChild", "onFocusedChildChange")
+    m.top.highlightIndex = 1
+    updateVisuals()
+end sub
+
+sub onHighlightIndex()
+    if m.top.highlightIndex >= 0 then
+        m.focusedIndex = m.top.highlightIndex
+        if m.focusedIndex < 0 then m.focusedIndex = 0
+        if m.focusedIndex > 7 then m.focusedIndex = 7
+    end if
     updateVisuals()
 end sub
 

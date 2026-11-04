@@ -3,6 +3,10 @@
 ' ====================================================================
 
 sub init()
+    di = CreateObject("roDeviceInfo")
+    model = ""
+    if di <> invalid then model = di.GetModel()
+    m.isDesktopSim = (model = "4200X")
     m.screensContainer = m.top.findNode("screensContainer")
     m.topNavBar = m.top.findNode("topNavBar")
 
@@ -49,7 +53,9 @@ sub init()
     m.signatureMarker = "task.signature = signature"
     if false then startLoader("saimo_index")
 
-    runScheduledSync()
+    if not m.isDesktopSim then
+        runScheduledSync()
+    end if
 
     WriteSaimoKey("playlistUrl", m.playlistUrl)
     WriteSaimoKey("vodUrl", m.vodUrl)
@@ -80,9 +86,11 @@ sub init()
         m.minhasLoader.control = "RUN"
     end if
 
-    startConnect()
+    if m.topNavBar <> invalid then m.topNavBar.SetFocus(true)
 
     switchScreen("home")
+
+    startConnect()
 end sub
 
 sub onTopNavSelected(evt as Object)
@@ -117,7 +125,7 @@ sub runScheduledSync()
         age = nowSeconds - indexTime
         if age >= 0 and age < 86400 then spawnIndex = false
     end if
-    if spawnIndex then startLoader("saimo_search_index")
+    if spawnIndex and (CreateObject("roDeviceInfo").GetModel() <> "4200X") then startLoader("saimo_search_index")
 
     m.vodInitPending = true
 end sub
@@ -426,6 +434,12 @@ sub onDataLoaded(e as Object)
 end sub
 
 sub startConnect()
+    di = CreateObject("roDeviceInfo")
+    if di <> invalid then
+        model = di.GetModel()
+        if model = "4200X" or model = invalid or model = "" then return
+    end if
+
     m.connectServer = m.top.findNode("connectServer")
     if m.connectServer <> invalid then
         m.connectServer.observeField("receivedCommand", "onConnectCommand")
@@ -521,6 +535,11 @@ sub onListasMudaram(evt as Object)
 end sub
 
 sub onScreenFocusUp()
+    if m.topNavBar <> invalid then
+        currentTab = m.topNavBar.selectedIndex
+        m.topNavBar.highlightIndex = currentTab
+        m.topNavBar.SetFocus(true)
+    end if
 end sub
 
 function canalDoJogo(players as Object) as String
@@ -622,7 +641,7 @@ sub spawnFichaEpisodes(node as Object, item as Object)
     base = m.vodUrl
     task.requestType = "saimo_episodes"
     task.mode = "saimo_episodes"
-    task.url = base + "series-" + letter + "-" + piece.ToStr() + ".txt"
+    task.url = base + "series-" + UCase(letter) + "-" + piece.ToStr() + ".txt"
     task.baseUrl = base
     task.title = item.title
     ua = ReadSaimoKey("userAgent")

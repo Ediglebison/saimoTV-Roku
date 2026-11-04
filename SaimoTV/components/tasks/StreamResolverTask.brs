@@ -211,7 +211,7 @@ function resolveSeriesStream(title as String, letter as String, season as Intege
     results = []
 
     ' 1. Busca índice de pedaços da série em series-<letra>.txt
-    url = "https://filmes-saimo.pages.dev/series-" + letter + ".txt"
+    url = "https://filmes-saimo.pages.dev/series-" + UCase(letter) + ".txt"
     ut = CreateObject("roUrlTransfer")
     ut.SetUrl(url)
     ut.SetCertificatesFile("common:/certs/ca-bundle.crt")
@@ -238,7 +238,7 @@ function resolveSeriesStream(title as String, letter as String, season as Intege
     end if
 
     ' 2. Baixa o pedaço correspondente: series-<letra>-<pedaco>.txt
-    chunkUrl = "https://filmes-saimo.pages.dev/series-" + letter + "-" + pedaco.ToStr() + ".txt"
+    chunkUrl = "https://filmes-saimo.pages.dev/series-" + UCase(letter) + "-" + pedaco.ToStr() + ".txt"
     ut.SetUrl(chunkUrl)
     chunkText = ut.GetToString()
 

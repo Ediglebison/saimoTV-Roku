@@ -2,6 +2,7 @@
 <component name="TopNavBar" extends="Group">
   <interface>
     <field id="selectedIndex" type="integer" value="1" onChange="onIndexChange" />
+    <field id="highlightIndex" type="integer" value="1" onChange="onHighlightIndex" />
     <field id="itemSelected" type="string" alwaysNotify="true" />
     <field id="focusDownRequested" type="boolean" alwaysNotify="true" />
   </interface>
