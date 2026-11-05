@@ -3,6 +3,7 @@
   <interface>
     <field id="channels" type="array" onChange="onChannelsChange" />
     <field id="epgMap" type="assocarray" onChange="onEpgChange" />
+    <field id="arvore" type="node" onChange="onArvore" />
     <field id="currentChannelIndex" type="integer" value="0" onChange="onChannelIndexChange" />
     <field id="openDrawerOnLoad" type="boolean" value="false" />
     <field id="telaCheia" type="boolean" />

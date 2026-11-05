@@ -65,6 +65,8 @@ sub init()
     m.cachedCatalogChannels = invalid
     m.cachedMinhasChannels = []
     m.cachedEpg = invalid
+    m.arvoreCanais = invalid
+    m.tarefaArvore = invalid
     m.cachedVod = invalid
     m.cachedVodItems = invalid
     m.cachedEvents = invalid
@@ -116,6 +118,8 @@ sub runScheduledSync()
         refreshPlaylist(false)
         refreshVodCatalog(false)
     end if
+
+    if not m.isDesktopSim then startLoader("epg")
 
     ' Indice local de busca: ciclo independente de 24 h.
     indexTimeRaw = readCacheAscii("cachefs:/saimo_search_index.time")
@@ -255,6 +259,7 @@ sub switchScreen(screenName as String, params = invalid as Dynamic)
     end if
 
     if screenName = "live" and node <> invalid then
+        if m.arvoreCanais <> invalid then node.arvore = m.arvoreCanais
         if m.cachedChannels <> invalid then node.channels = m.cachedChannels
         if m.cachedEpg <> invalid then node.epgMap = m.cachedEpg
         if params <> invalid and params.tune <> invalid then
@@ -349,12 +354,29 @@ sub goBack()
     end if
 end sub
 
+' Host da lista de canais (esquema + dominio), base do guia de programacao.
+function origemDaLista(url as string) as string
+    alvo = url.Trim()
+    if alvo = "" then return ""
+    esquema = Instr(1, alvo, "://")
+    if esquema = 0 then return ""
+    barra = Instr(esquema + 3, alvo, "/")
+    if barra = 0 then return alvo + "/"
+    return Left(alvo, barra)
+end function
+
 sub startLoader(requestType as String)
     task = CreateObject("roSGNode", "DataLoaderTask")
     task.requestType = requestType
     task.url = m.playlistUrl
     task.baseUrl = m.vodUrl
     task.requestUrl = m.playlistUrl
+    ' A grade fica na raiz do host da lista de canais, nao na pasta do VOD.
+    if requestType = "epg" then
+        origem = origemDaLista(m.playlistUrl)
+        if origem = "" then origem = "https://saimo-canais.pages.dev/"
+        task.baseUrl = origem
+    end if
     task.userAgent = m.userAgent
     task.observeField("responseChannels", "onDataLoaded")
     task.observeField("responseEpg", "onDataLoaded")
@@ -366,6 +388,39 @@ sub startLoader(requestType as String)
     task.control = "RUN"
 end sub
 
+' Arvore do Ao vivo: montada em segundo plano quando os canais ou a grade mudam.
+sub montarArvore()
+    if m.cachedChannels = invalid or m.cachedChannels.Count() = 0 then return
+    if m.tarefaArvore <> invalid then m.tarefaArvore.control = "STOP"
+    tarefa = CreateObject("roSGNode", "ArvoreCanaisTask")
+    tarefa.canais = m.cachedChannels
+    if m.cachedEpg <> invalid then tarefa.epg = m.cachedEpg
+    tarefa.observeField("arvore", "onArvorePronta")
+    tarefa.observeField("error", "onArvoreFalha")
+    m.tarefaArvore = tarefa
+    tarefa.control = "RUN"
+end sub
+
+sub onArvorePronta(evt as Object)
+    if evt <> invalid and evt.GetRoSGNode() <> m.tarefaArvore then return
+    arvore = invalid
+    if evt <> invalid then arvore = evt.getData()
+    if arvore = invalid then return
+    m.arvoreCanais = arvore
+    if m.currentScreenName = "live" and m.currentScreenNode <> invalid then m.currentScreenNode.arvore = m.arvoreCanais
+end sub
+
+sub onArvoreFalha(evt as Object)
+    if evt <> invalid and evt.GetRoSGNode() <> m.tarefaArvore then return
+    motivo = ""
+    if evt <> invalid then motivo = evt.getData()
+    if motivo <> invalid and motivo <> "" then
+        print "ArvoreFalha " + motivo.ToStr()
+    else
+        print "ArvoreFalha"
+    end if
+end sub
+
 sub onDataLoaded(e as Object)
     task = invalid
     if e <> invalid then task = e.GetRoSGNode()
@@ -375,6 +430,7 @@ sub onDataLoaded(e as Object)
         m.cachedCatalogChannels = task.responseChannels
         WriteSaimoKey("playlistLastSync", CreateObject("roDateTime").AsSeconds().ToStr())
         rebuildChannelCache()
+        montarArvore()
         if m.currentScreenName = "favorites" and m.currentScreenNode <> invalid then
             m.currentScreenNode.channels = m.cachedChannels
         end if
@@ -393,6 +449,7 @@ sub onDataLoaded(e as Object)
     end if
     if task.responseEpg <> invalid then
         m.cachedEpg = task.responseEpg
+        montarArvore()
         if m.currentScreenName = "home" and m.currentScreenNode <> invalid then
             m.currentScreenNode.epgMap = m.cachedEpg
         end if
@@ -453,6 +510,7 @@ sub onMinhasBootPronto()
     if task.canais <> invalid then
         m.cachedMinhasChannels = task.canais
         rebuildChannelCache()
+        montarArvore()
         if m.currentScreenName = "home" and m.currentScreenNode <> invalid then m.currentScreenNode.channels = m.cachedChannels
         if m.currentScreenName = "live" and m.currentScreenNode <> invalid then m.currentScreenNode.channels = m.cachedChannels
         if m.currentScreenName = "favorites" and m.currentScreenNode <> invalid then m.currentScreenNode.channels = m.cachedChannels
@@ -527,6 +585,7 @@ sub onListasMudaram(evt as Object)
     if data <> invalid and data.canais <> invalid then canais = data.canais
     m.cachedMinhasChannels = canais
     rebuildChannelCache()
+    montarArvore()
     if m.currentScreenName = "home" and m.currentScreenNode <> invalid then m.currentScreenNode.channels = m.cachedChannels
     if m.currentScreenName = "live" and m.currentScreenNode <> invalid then m.currentScreenNode.channels = m.cachedChannels
     if m.currentScreenName = "favorites" and m.currentScreenNode <> invalid then m.currentScreenNode.channels = m.cachedChannels

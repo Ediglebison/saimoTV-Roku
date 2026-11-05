@@ -97,6 +97,8 @@ def main() -> int:
         APP / "components/tasks/ConnectTask.brs",
         APP / "components/tasks/AcervoTask.xml",
         APP / "components/tasks/AcervoTask.brs",
+        APP / "components/tasks/ArvoreCanaisTask.xml",
+        APP / "components/tasks/ArvoreCanaisTask.brs",
         APP / "images/icon_focus_fhd.png",
         APP / "images/splash_fhd.png",
         APP / "images/bg_app.png",
@@ -526,6 +528,47 @@ def main() -> int:
           "Parsers puros do Acervo ausentes no bslib")
     check('testAcervoIndice' in tests and 'testAcervoPagina' in tests,
           "Suíte BRS deve registrar os testes do Acervo")
+
+    # E14 — ArvoreCanaisTask (arvore do Ao vivo) + EPG
+    arvore_xml = read(APP / "components/tasks/ArvoreCanaisTask.xml")
+    arvore_brs = read(APP / "components/tasks/ArvoreCanaisTask.brs")
+    live_xml = read(APP / "components/screens/LiveScreen.xml")
+    live_brs = read(APP / "components/screens/LiveScreen.brs")
+    drawer_xml = read(APP / "components/views/ChannelDrawer.xml")
+    drawer_brs = read(APP / "components/views/ChannelDrawer.brs")
+
+    check('field id="arvore" type="node" alwaysNotify="true"' in arvore_xml,
+          "ArvoreCanaisTask deve expor o campo arvore como node alwaysNotify")
+    check('field id="error"' in arvore_xml, "ArvoreCanaisTask deve expor o campo error")
+    check('sub montar()' in arvore_brs and 'm.top.arvore = raiz' in arvore_brs,
+          "ArvoreCanaisTask deve montar a arvore de secoes")
+    check('m.top.error = "SemCanais"' in arvore_brs,
+          "ArvoreCanaisTask deve recusar canais vazios com error SemCanais")
+
+    check('sub montarArvore()' in main_brs, "MainScene deve implementar o fornecedor montarArvore")
+    check('sub onArvorePronta(evt as Object)' in main_brs,
+          "MainScene deve receber a arvore pronta em onArvorePronta")
+    check('CreateObject("roSGNode", "ArvoreCanaisTask")' in main_brs,
+          "MainScene deve criar a ArvoreCanaisTask")
+    check('m.tarefaArvore.control = "STOP"' in main_brs,
+          "MainScene deve cancelar a arvore em voo antes de recriar")
+    check('m.currentScreenNode.arvore = m.arvoreCanais' in main_brs and 'node.arvore = m.arvoreCanais' in main_brs,
+          "MainScene deve entregar a arvore em cache e na conclusao")
+    check('startLoader("epg")' in main_brs, "MainScene deve pedir a grade no boot e na sincronizacao")
+
+    check('field id="arvore"' in live_xml, "LiveScreen deve expor o campo arvore")
+    check('sub onArvore()' in live_brs, "LiveScreen deve encaminhar a arvore ao drawer")
+    check('channels[i].name = sel.name' in live_brs,
+          "LiveScreen deve casar a selecao do drawer pelo nome do canal")
+    check('m.channelDrawer.channels' not in live_brs,
+          "LiveScreen nao deve passar a lista de canais ao drawer")
+
+    check('field id="arvore"' in drawer_xml, "ChannelDrawer deve receber a arvore")
+    check('field id="channels"' not in drawer_xml, "ChannelDrawer nao deve expor o campo channels")
+    check('noDosFavoritos' in drawer_brs, "ChannelDrawer deve montar Favoritos em tempo de render")
+    check('atualizarSecoes' in drawer_brs, "ChannelDrawer deve atualizar as secoes a partir da arvore")
+    check('totalDeCanais' in drawer_brs, "ChannelDrawer deve contar os canais da arvore")
+    check('canalEm(' in drawer_brs, "ChannelDrawer deve resolver o canal pelo indice da lista")
 
     if ERRORS:
         print(f"FALHOU: {len(ERRORS)} problema(s) em {CHECKS} verificações.", file=sys.stderr)

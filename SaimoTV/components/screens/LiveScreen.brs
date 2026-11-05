@@ -313,7 +313,6 @@ end sub
 sub onChannelsChange()
     ' Campo de nó é copiado inteiro a cada leitura: aqui só se lê uma vez.
     m.canais = m.top.channels
-    m.channelDrawer.channels = m.canais
     if m.canais <> invalid and m.canais.Count() > 0 then
         playChannel(m.top.currentChannelIndex)
         if m.top.openDrawerOnLoad then
@@ -327,8 +326,12 @@ end sub
 
 sub onEpgChange()
     m.epg = m.top.epgMap
-    m.channelDrawer.epgMap = m.epg
     updateHUDInfo()
+end sub
+
+sub onArvore()
+    if m.top.arvore = invalid then return
+    m.channelDrawer.arvore = m.top.arvore
 end sub
 
 sub onChannelIndexChange()
@@ -506,7 +509,7 @@ sub onDrawerSelect()
     if sel <> invalid then
         channels = m.canais
         for i = 0 to channels.Count() - 1
-            if channels[i].id = sel.id then
+            if channels[i].name = sel.name then
                 if i <> m.top.currentChannelIndex then playChannel(i)
                 m.channelDrawer.isOpen = false
                 exit for
