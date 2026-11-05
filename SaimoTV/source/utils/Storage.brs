@@ -22,6 +22,10 @@ sub WriteSaimoKey(key as String, value as String)
     reg.Flush()
 end sub
 
+function LoadPreferences() as Object
+    return { urlFilmes: ReadSaimoKey("vodUrl"), playlistUrl: ReadSaimoKey("playlistUrl") }
+end function
+
 function LoadFavoriteChannels() as Object
     raw = ReadSaimoKey("favorites")
     if raw = "" then return []

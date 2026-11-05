@@ -17,6 +17,8 @@ sub main()
     testChannelCatalog()
     testVodM3u()
     testSorting()
+    testAcervoIndice()
+    testAcervoPagina()
 
     if m.failures = 0 then
         print "TESTS_PASS " + Str(m.checks).Trim()
@@ -57,6 +59,14 @@ function findLetter(letters as object, letter as string) as object
     if type(letters) <> "roArray" then return invalid
     for each row in letters
         if strField(row, "letter") = letter then return row
+    end for
+    return invalid
+end function
+
+function findAcervoEntrada(entries as object, letra as string) as object
+    if type(entries) <> "roArray" then return invalid
+    for each entry in entries
+        if strField(entry, "letra") = letra then return entry
     end for
     return invalid
 end function
@@ -353,4 +363,77 @@ sub testSorting()
     eqInt(sorted.Count(), 6, "ordenacao preserva filmes e series")
     eqStr(sorted[0].title, "#Alive (2020)", "titulo com # ordena primeiro")
     eqStr(sorted[1].title, "A 5a Onda (2016)", "ordenacao alfabetica ignora ano")
+end sub
+
+sub testAcervoIndice()
+    parsed = parseAcervoIndice(fixture("acervo-indice.txt"))
+    eqStr(parsed.capa, "https://image.tmdb.org/t/p/w185", "capa do indice ao vivo")
+    eqInt(parsed.letras.Count(), 4, "indice agrupa as quatro categorias")
+    filmes = parsed.letras["filmes"]
+    ok(filmes <> invalid, "indice contem a categoria filmes")
+    if filmes <> invalid then
+        entradaA = findAcervoEntrada(filmes, "A")
+        ok(entradaA <> invalid, "filmes contem a letra A")
+        if entradaA <> invalid then
+            eqInt(entradaA.paginas, 71, "paginas da letra A de filmes")
+            eqInt(entradaA.total, 3514, "total de titulos da letra A de filmes")
+        end if
+        entradaHash = findAcervoEntrada(filmes, "#")
+        ok(entradaHash <> invalid, "indice preserva a letra #")
+        if entradaHash <> invalid then
+            eqInt(entradaHash.paginas, 8, "paginas da letra # de filmes")
+        end if
+    end if
+
+    comCapa = parseAcervoIndice("capa: https://exemplo.org/t/p/w92" + Chr(10) + "filmes" + Chr(9) + "B" + Chr(9) + "2" + Chr(9) + "90")
+    eqStr(comCapa.capa, "https://exemplo.org/t/p/w92", "capa customizado lido da linha capa:")
+    semCapa = parseAcervoIndice("filmes" + Chr(9) + "B" + Chr(9) + "2" + Chr(9) + "90")
+    eqStr(semCapa.capa, "https://image.tmdb.org/t/p/w185", "capa padrao quando a linha capa falta")
+
+    soRuido = parseAcervoIndice("# comentario" + Chr(10) + "linhas" + Chr(9) + "curta" + Chr(9) + "3")
+    eqInt(soRuido.letras.Count(), 0, "comentario e linha de tres colunas sao descartados")
+
+    crlf = parseAcervoIndice("filmes" + Chr(9) + "C" + Chr(9) + "5" + Chr(9) + "200" + Chr(13) + Chr(10) + Chr(10) + "series" + Chr(9) + "D" + Chr(9) + "1" + Chr(9) + "9" + Chr(9) + "extra")
+    eqInt(crlf.letras["filmes"][0].total, 200, "linha CRLF nao deforma a contagem")
+    eqInt(crlf.letras["series"][0].paginas, 1, "coluna extra nao desloca as colunas")
+
+    vazio = parseAcervoIndice("")
+    eqInt(vazio.letras.Count(), 0, "indice vazio devolve mapa vazio")
+    eqStr(vazio.capa, "https://image.tmdb.org/t/p/w185", "indice vazio mantem o capa padrao")
+end sub
+
+sub testAcervoPagina()
+    pagina = parseAcervoPagina(fixture("acervo-pagina.txt"))
+    eqInt(pagina.Count(), 2, "pagina mantem as duas linhas completas")
+    if pagina.Count() = 2 then
+        eqStr(pagina[0].title, "A 13ª Emenda (2016)", "titulo da linha completa")
+        eqStr(pagina[0].year, "2016", "ano da linha completa")
+        eqStr(pagina[0].posterPath, "/3DVJArQJ3zSTvc34Bve0diIwTJz.jpg", "poster da linha completa")
+        eqStr(pagina[1].title, "A  Teia", "titulo da linha sem ano")
+        eqStr(pagina[1].year, "", "ano vazio permanece vazio")
+        eqStr(pagina[1].posterPath, "/f4pxgFHotbm8rzIPxW1zVvugYOb.jpg", "poster da linha sem ano")
+    end if
+
+    comAba = parseAcervoPagina("Titulo" + Chr(9) + "2020" + Chr(9) + "/p.jpg" + Chr(9) + "extra" + Chr(9) + "outra")
+    eqInt(comAba.Count(), 1, "colunas extras nao quebram a linha")
+    if comAba.Count() = 1 then
+        eqStr(comAba[0].posterPath, "/p.jpg", "poster continua na terceira coluna")
+    end if
+
+    semTitulo = parseAcervoPagina(Chr(9) + "2020" + Chr(9) + "/x.jpg")
+    eqInt(semTitulo.Count(), 0, "linha sem titulo e descartada")
+
+    crlf = parseAcervoPagina("Titulo" + Chr(9) + "2020" + Chr(9) + "/c.jpg" + Chr(13) + Chr(10))
+    eqInt(crlf.Count(), 1, "pagina CRLF mantem a linha")
+    if crlf.Count() = 1 then eqStr(crlf[0].posterPath, "/c.jpg", "CRLF nao contamina o poster")
+
+    grande = ""
+    for numero = 1 to 200
+        if numero > 1 then grande = grande + Chr(10)
+        grande = grande + "Titulo " + numero.ToStr() + Chr(9) + "2020" + Chr(9) + "/p" + numero.ToStr() + ".jpg"
+    end for
+    duzentas = parseAcervoPagina(grande)
+    eqInt(duzentas.Count(), 200, "pagina de 200 linhas mantem tudo")
+    eqStr(duzentas[0].title, "Titulo 1", "ordem preservada no inicio")
+    eqStr(duzentas[199].title, "Titulo 200", "ordem preservada no fim")
 end sub

@@ -1,0 +1,9 @@
+# categoria	letra	páginas	quantidade
+capa: https://image.tmdb.org/t/p/w185
+filmes	#	8	365
+filmes	A	71	3514
+series	#	3	111
+series	A	26	1251
+animes	A	1	9
+doramas	#	1	1
+doramas	A	1	11

@@ -95,6 +95,8 @@ def main() -> int:
         ROOT / "docs/TESTE_ROKU.md",
         APP / "components/tasks/ConnectTask.xml",
         APP / "components/tasks/ConnectTask.brs",
+        APP / "components/tasks/AcervoTask.xml",
+        APP / "components/tasks/AcervoTask.brs",
         APP / "images/icon_focus_fhd.png",
         APP / "images/splash_fhd.png",
         APP / "images/bg_app.png",
@@ -118,6 +120,8 @@ def main() -> int:
         ROOT / "tools/tests/fixtures/indice.txt",
         ROOT / "tools/tests/fixtures/filmes-A.txt",
         ROOT / "tools/tests/fixtures/series-A.txt",
+        ROOT / "tools/tests/fixtures/acervo-indice.txt",
+        ROOT / "tools/tests/fixtures/acervo-pagina.txt",
     ]
     for path in required:
         check(path.is_file() and path.stat().st_size > 0,
@@ -489,6 +493,39 @@ def main() -> int:
           "Ainda existe referência ao antigo carregador VOD")
     check(not (APP / "session-3cfa976b-ad44-404c-bbe3-6157231feb43.md").exists(),
           "A transcrição da sessão não deve estar dentro do aplicativo")
+
+    # E13 — AcervoTask (navegador do catálogo VOD)
+    acervo_xml = read(APP / "components/tasks/AcervoTask.xml")
+    acervo_brs = read(APP / "components/tasks/AcervoTask.brs")
+    storage_brs = read(APP / "source/utils/Storage.brs")
+    check('field id="baseUrl"' in acervo_xml, "AcervoTask deve expor baseUrl opcional")
+    check('field id="error"' in acervo_xml, "AcervoTask deve expor o campo error")
+    check('roku/indice.txt' in acervo_brs, "AcervoTask deve baixar o indice roku/indice.txt")
+    check('LoadPreferences()' in acervo_brs and 'pkg:/source/utils/Storage.brs' in acervo_xml,
+          "AcervoTask deve cair em LoadPreferences quando baseUrl esta vazio")
+    check('normalizeSaimoBase(base)' in acervo_brs, "AcervoTask deve normalizar a base com normalizeSaimoBase")
+    check('m.top.error' in acervo_brs, "AcervoTask deve reportar falha pelo campo error")
+
+    check('function LoadPreferences() as Object' in storage_brs, "Storage deve expor o alias LoadPreferences")
+    load_prefs = re.search(r"function LoadPreferences\(\) as Object.*?end function", storage_brs, re.S)
+    check(load_prefs is not None and 'ReadSaimoKey("vodUrl")' in load_prefs.group(0),
+          "LoadPreferences deve ler a chave vodUrl existente")
+    registry_sections = set(re.findall(r'roRegistrySection",\s*"([^"]+)"', storage_brs))
+    check(registry_sections == {"SaimoTV"}, "Storage deve abrir apenas a secao de registro SaimoTV")
+
+    check('AcervoTask' in vod_screen_brs and 'm.chaves' in vod_screen_brs and 'totalDaCategoria' in vod_screen_brs,
+          "VodScreen deve montar o indice do Acervo por categoria")
+    check('carregarPerto' in vod_screen_brs and 'carregarPagina' in vod_screen_brs,
+          "VodScreen deve carregar as paginas perto do foco")
+    check('adaptarAcervo' in vod_screen_brs and 'isRestrictedVod(' in vod_screen_brs,
+          "VodScreen deve adaptar os itens crus do Acervo e filtrar os restritos")
+    check('itemType: "erro"' in vod_screen_brs and 'onLinhaFalha' in vod_screen_brs,
+          "VodScreen deve expor a falha de pagina com retry")
+
+    check('function parseAcervoIndice' in bslib and 'function parseAcervoPagina' in bslib,
+          "Parsers puros do Acervo ausentes no bslib")
+    check('testAcervoIndice' in tests and 'testAcervoPagina' in tests,
+          "Suíte BRS deve registrar os testes do Acervo")
 
     if ERRORS:
         print(f"FALHOU: {len(ERRORS)} problema(s) em {CHECKS} verificações.", file=sys.stderr)

@@ -1471,3 +1471,38 @@ function epgTagAttr(line as string, name as string) as string
     if finish = 0 then return ""
     return Left(rest, finish - 1)
 end function
+
+' ---------------------------------------------------------------------------
+' Acervo Roku: índice de letras e páginas de até 50 títulos (funções puras)
+' ---------------------------------------------------------------------------
+
+function parseAcervoIndice(text as string) as object
+    capa = "https://image.tmdb.org/t/p/w185"
+    letras = {}
+    if text = invalid or text = "" then return { capa: capa, letras: letras }
+    for each bruta in text.Split(Chr(10))
+        linha = bruta.Trim()
+        if Left(linha, 5) = "capa:" then
+            capa = Mid(linha, 6).Trim()
+        else if linha <> "" and Left(linha, 1) <> "#" then
+            campos = linha.Split(Chr(9))
+            if campos.Count() >= 4 then
+                if letras[campos[0]] = invalid then letras[campos[0]] = []
+                letras[campos[0]].Push({ letra: campos[1], paginas: Int(Val(campos[2])), total: Int(Val(campos[3])) })
+            end if
+        end if
+    end for
+    return { capa: capa, letras: letras }
+end function
+
+function parseAcervoPagina(text as string) as object
+    itens = []
+    if text = invalid or text = "" then return itens
+    for each bruta in text.Split(Chr(10))
+        campos = bruta.Trim().Split(Chr(9))
+        if campos.Count() >= 3 and campos[0] <> "" then
+            itens.Push({ title: campos[0], year: campos[1].Trim(), posterPath: campos[2].Trim() })
+        end if
+    end for
+    return itens
+end function
