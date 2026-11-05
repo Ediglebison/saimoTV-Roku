@@ -570,6 +570,32 @@ def main() -> int:
     check('totalDeCanais' in drawer_brs, "ChannelDrawer deve contar os canais da arvore")
     check('canalEm(' in drawer_brs, "ChannelDrawer deve resolver o canal pelo indice da lista")
 
+    # E15 — coerencia entre os dois epicos e pins de versao
+    check((APP / "components/tasks/AcervoTask.xml").is_file()
+          and (APP / "components/tasks/AcervoTask.brs").is_file()
+          and (APP / "components/tasks/ArvoreCanaisTask.xml").is_file()
+          and (APP / "components/tasks/ArvoreCanaisTask.brs").is_file(),
+          "Os dois pares de tarefas novas devem estar presentes juntos")
+    check('pkg:/components/tasks/AcervoTask.brs' in acervo_xml
+          and 'pkg:/source/bslib.brs' in acervo_xml,
+          "AcervoTask.xml deve registrar os scripts que usa")
+    check('pkg:/components/tasks/ArvoreCanaisTask.brs' in arvore_xml,
+          "ArvoreCanaisTask.xml deve registrar o proprio script")
+    check('CreateObject("roSGNode", "AcervoTask")' in vod_screen_brs,
+          "VodScreen deve instanciar a AcervoTask")
+    check('CreateObject("roSGNode", "ArvoreCanaisTask")' in main_brs,
+          "MainScene deve instanciar a ArvoreCanaisTask")
+    check('m.top.error' in acervo_brs and 'm.top.error' in arvore_brs
+          and 'field id="error"' in acervo_xml and 'field id="error"' in arvore_xml,
+          "As duas tarefas devem expor e preencher o campo error")
+    check(package.get("version") == "2.6.0"
+          and lock.get("version") == "2.6.0"
+          and (version_fields.get("major_version"), version_fields.get("minor_version"), version_fields.get("build_version")) == ("2", "6", "0")
+          and 'SaimoTV/2.6.0 (RokuOS)' in stream_resolver_brs
+          and 'version: "2.6.0"' in connect_task_brs
+          and "2.6.0" in readme,
+          "E15 deve manter a versao 2.6.0 nas fontes de versao")
+
     if ERRORS:
         print(f"FALHOU: {len(ERRORS)} problema(s) em {CHECKS} verificações.", file=sys.stderr)
         for error in ERRORS:

@@ -88,3 +88,25 @@ Regressão completa §1–§10 em dispositivo/sideload.
 10. Segmentação de rede: testar aparelho em sub-rede/VPN/firewall diferente; esperado falha de conexão/sem controle. Com firewall bloqueando 8999, discovery falha.
 11. Regressão completa §1-§11 e gates `npm run build`, `npm run check`, `npm run test`, `npm run package`.
 12. Observação: trusted-LAN, sem TLS/pairing; qualquer dispositivo da rede pode enviar `hello`; documentado como recurso doméstico.
+
+### §13 E13 - Acervo (catálogo completo)
+1. Abra a aba Catálogo/VOD: o hero e as três fileiras editoriais continuam aparecendo; o índice do Acervo carrega em segundo plano.
+2. As fileiras de páginas aparecem abaixo dos destaques, uma por página (50 títulos), com títulos como `A · 1 de 71`.
+3. Desça pelas fileiras: as páginas próximas ao foco carregam sozinhas e as distantes voltam para "Carregando…" (janela de memória).
+4. Selecione um título de página: a Ficha abre com capa, ano, gênero e sinopse; filmes e séries seguem o fluxo normal de episódios.
+5. Títulos restritos continuam ausentes do acervo e dos destaques.
+6. Com `vodUrl` inválido ou vazio, o Acervo usa o host canônico `https://filmes-saimo.pages.dev/`; com a rede caída, as fileiras já carregadas permanecem e a página falha mostra "Falha ao carregar · OK tenta de novo".
+7. Pressione OK na linha de falha: apenas aquela página é rebaixada e recarregada.
+8. Troque rapidamente de categoria (Filmes → Séries → Animes → Doramas): nenhuma página de outra categoria aparece na grade.
+
+### §14 E14 - Árvore de canais (drawer) + grade
+1. Abra Ao vivo: o drawer abre com as seções por categoria, contagem por seção e total de canais.
+2. A prévia mostra canal, programa atual, horário e "A seguir" (a grade agora é buscada no boot; se `guia.txt` falhar, o drawer abre sem programa, sem travar).
+3. Navegue com cima/baixo, esquerda/direita (seções) e OK: o canal selecionado toca (correção F-1 — antes tocava sempre o primeiro).
+4. Favoritar com replay ou pelo menu: a seção "Favoritos" aparece/desaparece sem sair do lugar e sem perder o foco.
+5. Troque de canal por zapping e dígitos com o drawer fechado: o comportamento é o mesmo de antes.
+6. Abra fontes (direita) e menu (opções): continuam lendo o canal em foco, agora a partir da árvore.
+7. PIN parental, timer de sono, HUD e prévia continuam funcionando.
+8. Com a grade chegando depois dos canais, o drawer atualiza programa/progresso sem fechar nem reposicionar o foco.
+9. Atualize Minhas listas: a árvore é reconstruída e os canais novos aparecem nas seções certas.
+10. Regressão completa §1-§13 e gates `npm run build`, `npm run check`, `npm run test`, `npm run package`.

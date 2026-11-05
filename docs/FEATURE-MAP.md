@@ -31,6 +31,15 @@ The user browses live channels by category, sees the channel list with status, a
 5. `SaimoTV/components/MainScene.brs` — `(legacy)`, `(legacy)`, `buildNav`, and `(legacy)` build the category navigation and channel rows.
 6. `SaimoTV/components/MainScene.brs` — `(legacy)` updates the header, counts, and empty state; `onItemSelected` starts playback.
 
+**Drawer flow (árvore de canais):**
+
+1. `SaimoTV/components/MainScene.brs` — `montarArvore` builds one `ArvoreCanaisTask` off-thread whenever channels, EPG, or user lists change; the in-flight task is stopped first and pinned in `m.tarefaArvore`.
+2. `SaimoTV/components/tasks/ArvoreCanaisTask.brs` — `montar` turns the channel array plus the EPG map into one `ContentNode` tree (section → channel) carrying name, number, category, logo, variants, and the current program/progress.
+3. `SaimoTV/components/MainScene.brs` — `onArvorePronta` caches the tree in `m.arvoreCanais` and pushes it to a mounted `LiveScreen`; `switchScreen("live")` injects the cached tree before `channels`.
+4. `SaimoTV/components/screens/LiveScreen.brs` — `onArvore` forwards the tree to the drawer; `channels`/`epgMap` stay on the screen for playback, zapping, PIN, and the HUD.
+5. `SaimoTV/components/views/ChannelDrawer.brs` — `atualizarSecoes`/`preencher`/`canalEm` render chips and rows from the tree, and `noDosFavoritos` builds the Favoritos section at render time.
+6. `SaimoTV/components/tasks/DataLoaderTask.brs` — `fetchEpg` is requested on boot/sync (`startLoader("epg")`) using the playlist host, so the tree carries the current program and progress.
+
 ---
 
 ## Live TV Playback
@@ -90,6 +99,16 @@ The user browses the Saimo catalog by letter, sees six-column poster grids, and 
 17. `SaimoTV/components/items/EpisodeItem.xml` — renders each season chip in the series season selector.
 18. `SaimoTV/components/items/EpisodeItem.xml` — renders each 396x310 episode card beside the season selector, with a 16:9 thumbnail, episode-number fallback art, code badge, title, and meta.
 19. `SaimoTV/components/items/AjusteItem.xml` — renders each detail action button and its focus overlay.
+
+**Acervo flow (catálogo completo por páginas):**
+
+1. `SaimoTV/components/screens/VodScreen.brs` — `montarIndice` starts one `AcervoTask` with an empty category on screen entry; `onIndice` stores the index and keeps the highlight rails.
+2. `SaimoTV/components/tasks/AcervoTask.brs` — `lerIndice` downloads `roku/indice.txt` and `lerPagina` downloads `roku/<categoria>-<letra|0>-<pagina>.txt`; the base comes from `baseUrl`, then `LoadPreferences().urlFilmes`, then the canonical VOD host.
+3. `SaimoTV/source/bslib.brs` — `parseAcervoIndice` and `parseAcervoPagina` turn the tab-separated feed into categories, letter counts, and title rows.
+4. `SaimoTV/components/screens/VodScreen.brs` — `montar` adds one placeholder row per page beside the three highlight rails; `carregarPerto` keeps only the window `[r-4, r+6]` loaded and prefetches `r..r+2`.
+5. `SaimoTV/components/screens/VodScreen.brs` — `onLinha` filters restricted titles with `isRestrictedVod` and `adaptarAcervo` maps the raw row to the app VOD item shape (`id`, `kind`, `genres`, `letter`, `isSeries`).
+6. `SaimoTV/components/screens/VodScreen.brs` — a failed page shows a retry row (`itemType: "erro"`); the highlight rails stay visible when the index fails.
+7. `SaimoTV/components/MainScene.brs` — `onVodItemSelected` opens the existing Ficha/episode flow with the adapted item.
 
 **Branch — M3U VOD:**
 

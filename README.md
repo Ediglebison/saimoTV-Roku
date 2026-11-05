@@ -95,6 +95,8 @@ A fonte padrão de filmes e séries é `https://filmes-saimo.pages.dev/`. O app 
 
 Endereços antigos (`filmes-saimo.pages.dev` e `saimoplayer/main/vod`) são migrados automaticamente para a fonte canônica. A lista de canais ao vivo padrão é `https://saimo-canais.pages.dev/catalogo.txt`; o alias `canais-saimo.pages.dev` também é reconhecido e migrado.
 
+O catálogo completo do acervo é navegável por páginas: o app baixa `roku/indice.txt`, monta uma fileira por página de até 50 títulos e mantém em memória apenas as páginas próximas ao foco. As fileiras editoriais de destaque continuam no topo. No Ao vivo, o menu de canais é montado a partir de uma árvore por seção, com programa atual e progresso da grade quando o guia está disponível.
+
 O cache fica em `cachefs:` e pode ser descartado pelo Roku quando a memória estiver baixa. Se uma atualização falhar, o conteúdo já carregado é preservado. Trocar a URL de uma fonte não mistura itens da fonte anterior.
 
 ## Estrutura
